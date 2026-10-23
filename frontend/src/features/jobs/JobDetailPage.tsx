@@ -10,6 +10,7 @@ import {
   type JobDetail,
 } from '@/api/queries'
 import { AppliedJobCard } from '@/components/AppliedJobCard'
+import { FeedbackButtons } from '@/components/FeedbackButtons'
 import { Markdown } from '@/components/Markdown'
 import { PageHeader } from '@/components/PageHeader'
 import { ErrorBlock, LoadingBlock } from '@/components/QueryState'
@@ -17,7 +18,7 @@ import { ResumePickerDialog } from '@/components/ResumePickerDialog'
 import { StatusBadge } from '@/components/StatusBadge'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ApplicationDetailsForm } from '@/features/applications/ApplicationDetailsForm'
@@ -49,10 +50,13 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
         description={job.company}
         actions={application && <StatusBadge status={application.status as ApplicationStatus} />}
       />
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="mb-6 flex flex-wrap items-center gap-2">
         {job.location && <Badge variant="secondary">{job.location}</Badge>}
         {job.workModel !== 'NAO_INFORMADO' && <Badge variant="secondary">{workModelLabels[job.workModel]}</Badge>}
         {job.salaryRange && <Badge variant="secondary">{job.salaryRange}</Badge>}
+        <div className="ml-auto">
+          <FeedbackButtons jobId={job.id} rating={detail.feedback?.rating} reasons={detail.feedback?.reasons} />
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -61,14 +65,16 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
             <AppliedJobCard applicationId={application.id} />
           ) : (
             <Card>
-              <CardHeader className="flex-row items-center justify-between">
+              <CardHeader>
                 <CardTitle className="text-base">Descrição da vaga</CardTitle>
                 {job.url && (
-                  <Button asChild variant="outline" size="sm">
-                    <a href={job.url} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink /> Abrir vaga
-                    </a>
-                  </Button>
+                  <CardAction>
+                    <Button asChild variant="outline" size="sm">
+                      <a href={job.url} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink /> Abrir vaga
+                      </a>
+                    </Button>
+                  </CardAction>
                 )}
               </CardHeader>
               <CardContent>

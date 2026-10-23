@@ -4,6 +4,38 @@
  */
 
 export interface paths {
+    "/api/search-profiles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["update"];
+        post?: never;
+        delete: operations["delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{id}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["feedback"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{id}/snapshot": {
         parameters: {
             query?: never;
@@ -20,7 +52,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/resumes": {
+    "/api/search-profiles": {
         parameters: {
             query?: never;
             header?: never;
@@ -28,6 +60,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["list"];
+        put?: never;
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/resumes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_1"];
         put?: never;
         post: operations["upload"];
         delete?: never;
@@ -43,9 +91,9 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_1"];
+        get: operations["list_2"];
         put?: never;
-        post: operations["create"];
+        post: operations["create_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -68,6 +116,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/companies/{id}/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["merge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{id}/snapshot/pdf": {
         parameters: {
             query?: never;
@@ -78,6 +142,22 @@ export interface paths {
         get: operations["pagePdf"];
         put?: never;
         post: operations["attachPagePdf"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/collect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["collect"];
         delete?: never;
         options?: never;
         head?: never;
@@ -97,7 +177,23 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update"];
+        patch: operations["update_1"];
+        trace?: never;
+    };
+    "/api/companies/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["update_2"];
         trace?: never;
     };
     "/api/applications/{id}": {
@@ -180,6 +276,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/companies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/me": {
         parameters: {
             query?: never;
@@ -203,7 +315,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_2"];
+        get: operations["list_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -228,10 +340,114 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/gmail/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/gmail/connect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["connect"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/gmail/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["callback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/collection-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["recentRuns"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/gmail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["disconnect"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        SearchProfileCommand: {
+            name: string;
+            keywords: string[];
+            excludedKeywords: string[];
+            locations: string[];
+            remoteOnly: boolean;
+            active: boolean;
+        };
+        SearchProfileView: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            keywords: string[];
+            excludedKeywords: string[];
+            locations: string[];
+            remoteOnly: boolean;
+            active: boolean;
+        };
+        Feedback: {
+            /** @enum {string} */
+            rating: "GOSTEI" | "NEUTRO" | "NAO_GOSTEI";
+            reasons?: ("SALARIO" | "STACK" | "SENIORIDADE" | "MODELO_TRABALHO" | "EMPRESA" | "LOCALIZACAO")[] | null;
+            comment?: string | null;
+        };
         SaveJobSnapshot: {
             url?: string | null;
             title: string;
@@ -272,7 +488,7 @@ export interface components {
             /** Format: int64 */
             id: number;
             /** @enum {string} */
-            origin: "MANUAL";
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA";
             title: string;
             company: string;
             location?: string | null;
@@ -299,11 +515,70 @@ export interface components {
             /** Format: int64 */
             id: number;
         };
+        MergeCompany: {
+            /** Format: int64 */
+            targetId: number;
+        };
+        CollectionRun: {
+            /** Format: int64 */
+            id: number;
+            trigger: string;
+            status: string;
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            finishedAt?: string | null;
+            stats: {
+                [key: string]: components["schemas"]["SourceCounts"];
+            };
+            error?: string | null;
+        };
+        SourceCounts: {
+            /** Format: int32 */
+            created: number;
+            /** Format: int32 */
+            duplicate: number;
+            /** Format: int32 */
+            excluded: number;
+            /** Format: int32 */
+            errors: number;
+        };
         UpdateResumeCommand: {
             label?: string | null;
             targetRole?: string | null;
             makeDefault?: boolean | null;
             archived?: boolean | null;
+        };
+        UpdateCompanyCommand: {
+            /** @enum {string|null} */
+            watchStatus?: "DESCOBERTA" | "MONITORADA" | "ALVO" | "IGNORADA" | null;
+            website?: string | null;
+            atsType?: string | null;
+            atsSlug?: string | null;
+            notes?: string | null;
+        };
+        CompanyItem: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            website?: string | null;
+            atsType?: string | null;
+            atsSlug?: string | null;
+            /** @enum {string} */
+            kind: "CONTRATANTE" | "CONSULTORIA_TI" | "RECRUTAMENTO";
+            /** @enum {string} */
+            watchStatus: "DESCOBERTA" | "MONITORADA" | "ALVO" | "IGNORADA";
+            notes?: string | null;
+            /** Format: date-time */
+            firstSeenAt: string;
+            /** Format: int64 */
+            jobsTotal: number;
+            /** Format: int64 */
+            jobsLast90Days: number;
+            /** Format: date-time */
+            lastJobAt?: string | null;
+            /** Format: int64 */
+            applications: number;
         };
         UpdateApplicationDetails: {
             notes?: string | null;
@@ -332,17 +607,23 @@ export interface components {
             id: number;
             title: string;
             company: string;
+            /** Format: int64 */
+            companyId?: number | null;
             location?: string | null;
             /** @enum {string} */
             workModel: "REMOTO" | "HIBRIDO" | "PRESENCIAL" | "NAO_INFORMADO";
             url?: string | null;
             /** @enum {string} */
-            origin: "MANUAL";
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA";
             /** Format: date-time */
             collectedAt: string;
+            preview?: string | null;
             /** Format: int64 */
             applicationId?: number | null;
             status: string;
+            /** @enum {string|null} */
+            rating?: "GOSTEI" | "NEUTRO" | "NAO_GOSTEI" | null;
+            reasons: ("SALARIO" | "STACK" | "SENIORIDADE" | "MODELO_TRABALHO" | "EMPRESA" | "LOCALIZACAO")[];
         };
         PageResponseJobListItem: {
             items: components["schemas"]["JobListItem"][];
@@ -371,6 +652,13 @@ export interface components {
             job: components["schemas"]["JobView"];
             application?: components["schemas"]["JobApplicationSummary"] | null;
             timeline: components["schemas"]["TimelineEvent"][];
+            feedback?: components["schemas"]["JobFeedback"] | null;
+        };
+        JobFeedback: {
+            /** @enum {string} */
+            rating: "GOSTEI" | "NEUTRO" | "NAO_GOSTEI";
+            reasons: ("SALARIO" | "STACK" | "SENIORIDADE" | "MODELO_TRABALHO" | "EMPRESA" | "LOCALIZACAO")[];
+            comment?: string | null;
         };
         TimelineEvent: {
             /** Format: int64 */
@@ -469,6 +757,14 @@ export interface components {
             status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";
             cards: components["schemas"]["BoardCard"][];
         };
+        MailboxStatus: {
+            configured: boolean;
+            connected: boolean;
+            accountEmail?: string | null;
+            label: string;
+            /** Format: date-time */
+            lastSyncAt?: string | null;
+        };
     };
     responses: never;
     parameters: never;
@@ -478,6 +774,76 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SearchProfileCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SearchProfileView"];
+                };
+            };
+        };
+    };
+    delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    feedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Feedback"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     snapshot: {
         parameters: {
             query?: never;
@@ -539,6 +905,50 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    "*/*": components["schemas"]["SearchProfileView"][];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SearchProfileCommand"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SearchProfileView"];
+                };
+            };
+        };
+    };
+    list_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "*/*": components["schemas"]["ResumeItem"][];
                 };
             };
@@ -574,11 +984,13 @@ export interface operations {
             };
         };
     };
-    list_1: {
+    list_2: {
         parameters: {
             query?: {
                 status?: string;
+                rating?: "GOSTEI" | "NEUTRO" | "NAO_GOSTEI";
                 q?: string;
+                inbox?: boolean;
                 page?: number;
                 size?: number;
             };
@@ -599,7 +1011,7 @@ export interface operations {
             };
         };
     };
-    create: {
+    create_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -646,6 +1058,30 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["CreatedApplication"];
                 };
+            };
+        };
+    };
+    merge: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MergeCompany"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -698,7 +1134,27 @@ export interface operations {
             };
         };
     };
-    update: {
+    collect: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CollectionRun"];
+                };
+            };
+        };
+    };
+    update_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -720,6 +1176,54 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ResumeItem"];
+                };
+            };
+        };
+    };
+    get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyItem"];
+                };
+            };
+        };
+    };
+    update_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCompanyCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyItem"];
                 };
             };
         };
@@ -840,6 +1344,26 @@ export interface operations {
             };
         };
     };
+    list_3: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyItem"][];
+                };
+            };
+        };
+    };
     me: {
         parameters: {
             query?: never;
@@ -860,7 +1384,7 @@ export interface operations {
             };
         };
     };
-    list_2: {
+    list_4: {
         parameters: {
             query?: {
                 status?: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";
@@ -900,6 +1424,104 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["Board"];
                 };
+            };
+        };
+    };
+    status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MailboxStatus"];
+                };
+            };
+        };
+    };
+    connect: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    callback: {
+        parameters: {
+            query?: {
+                code?: string;
+                state?: string;
+                error?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recentRuns: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CollectionRun"][];
+                };
+            };
+        };
+    };
+    disconnect: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

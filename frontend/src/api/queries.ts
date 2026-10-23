@@ -237,3 +237,110 @@ export function useUpdateResume() {
 export function fetchResumeLink(id: number): Promise<DownloadLink> {
   return unwrap(api.GET('/api/resumes/{id}/file', { params: { path: { id } } }))
 }
+
+// Caixa de vagas e feedback
+
+export type JobListItem = Schemas['JobListItem']
+export type FeedbackRating = NonNullable<Schemas['JobListItem']['rating']>
+export type FeedbackReason = Schemas['JobListItem']['reasons'][number]
+
+export function useInboxJobs(q?: string) {
+  return useQuery({
+    queryKey: ['jobs', 'inbox', { q }],
+    queryFn: () => unwrap(api.GET('/api/jobs', { params: { query: { inbox: true, q: q || undefined, size: 50 } } })),
+    placeholderData: (previous) => previous,
+  })
+}
+
+export function useSaveFeedback() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ jobId, ...body }: { jobId: number } & Schemas['Feedback']) =>
+      unwrap(api.PUT('/api/jobs/{id}/feedback', { params: { path: { id: jobId } }, body })),
+    onSuccess: () =>
+      Promise.all([client.invalidateQueries({ queryKey: ['jobs'] }), client.invalidateQueries({ queryKey: ['job'] })]),
+  })
+}
+
+// Empresas
+
+export type CompanyItem = Schemas['CompanyItem']
+export type WatchStatus = CompanyItem['watchStatus']
+
+export function useCompanies() {
+  return useQuery({ queryKey: ['companies'], queryFn: () => unwrap(api.GET('/api/companies')) })
+}
+
+export function useUpdateCompany() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: number } & Schemas['UpdateCompanyCommand']) =>
+      unwrap(api.PATCH('/api/companies/{id}', { params: { path: { id } }, body })),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['companies'] }),
+  })
+}
+
+export function useMergeCompany() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, targetId }: { id: number; targetId: number }) =>
+      unwrap(api.POST('/api/companies/{id}/merge', { params: { path: { id } }, body: { targetId } })),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['companies'] }),
+  })
+}
+
+// Configurações: Gmail, coleta e perfis de busca
+
+export type MailboxStatus = Schemas['MailboxStatus']
+export type CollectionRun = Schemas['CollectionRun']
+export type SearchProfile = Schemas['SearchProfileView']
+
+export function useGmailStatus() {
+  return useQuery({ queryKey: ['gmail'], queryFn: () => unwrap(api.GET('/api/admin/gmail/status')) })
+}
+
+export function useDisconnectGmail() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: () => unwrap(api.DELETE('/api/admin/gmail')),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['gmail'] }),
+  })
+}
+
+export function useCollectionRuns() {
+  return useQuery({ queryKey: ['collection-runs'], queryFn: () => unwrap(api.GET('/api/admin/collection-runs')) })
+}
+
+export function useCollectNow() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: () => unwrap(api.POST('/api/admin/collect')),
+    onSettled: () =>
+      Promise.all(
+        ['collection-runs', 'jobs', 'companies', 'gmail'].map((key) => client.invalidateQueries({ queryKey: [key] })),
+      ),
+  })
+}
+
+export function useSearchProfiles() {
+  return useQuery({ queryKey: ['search-profiles'], queryFn: () => unwrap(api.GET('/api/search-profiles')) })
+}
+
+export function useSaveSearchProfile() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id?: number } & Schemas['SearchProfileCommand']) =>
+      id === undefined
+        ? unwrap(api.POST('/api/search-profiles', { body }))
+        : unwrap(api.PUT('/api/search-profiles/{id}', { params: { path: { id } }, body })),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['search-profiles'] }),
+  })
+}
+
+export function useDeleteSearchProfile() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => unwrap(api.DELETE('/api/search-profiles/{id}', { params: { path: { id } } })),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['search-profiles'] }),
+  })
+}

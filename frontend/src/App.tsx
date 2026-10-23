@@ -11,6 +11,19 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/board" replace /> },
       {
+        path: 'inbox',
+        lazy: () => import('@/features/inbox/InboxPage').then((module) => ({ Component: module.InboxPage })),
+      },
+      {
+        path: 'companies',
+        lazy: () =>
+          import('@/features/companies/CompaniesPage').then((module) => ({ Component: module.CompaniesPage })),
+      },
+      {
+        path: 'settings',
+        lazy: () => import('@/features/settings/SettingsPage').then((module) => ({ Component: module.SettingsPage })),
+      },
+      {
         path: 'board',
         lazy: () => import('@/features/board/BoardPage').then((module) => ({ Component: module.BoardPage })),
       },
