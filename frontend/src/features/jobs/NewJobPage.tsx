@@ -8,6 +8,7 @@ import {
   useStartApplication,
   type ApplicationChannel,
   type ApplicationStatus,
+  type JobScope,
   type WorkModel,
 } from '@/api/queries'
 import { PageHeader } from '@/components/PageHeader'
@@ -22,6 +23,7 @@ import {
   channelLabels,
   startableStatuses,
   statusesRequiringResume,
+  scopeLabels,
   statusLabels,
   workModelLabels,
 } from '@/lib/labels'
@@ -43,6 +45,8 @@ export function NewJobPage() {
   const [location, setLocation] = useState('')
   const [workModel, setWorkModel] = useState<WorkModel>('NAO_INFORMADO')
   const [salaryRange, setSalaryRange] = useState('')
+  // AUTO: o backend decide pelo idioma da descrição (em inglês, internacional)
+  const [scope, setScope] = useState<JobScope | 'AUTO'>('AUTO')
   const [description, setDescription] = useState('')
   const [status, setStatus] = useState<ApplicationStatus>('APLICADA')
   const [resumeId, setResumeId] = useState<string | undefined>()
@@ -61,6 +65,7 @@ export function NewJobPage() {
         company,
         location: location || null,
         workModel,
+        scope: scope === 'AUTO' ? null : scope,
         salaryRange: salaryRange || null,
         url: url || null,
         description: description || null,
@@ -135,7 +140,20 @@ export function NewJobPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2 sm:col-span-2">
+              <div className="space-y-2">
+                <Label htmlFor="job-scope">Vaga no Brasil ou no exterior</Label>
+                <Select value={scope} onValueChange={(value) => setScope(value as JobScope | 'AUTO')}>
+                  <SelectTrigger id="job-scope" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="AUTO">Detectar pelo idioma da descrição</SelectItem>
+                    <SelectItem value="NACIONAL">{scopeLabels.NACIONAL}</SelectItem>
+                    <SelectItem value="INTERNACIONAL">No exterior ({scopeLabels.INTERNACIONAL.toLowerCase()})</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="job-salary">Faixa salarial</Label>
                 <Input
                   id="job-salary"

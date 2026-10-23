@@ -1,9 +1,11 @@
 import type {
   ApplicationChannel,
   ApplicationStatus,
+  DismissReason,
   EmailClassification,
   FeedbackReason,
   JobListItem,
+  JobScope,
   LinkStatus,
   ResponseChannel,
   ResponseType,
@@ -72,6 +74,11 @@ export const workModelLabels: Record<WorkModel, string> = {
   NAO_INFORMADO: 'Não informado',
 }
 
+export const scopeLabels: Record<JobScope, string> = {
+  NACIONAL: 'Nacional',
+  INTERNACIONAL: 'Internacional',
+}
+
 export const linkStatusLabels: Record<NonNullable<LinkStatus>, string> = {
   ATIVO: 'Ativo',
   REMOVIDO: 'Removido',
@@ -85,6 +92,11 @@ export const feedbackReasonLabels: Record<FeedbackReason, string> = {
   MODELO_TRABALHO: 'Modelo de trabalho',
   EMPRESA: 'Empresa',
   LOCALIZACAO: 'Localização',
+}
+
+export const dismissReasonLabels: Record<DismissReason, string> = {
+  SEM_INTERESSE: 'Não tenho interesse',
+  SEM_PERFIL_TECNICO: 'Não tenho o perfil técnico',
 }
 
 export const originLabels: Record<JobListItem['origin'], string> = {

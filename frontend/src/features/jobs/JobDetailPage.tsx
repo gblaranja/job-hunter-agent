@@ -13,6 +13,8 @@ import {
 import { AppliedJobCard } from '@/components/AppliedJobCard'
 import { FeedbackButtons } from '@/components/FeedbackButtons'
 import { AnalysisCard } from './AnalysisCard'
+import { DismissalActions } from './DismissalActions'
+import { ScopeSwitch } from './ScopeSwitch'
 import { TailoredResumeCard } from './TailoredResumeCard'
 import { Markdown } from '@/components/Markdown'
 import { PageHeader } from '@/components/PageHeader'
@@ -58,6 +60,7 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
         {job.location && !sameAsWorkModel(job.location, job.workModel) && <Badge variant="secondary">{job.location}</Badge>}
         {job.workModel !== 'NAO_INFORMADO' && <Badge variant="secondary">{workModelLabels[job.workModel]}</Badge>}
         {job.salaryRange && <Badge variant="secondary">{job.salaryRange}</Badge>}
+        <ScopeSwitch jobId={job.id} scope={job.scope} />
         <div className="ml-auto">
           <FeedbackButtons jobId={job.id} rating={detail.feedback?.rating} reasons={detail.feedback?.reasons} />
         </div>
@@ -127,7 +130,7 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
               </Card>
             </>
           ) : (
-            <StartPanel jobId={job.id} />
+            <StartPanel jobId={job.id} dismissal={detail.dismissal} />
           )}
         </aside>
       </div>
@@ -206,7 +209,7 @@ function StatusPanel({
   )
 }
 
-function StartPanel({ jobId }: { jobId: number }) {
+function StartPanel({ jobId, dismissal }: { jobId: number; dismissal: JobDetail['dismissal'] }) {
   const start = useStartApplication()
   const tailored = useTailoredResumes(jobId)
   const [picking, setPicking] = useState(false)
@@ -238,6 +241,7 @@ function StartPanel({ jobId }: { jobId: number }) {
         <Button variant="ghost" onClick={() => begin('ENCERRADA', undefined, closedJobNote)} disabled={start.isPending}>
           Vaga encerrada
         </Button>
+        <DismissalActions jobId={jobId} dismissal={dismissal} />
       </CardContent>
       {picking && (
         <ResumePickerDialog

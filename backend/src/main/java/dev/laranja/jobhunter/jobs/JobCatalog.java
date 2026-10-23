@@ -11,6 +11,7 @@ import dev.laranja.jobhunter.companies.CompanyDirectory;
 import dev.laranja.jobhunter.jobs.internal.Job;
 import dev.laranja.jobhunter.jobs.internal.JobFingerprint;
 import dev.laranja.jobhunter.jobs.internal.JobRepository;
+import dev.laranja.jobhunter.jobs.internal.JobScopeDetector;
 import dev.laranja.jobhunter.shared.ConflictException;
 import dev.laranja.jobhunter.shared.NotFoundException;
 
@@ -82,10 +83,11 @@ public class JobCatalog {
 		long companyId = this.companies.resolveOrRegister(raw.company());
 		// xmax = 0 só na linha recém-inserida; no conflito, a linha existente é atualizada e devolvida.
 		IngestResult result = this.jdbc.sql("""
-				insert into job (source, external_id, fingerprint, title, company, location, work_model, salary_range,
-				                 url, raw_description, collected_at, company_id, first_seen_at, last_seen_at)
-				values (:source, :externalId, :fingerprint, :title, :company, :location, :workModel, :salaryRange,
-				        :url, :description, :now, :companyId, :now, :now)
+				insert into job (source, external_id, fingerprint, title, company, location, work_model, scope,
+				                 salary_range, url, raw_description, collected_at, company_id, first_seen_at,
+				                 last_seen_at)
+				values (:source, :externalId, :fingerprint, :title, :company, :location, :workModel, :scope,
+				        :salaryRange, :url, :description, :now, :companyId, :now, :now)
 				on conflict (fingerprint) do update set last_seen_at = excluded.last_seen_at, closed_at = null
 				returning id, (xmax = 0) as created
 				""")
@@ -96,6 +98,7 @@ public class JobCatalog {
 			.param("company", truncate(raw.company().strip(), 200))
 			.param("location", truncate(raw.location(), 200))
 			.param("workModel", raw.resolvedWorkModel().name())
+			.param("scope", JobScopeDetector.detect(raw.description()).name())
 			.param("salaryRange", truncate(raw.salaryRange(), 100))
 			.param("url", truncate(raw.url(), 2000))
 			.param("description", raw.description())
@@ -126,6 +129,18 @@ public class JobCatalog {
 			.param("companyId", companyId)
 			.param("listed", String.join(String.valueOf((char) 31), listedExternalIds))
 			.update();
+	}
+
+	/** Corrige a classificação automática: a vaga muda de seção na caixa de vagas. */
+	@Transactional
+	public void changeScope(long jobId, JobScope scope) {
+		int updated = this.jdbc.sql("update job set scope = :scope where id = :id")
+			.param("scope", scope.name())
+			.param("id", jobId)
+			.update();
+		if (updated == 0) {
+			throw NotFoundException.of("Vaga", jobId);
+		}
 	}
 
 	/** Você viu que a vaga não aceita mais candidaturas: fecha agora, se ainda estava aberta. */

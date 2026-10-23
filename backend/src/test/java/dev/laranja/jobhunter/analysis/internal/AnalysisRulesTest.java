@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import dev.laranja.jobhunter.analysis.Seniority;
 import dev.laranja.jobhunter.jobs.JobOrigin;
+import dev.laranja.jobhunter.jobs.JobScope;
 import dev.laranja.jobhunter.jobs.JobView;
 import dev.laranja.jobhunter.jobs.WorkModel;
 import dev.laranja.jobhunter.shared.ai.AiProperties;
@@ -61,8 +62,8 @@ class AnalysisRulesTest {
 	@Test
 	void withoutLlmSkillsAfterTheNiceToHaveHeadingAreOptional() {
 		var extractor = new RequirementsExtractor(this.dictionary, null, new AiProperties(null, null, null));
-		var job = new JobView(1, JobOrigin.MANUAL, "Desenvolvedor Java Sênior", "Banco", "Remoto", WorkModel.REMOTO, null,
-				null, """
+		var job = new JobView(1, JobOrigin.MANUAL, "Desenvolvedor Java Sênior", "Banco", "Remoto", WorkModel.REMOTO,
+				JobScope.NACIONAL, null, null, """
 						Requisitos: Java 21, Spring Boot, Kafka e PostgreSQL. Atuação em microsserviços.
 						Diferenciais: Kubernetes, Terraform e Kafka. Contratação PJ.
 						""", Instant.now());

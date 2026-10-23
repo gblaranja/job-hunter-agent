@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import { Link } from 'react-router'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
-import { useInboxJobs, useStartApplication, type JobListItem } from '@/api/queries'
+import { useInboxCount, useInboxJobs, useStartApplication, type JobListItem, type JobScope } from '@/api/queries'
 import { FeedbackButtons } from '@/components/FeedbackButtons'
 import { PageHeader } from '@/components/PageHeader'
+import { Pagination } from '@/components/Pagination'
 import { ScoreBadge } from '@/components/ScoreBadge'
 import { SkillChips } from '@/components/SkillChips'
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/QueryState'
@@ -11,64 +12,179 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { formatDate } from '@/lib/format'
+import { isPageSize } from '@/lib/pagination'
 import { closedJobNote, originLabels, sameAsWorkModel, workModelLabels } from '@/lib/labels'
-import { Ban, ExternalLink, Search, Star } from 'lucide-react'
+import { Ban, ExternalLink, Search } from 'lucide-react'
+import { InterestMenu } from './InterestMenu'
+
+const PAGE_SIZE_KEY = 'job-hunter-inbox-page-size'
+const DEFAULT_PAGE_SIZE = 20
+
+// Seção da caixa na URL (?secao=internacionais); sem ela, as nacionais, que são a prioridade.
+const INTERNATIONAL_SECTION = 'internacionais'
+
+// O tamanho da página vem da URL; sem ele, da última escolha feita neste navegador.
+function readPageSize(params: URLSearchParams) {
+  const fromUrl = Number(params.get('size'))
+  if (isPageSize(fromUrl)) return fromUrl
+  try {
+    const stored = Number(window.localStorage.getItem(PAGE_SIZE_KEY))
+    if (isPageSize(stored)) return stored
+  } catch {
+    // Sem armazenamento, fica o tamanho padrão.
+  }
+  return DEFAULT_PAGE_SIZE
+}
 
 /** Vagas novas, ainda sem candidatura: avalie, marque interesse ou descarte. */
 export function InboxPage() {
   const [search, setSearch] = useState('')
   const query = useDebouncedValue(search.trim())
-  const jobs = useInboxJobs(query)
+  const [params, setParams] = useSearchParams()
+  // Na URL a página começa em 1; na API, em 0.
+  const page = Math.max(0, (Number.parseInt(params.get('page') ?? '', 10) || 1) - 1)
+  const size = readPageSize(params)
+  const scope: JobScope = params.get('secao') === INTERNATIONAL_SECTION ? 'INTERNACIONAL' : 'NACIONAL'
+  const otherScope: JobScope = scope === 'NACIONAL' ? 'INTERNACIONAL' : 'NACIONAL'
+  const jobs = useInboxJobs({ q: query, scope, page, size })
+  const otherTotal = useInboxCount({ q: query, scope: otherScope }).data
+  const totals: Partial<Record<JobScope, number>> = { [scope]: jobs.data?.total, [otherScope]: otherTotal }
+  const top = useRef<HTMLDivElement>(null)
+
+  function changePage(next: { page?: number; size?: number }, replace = false) {
+    setParams(
+      (current) => {
+        const updated = new URLSearchParams(current)
+        if (next.page !== undefined) {
+          if (next.page > 0) updated.set('page', String(next.page + 1))
+          else updated.delete('page')
+        }
+        if (next.size !== undefined) updated.set('size', String(next.size))
+        return updated
+      },
+      { replace },
+    )
+  }
+
+  // Cada seção tem a sua paginação: trocar de seção volta para a primeira página.
+  function changeScope(next: string) {
+    setParams(
+      (current) => {
+        const updated = new URLSearchParams(current)
+        if (next === 'INTERNACIONAL') updated.set('secao', INTERNATIONAL_SECTION)
+        else updated.delete('secao')
+        updated.delete('page')
+        return updated
+      },
+      { replace: true },
+    )
+  }
+
+  function goTo(nextPage: number) {
+    changePage({ page: nextPage })
+    top.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  function resize(nextSize: number) {
+    try {
+      window.localStorage.setItem(PAGE_SIZE_KEY, String(nextSize))
+    } catch {
+      // A escolha ainda vale pela URL.
+    }
+    // Mantém na tela a primeira vaga que o usuário estava vendo.
+    changePage({ size: nextSize, page: Math.floor((page * size) / nextSize) })
+  }
+
+  // Quando vagas saem da caixa (interesse, encerrada, "não gostei"), a última página pode deixar de existir.
+  const lastPage = jobs.data ? Math.max(0, Math.ceil(jobs.data.total / size) - 1) : 0
+  const pageOutOfRange = jobs.isSuccess && !jobs.isPlaceholderData && page > lastPage
+  useEffect(() => {
+    if (pageOutOfRange) changePage({ page: lastPage }, true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- changePage só escreve na URL
+  }, [pageOutOfRange, lastPage])
 
   return (
     <>
       <PageHeader
         title="Caixa de vagas"
-        description="Vagas que ainda não viraram candidatura, da maior para a menor aderência ao seu currículo padrão. As marcadas com “Não gostei” ou como encerradas saem daqui."
-        actions={jobs.data && <span className="text-sm text-muted-foreground">{jobs.data.total} vagas</span>}
+        description="Vagas que ainda não viraram candidatura, da maior para a menor aderência ao seu currículo padrão, separadas entre nacionais e internacionais (descrição em inglês). As marcadas com “Não gostei”, como encerradas ou sem interesse saem daqui."
+        actions={
+          jobs.data &&
+          otherTotal !== undefined && (
+            <span className="text-sm text-muted-foreground">{jobs.data.total + otherTotal} vagas</span>
+          )
+        }
       />
-      <div className="relative mb-4 max-w-xl">
+      <Tabs value={scope} onValueChange={changeScope} className="mb-4">
+        <TabsList>
+          {(['NACIONAL', 'INTERNACIONAL'] as const).map((option) => (
+            <TabsTrigger key={option} value={option}>
+              {option === 'NACIONAL' ? 'Nacionais' : 'Internacionais'}
+              {totals[option] !== undefined && (
+                <Badge variant="secondary" className="ml-1">
+                  {totals[option]}
+                </Badge>
+              )}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+      <div ref={top} className="relative mb-4 max-w-xl scroll-mt-4">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
         <Input
           className="pl-9"
           placeholder="Filtrar por cargo ou empresa"
           aria-label="Filtrar vagas"
           value={search}
-          onChange={(event) => setSearch(event.target.value)}
+          onChange={(event) => {
+            setSearch(event.target.value)
+            if (page > 0) changePage({ page: 0 }, true)
+          }}
         />
       </div>
       {jobs.isLoading && <LoadingBlock />}
       {jobs.error && <ErrorBlock error={jobs.error} />}
-      {jobs.isSuccess && jobs.data.items.length === 0 && (
-        <EmptyBlock title={query ? `Nenhuma vaga para “${query}”.` : 'Nenhuma vaga nova por aqui.'}>
-          {!query && (
+      {jobs.isSuccess && jobs.data.total === 0 && (
+        <EmptyBlock
+          title={
+            query
+              ? `Nenhuma vaga ${scope === 'NACIONAL' ? 'nacional' : 'internacional'} para “${query}”.`
+              : scope === 'NACIONAL'
+                ? 'Nenhuma vaga nova por aqui.'
+                : 'Nenhuma vaga internacional por aqui.'
+          }
+        >
+          {!query && scope === 'INTERNACIONAL' && 'Vagas com a descrição em inglês aparecem nesta seção.'}
+          {!query && scope === 'NACIONAL' && (
             <>
               Conecte o Gmail e rode a coleta em <Link to="/settings" className="text-primary underline">Configurações</Link>.
             </>
           )}
         </EmptyBlock>
       )}
-      <div className="space-y-3">
+      <div className={jobs.isPlaceholderData ? 'space-y-3 opacity-60 transition-opacity' : 'space-y-3'} aria-busy={jobs.isFetching}>
         {jobs.data?.items.map((job) => <InboxCard key={job.id} job={job} />)}
       </div>
+      {jobs.data && jobs.data.total > 0 && (
+        <Pagination
+          className="mt-6 border-t pt-4"
+          page={page}
+          size={size}
+          total={jobs.data.total}
+          itemLabel="vagas"
+          onPageChange={goTo}
+          onSizeChange={resize}
+        />
+      )}
     </>
   )
 }
 
 function InboxCard({ job }: { job: JobListItem }) {
   const start = useStartApplication()
-
-  function interest() {
-    start.mutate(
-      { jobId: job.id, body: { status: 'INTERESSE' } },
-      {
-        onSuccess: () => toast.success('Vaga movida para Interesse no kanban.'),
-        onError: (error) => toast.error(error.message),
-      },
-    )
-  }
 
   function closed() {
     start.mutate(
@@ -117,9 +233,7 @@ function InboxCard({ job }: { job: JobListItem }) {
             <Button variant="ghost" size="sm" onClick={closed} disabled={start.isPending}>
               <Ban /> Vaga encerrada
             </Button>
-            <Button size="sm" onClick={interest} disabled={start.isPending}>
-              <Star /> Tenho interesse
-            </Button>
+            <InterestMenu jobId={job.id} />
           </div>
         </div>
       </CardContent>

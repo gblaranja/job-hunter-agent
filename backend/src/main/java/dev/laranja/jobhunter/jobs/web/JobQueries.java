@@ -7,9 +7,11 @@ import java.sql.Types;
 import java.util.Arrays;
 import java.util.List;
 
+import dev.laranja.jobhunter.jobs.DismissReason;
 import dev.laranja.jobhunter.jobs.FeedbackRating;
 import dev.laranja.jobhunter.jobs.FeedbackReason;
 import dev.laranja.jobhunter.jobs.JobOrigin;
+import dev.laranja.jobhunter.jobs.JobScope;
 import dev.laranja.jobhunter.jobs.JobView;
 import dev.laranja.jobhunter.jobs.WorkModel;
 import dev.laranja.jobhunter.shared.jdbc.JdbcRows;
@@ -32,11 +34,13 @@ class JobQueries {
 			left join application a on a.job_id = j.id
 			left join job_feedback f on f.job_id = j.id
 			left join job_analysis an on an.job_id = j.id
+			left join job_dismissal d on d.job_id = j.id
 			where (cast(:status as text) is null or coalesce(a.status, 'NOVA') = :status)
 			  and (cast(:rating as text) is null or f.rating = :rating)
 			  and (cast(:pattern as text) is null or j.title ilike :pattern or j.company ilike :pattern)
-			  -- caixa de vagas: sem candidatura e sem "não gostei"
-			  and (not :inbox or (a.id is null and coalesce(f.rating, '') <> 'NAO_GOSTEI'))
+			  and (cast(:scope as text) is null or coalesce(j.scope, 'NACIONAL') = :scope)
+			  -- caixa de vagas: sem candidatura, sem "não gostei" e não descartada
+			  and (not :inbox or (a.id is null and coalesce(f.rating, '') <> 'NAO_GOSTEI' and d.job_id is null))
 			""";
 
 	private final JdbcClient jdbc;
@@ -51,7 +55,8 @@ class JobQueries {
 	PageResponse<JobListItem> list(JobListFilter filter, int page, int size) {
 		String pattern = JdbcRows.containsPattern(filter.query());
 		List<JobListItem> items = this.jdbc.sql("""
-				select j.id, j.title, j.company, j.company_id, j.location, j.work_model, j.url, j.source, j.collected_at,
+				select j.id, j.title, j.company, j.company_id, j.location, j.work_model,
+				       coalesce(j.scope, 'NACIONAL') as scope, j.url, j.source, j.collected_at,
 				       j.raw_description, a.id as application_id, coalesce(a.status, 'NOVA') as status,
 				       f.rating, f.reasons, an.match_score, an.summary, an.matched_skills::text as matched,
 				       an.gaps::text as gaps
@@ -63,12 +68,14 @@ class JobQueries {
 			.param("status", filter.status(), Types.VARCHAR)
 			.param("rating", (filter.rating() != null) ? filter.rating().name() : null, Types.VARCHAR)
 			.param("pattern", pattern, Types.VARCHAR)
+			.param("scope", (filter.scope() != null) ? filter.scope().name() : null, Types.VARCHAR)
 			.param("inbox", filter.inbox())
 			.param("size", size)
 			.param("offset", page * size)
 			.query((rs, row) -> new JobListItem(rs.getLong("id"), rs.getString("title"), rs.getString("company"),
 					JdbcRows.nullableLong(rs, "company_id"), rs.getString("location"),
-					WorkModel.valueOf(rs.getString("work_model")), rs.getString("url"),
+					WorkModel.valueOf(rs.getString("work_model")), JobScope.valueOf(rs.getString("scope")),
+					rs.getString("url"),
 					JobOrigin.valueOf(rs.getString("source")), JdbcRows.instant(rs, "collected_at"),
 					preview(rs.getString("raw_description")), JdbcRows.nullableLong(rs, "application_id"),
 					rs.getString("status"), JdbcRows.nullableEnum(rs, "rating", FeedbackRating.class),
@@ -79,6 +86,7 @@ class JobQueries {
 			.param("status", filter.status(), Types.VARCHAR)
 			.param("rating", (filter.rating() != null) ? filter.rating().name() : null, Types.VARCHAR)
 			.param("pattern", pattern, Types.VARCHAR)
+			.param("scope", (filter.scope() != null) ? filter.scope().name() : null, Types.VARCHAR)
 			.param("inbox", filter.inbox())
 			.query(Long.class)
 			.single();
@@ -117,6 +125,12 @@ class JobQueries {
 					rs.getString("comment")))
 			.optional()
 			.orElse(null);
+		JobDetail.Dismissal dismissal = this.jdbc.sql("select reason, created_at from job_dismissal where job_id = :jobId")
+			.param("jobId", job.id())
+			.query((rs, row) -> new JobDetail.Dismissal(DismissReason.valueOf(rs.getString("reason")),
+					JdbcRows.instant(rs, "created_at")))
+			.optional()
+			.orElse(null);
 		JobDetail.Analysis analysis = this.jdbc.sql("""
 				select status, seniority, required_skills::text as required, nice_to_have::text as nice, summary,
 				       employer_kind, contract_type, deterministic_score, llm_adjustment, match_score,
@@ -133,7 +147,7 @@ class JobQueries {
 					rs.getString("last_error"), JdbcRows.instant(rs, "analyzed_at")))
 			.optional()
 			.orElse(null);
-		return new JobDetail(job, application, timeline, feedback, analysis);
+		return new JobDetail(job, application, timeline, feedback, dismissal, analysis);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -163,7 +177,7 @@ class JobQueries {
 		return (text.length() <= 280) ? text : text.substring(0, 280).strip() + "…";
 	}
 
-	record JobListFilter(String status, FeedbackRating rating, String query, boolean inbox) {
+	record JobListFilter(String status, FeedbackRating rating, String query, JobScope scope, boolean inbox) {
 	}
 
 }
