@@ -1,0 +1,9 @@
+spring:
+  docker:
+    compose:
+      enabled: false
+
+logging:
+  structured:
+    format:
+      console: ecs

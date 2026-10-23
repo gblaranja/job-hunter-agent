@@ -1,0 +1,12 @@
+# Valores de desenvolvimento local; em produção tudo vem das variáveis de ambiente.
+jobhunter:
+  security:
+    username: ${JOBHUNTER_USER:admin}
+    # senha "jobhunter"
+    password-hash: ${JOBHUNTER_PASSWORD_HASH:{bcrypt}$2a$10$iIYdsL/jCnchsQCSW.ZeyeHVFnFAsE7dUEwoDOzetJ4ydIl8v466m}
+  storage:
+    endpoint: ${JOBHUNTER_STORAGE_ENDPOINT:http://localhost:9000}
+    public-endpoint: ${JOBHUNTER_STORAGE_PUBLIC_ENDPOINT:http://localhost:9000}
+    access-key: ${JOBHUNTER_STORAGE_ACCESS_KEY:jobhunter}
+    secret-key: ${JOBHUNTER_STORAGE_SECRET_KEY:jobhunter-secret}
+    create-bucket-if-missing: ${JOBHUNTER_STORAGE_CREATE_BUCKET:true}

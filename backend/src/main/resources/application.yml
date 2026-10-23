@@ -1,6 +1,8 @@
 spring:
   application:
     name: job-hunter-agent
+  profiles:
+    default: dev
   docker:
     compose:
       file: ../docker-compose.yml
@@ -9,3 +11,34 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+  modulith:
+    events:
+      republish-outstanding-events-on-restart: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,modulith
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+jobhunter:
+  security:
+    username: ${JOBHUNTER_USER}
+    password-hash: ${JOBHUNTER_PASSWORD_HASH}
+  storage:
+    endpoint: ${JOBHUNTER_STORAGE_ENDPOINT}
+    public-endpoint: ${JOBHUNTER_STORAGE_PUBLIC_ENDPOINT:${JOBHUNTER_STORAGE_ENDPOINT}}
+    region: ${JOBHUNTER_STORAGE_REGION:us-east-1}
+    access-key: ${JOBHUNTER_STORAGE_ACCESS_KEY}
+    secret-key: ${JOBHUNTER_STORAGE_SECRET_KEY}
+    bucket: ${JOBHUNTER_STORAGE_BUCKET:jobhunter-resumes}
+    path-style: ${JOBHUNTER_STORAGE_PATH_STYLE:true}
+    create-bucket-if-missing: ${JOBHUNTER_STORAGE_CREATE_BUCKET:false}
