@@ -17,32 +17,63 @@ A arquitetura completa está em [docs/arquitetura.md](docs/arquitetura.md).
 | Camada | Tecnologias |
 | --- | --- |
 | Backend | Java 25, Spring Boot 4.1, Spring Modulith 2.1, Spring Data JPA, Flyway, Spring Security |
-| Banco e storage | PostgreSQL 17, MinIO (local) / S3 compatível |
+| Banco e storage | PostgreSQL 17, storage S3 compatível (RustFS no ambiente local; S3 ou R2 em produção) |
 | IA | Claude API (SDK Java oficial da Anthropic), structured outputs e prompt caching |
-| Frontend | React, Vite, TypeScript, TanStack Query, shadcn/ui, dnd-kit, Recharts |
-| Testes | JUnit, Testcontainers, WireMock, Vitest, Testing Library |
+| Frontend | React 19, Vite, TypeScript, TanStack Query e Table, shadcn/ui, dnd-kit |
+| Contrato da API | springdoc-openapi, tipos TypeScript gerados com openapi-typescript |
+| Testes | JUnit, Testcontainers, Spring Modulith, Vitest, Testing Library, MSW |
 | Infra | Docker Compose, GitHub Actions |
 
-O backend é um monólito modular: cada módulo (`jobs`, `tracking`, `resumes`, `sourcing`, `analysis`, `inbox`, `companies`…) só se comunica com os outros pela API pública ou por eventos de domínio, e o Spring Modulith verifica essas fronteiras nos testes.
+O backend é um monólito modular: cada módulo (`jobs`, `tracking`, `resumes` e, nas próximas fases, `sourcing`, `analysis`, `inbox`, `companies`…) só se comunica com os outros pela API pública ou por eventos de domínio, e o Spring Modulith verifica essas fronteiras nos testes. Telas que cruzam módulos usam consultas SQL de leitura, para que nenhum módulo dependa de outro em Java só para montar uma lista.
+
+Algumas decisões que valem destacar:
+
+- **Histórico append-only.** `application_event` recusa `UPDATE` e `DELETE` por trigger; correções entram como eventos novos, e as métricas de conversão saem daí.
+- **Cópia congelada da vaga.** Ao aplicar, o link e a descrição viram um `job_snapshot`: as vagas saem do ar antes da entrevista, e o que foi pedido continua salvo.
+- **Upload validado pelo conteúdo.** O Apache Tika identifica PDF e DOCX pelos bytes (não pela extensão), o sha256 evita duplicatas e o download é por URL pré-assinada de 5 minutos.
+- **Contrato tipado de ponta a ponta.** Os records Java anotados com `@Nullable` (JSpecify) viram um OpenAPI fiel, e o frontend gera os tipos a partir dele.
 
 ## Como rodar
 
 Pré-requisitos: Java 25, Docker com o plugin Compose e Node 24.
 
+### Desenvolvimento
+
 ```bash
-# Backend (sobe o Postgres do docker-compose automaticamente)
+# Backend: sobe Postgres e o storage S3 do docker-compose automaticamente
 cd backend
 ./mvnw spring-boot:run
 
-# Testes do backend (usam Testcontainers)
-./mvnw verify
+# Frontend (em outro terminal): http://localhost:5173, com proxy de /api para o backend
+cd frontend
+npm install
+npm run dev
 ```
+
+O login de desenvolvimento é `admin` / `jobhunter`.
+
+### Stack completa, como em produção
+
+```bash
+cp .env.example .env   # defina usuário, hash da senha e segredos
+docker compose --profile app up --build
+# backoffice em http://localhost:8081
+```
+
+### Testes
+
+```bash
+cd backend && ./mvnw verify                                       # unitários, módulos e integração (Testcontainers)
+cd frontend && npm run lint && npx vitest run && npm run build
+```
+
+Depois de mudar a API, com o backend rodando: `cd frontend && npm run gen:api`.
 
 ## Roadmap
 
 | Fase | Entrega | Status |
 | --- | --- | --- |
-| 1 | Fundação, tracker de candidaturas e currículos | Em andamento |
+| 1 | Fundação, tracker de candidaturas e currículos | Concluída |
 | 2 | Coleta via Gmail, feedback e cadastro de empresas | — |
 | 3 | Análise por IA e score de aderência | — |
 | 4 | Classificação dos retornos e verificação de links | — |
