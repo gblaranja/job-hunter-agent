@@ -33,7 +33,7 @@ describe('HomePage', () => {
   })
 
   it('com sessão aberta, oferece voltar ao painel no lugar do GitHub', async () => {
-    server.use(http.get('/api/auth/me', () => HttpResponse.json({ username: 'admin' })))
+    server.use(http.get('/api/auth/me', () => HttpResponse.json({ username: 'admin', displayName: 'admin' })))
     renderWithProviders(<HomePage />)
 
     const links = await screen.findAllByRole('link', { name: /abrir o painel/i })

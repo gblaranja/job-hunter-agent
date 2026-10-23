@@ -1,7 +1,6 @@
 package dev.laranja.jobhunter.shared.security;
 
 import java.io.IOException;
-import java.util.Map;
 
 import jakarta.servlet.http.HttpServletResponse;
 import tools.jackson.databind.json.JsonMapper;
@@ -46,7 +45,7 @@ class SecurityConfig {
 			.authenticated())
 			.formLogin(form -> form.loginProcessingUrl("/api/auth/login")
 				.successHandler((request, response, authentication) -> writeJson(jsonMapper, response, HttpStatus.OK,
-						Map.of("username", authentication.getName())))
+						AuthController.CurrentUser.of(authentication)))
 				.failureHandler((request, response, exception) -> writeJson(jsonMapper, response,
 						HttpStatus.UNAUTHORIZED,
 						ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Usuário ou senha inválidos."))))

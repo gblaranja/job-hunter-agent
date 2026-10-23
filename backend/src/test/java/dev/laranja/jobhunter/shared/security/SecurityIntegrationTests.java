@@ -41,7 +41,8 @@ class SecurityIntegrationTests extends IntegrationTest {
 
 		this.mvc.perform(get("/api/auth/me").session(session))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.username").value("admin"));
+			.andExpect(jsonPath("$.username").value("admin"))
+			.andExpect(jsonPath("$.displayName").value("admin"));
 	}
 
 	@Test

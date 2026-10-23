@@ -25,7 +25,7 @@ function renderPanel(route = '/board') {
 describe('AppLayout', () => {
   beforeEach(() => {
     server.use(
-      http.get('/api/auth/me', () => HttpResponse.json({ username: 'gabriel' })),
+      http.get('/api/auth/me', () => HttpResponse.json({ username: 'gabriel', displayName: 'Gabriel' })),
       http.get('/api/notifications', () => HttpResponse.json([])),
     )
   })
@@ -69,7 +69,7 @@ describe('AppLayout', () => {
 
   it('no primeiro carregamento com a sessão já em cache (vindo do login), não move o foco para a região principal', async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-    client.setQueryData(queryKeys.me, { username: 'gabriel' })
+    client.setQueryData(queryKeys.me, { username: 'gabriel', displayName: 'Gabriel' })
     render(
       <QueryClientProvider client={client}>
         <TooltipProvider>

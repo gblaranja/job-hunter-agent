@@ -1401,6 +1401,7 @@ export interface components {
         };
         CurrentUser: {
             username: string;
+            displayName: string;
         };
         AppliedListItem: {
             /** Format: int64 */

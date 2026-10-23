@@ -34,8 +34,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * "Entrar com Google" (OpenID Connect, authorization code). O navegador vai ao Google e volta no callback; se a
- * conta tiver o e-mail autorizado e verificado, a sessão é aberta como o dono da instalação, igual ao login com
- * senha.
+ * conta tiver o e-mail autorizado e verificado, a sessão é aberta com as permissões do dono da instalação, igual ao
+ * login com senha, mas identificada pelo e-mail da conta Google.
  *
  * <p>
  * O {@code state} não depende de sessão: é o instante da chamada cifrado (AES-GCM, igual aos tokens do Gmail),
@@ -122,7 +122,7 @@ class GoogleLoginController {
 			log.warn("Login com Google recusado para {}.", user.email());
 			return redirect(back("negado"));
 		}
-		signIn(request, response);
+		signIn(new GoogleAccount(user.email(), user.name()), request, response);
 		return redirect(URI.create(this.google.afterLoginUrl()));
 	}
 
@@ -157,14 +157,17 @@ class GoogleLoginController {
 		return user;
 	}
 
-	/** Mesma sessão do login com senha: troca o id da sessão (contra fixation) e guarda o contexto. */
-	private void signIn(HttpServletRequest request, HttpServletResponse response) {
+	/**
+	 * Mesma sessão do login com senha: troca o id da sessão (contra fixation) e guarda o contexto. As permissões são
+	 * as do dono, mas a identidade é a conta Google, para a sessão mostrar quem de fato entrou.
+	 */
+	private void signIn(GoogleAccount account, HttpServletRequest request, HttpServletResponse response) {
 		// changeSessionId() exige uma sessão existente; como o state não depende mais dela, cria uma agora.
 		request.getSession(true);
 		request.changeSessionId();
-		UserDetails user = this.users.loadUserByUsername(this.owner.username());
+		UserDetails owner = this.users.loadUserByUsername(this.owner.username());
 		SecurityContext context = SecurityContextHolder.createEmptyContext();
-		context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(user, null, user.getAuthorities()));
+		context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(account, null, owner.getAuthorities()));
 		SecurityContextHolder.setContext(context);
 		this.contexts.saveContext(context, request, response);
 	}

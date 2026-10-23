@@ -46,15 +46,16 @@ export function AppLayout() {
       >
         Pular para o conteúdo
       </a>
-      {/* No celular a sidebar vira uma barra superior, e as telas ficam na gaveta do MobileNav. */}
-      <aside className="sticky top-0 z-40 flex shrink-0 flex-col gap-1 bg-sidebar px-3 py-2 text-sidebar-foreground md:static md:w-60 md:p-4">
+      {/* No celular a sidebar vira uma barra superior, e as telas ficam na gaveta do MobileNav.
+          No desktop ela ocupa a altura da janela e fica fixa enquanto o conteúdo rola. */}
+      <aside className="sticky top-0 z-40 flex shrink-0 flex-col gap-1 bg-sidebar px-3 py-2 text-sidebar-foreground md:h-svh md:w-60 md:overflow-y-auto md:p-4">
         <div className="flex items-center gap-2 px-2 py-1 md:mb-6">
           <Link to="/" aria-label="Página inicial">
             <Logo compact />
           </Link>
           <NotificationBell className="ml-auto text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
           <MobileNav
-            username={me.data.username}
+            displayName={me.data.displayName}
             onLogout={() => logout.mutate()}
             className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground md:hidden"
           />
@@ -77,7 +78,7 @@ export function AppLayout() {
           ))}
         </nav>
         <div className="mt-auto hidden items-center justify-between border-t border-sidebar-border px-2 pt-4 text-sm md:flex">
-          <span className="truncate">{me.data.username}</span>
+          <span className="truncate" title={me.data.username}>{me.data.displayName}</span>
           <Button
             variant="ghost"
             size="icon-sm"

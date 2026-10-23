@@ -7,7 +7,7 @@ import { LogOut, Menu, X } from 'lucide-react'
 import { navigation } from './navigation'
 
 /** Menu do painel no celular: um botão que abre a gaveta com as telas, o usuário e o "Sair". */
-export function MobileNav({ username, onLogout, className }: { username: string; onLogout: () => void; className?: string }) {
+export function MobileNav({ displayName, onLogout, className }: { displayName: string; onLogout: () => void; className?: string }) {
   const [open, setOpen] = useState(false)
   // Ao navegar, o foco fica com o conteúdo da tela nova (AppLayout); só Esc e "Fechar" devolvem o foco ao botão.
   const navigated = useRef(false)
@@ -64,7 +64,7 @@ export function MobileNav({ username, onLogout, className }: { username: string;
           ))}
         </nav>
         <SheetFooter className="flex-row items-center justify-between border-t border-sidebar-border text-sm">
-          <span className="truncate">{username}</span>
+          <span className="truncate">{displayName}</span>
           <Button
             variant="ghost"
             size="icon-sm"

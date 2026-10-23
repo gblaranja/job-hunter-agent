@@ -61,7 +61,8 @@ class GoogleLoginIntegrationTests extends IntegrationTest {
 
 		this.mvc.perform(get("/api/auth/me").session((MockHttpSession) result.getRequest().getSession()))
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.username").value("admin"));
+			.andExpect(jsonPath("$.username").value("dono@example.com"))
+			.andExpect(jsonPath("$.displayName").value("Dono"));
 		this.google.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/v1/userinfo"))
 			.withHeader("Authorization", equalTo("Bearer login-token")));
 	}

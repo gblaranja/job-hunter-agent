@@ -12,7 +12,7 @@ function renderNav({ route = '/board', onLogout = () => {} }: { route?: string; 
   return renderWithProviders(
     <>
       <button type="button">Notificações</button>
-      <MobileNav username="gabriel" onLogout={onLogout} />
+      <MobileNav displayName="Gabriel" onLogout={onLogout} />
       <Routes>
         <Route path="*" element={<CurrentPath />} />
       </Routes>
@@ -80,7 +80,7 @@ describe('MobileNav', () => {
     renderNav({ onLogout })
 
     const menu = await openMenu()
-    expect(within(menu).getByText('gabriel')).toBeInTheDocument()
+    expect(within(menu).getByText('Gabriel')).toBeInTheDocument()
     await userEvent.click(within(menu).getByRole('button', { name: 'Sair' }))
 
     expect(onLogout).toHaveBeenCalledTimes(1)
