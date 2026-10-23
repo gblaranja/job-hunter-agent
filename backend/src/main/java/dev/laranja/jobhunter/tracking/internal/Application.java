@@ -6,6 +6,8 @@ import dev.laranja.jobhunter.shared.BusinessRuleException;
 import dev.laranja.jobhunter.tracking.ApplicationChannel;
 import dev.laranja.jobhunter.tracking.ApplicationStatus;
 import dev.laranja.jobhunter.tracking.EventOrigin;
+import dev.laranja.jobhunter.tracking.ResponseChannel;
+import dev.laranja.jobhunter.tracking.ResponseType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -107,6 +109,28 @@ public class Application {
 		}
 		this.updatedAt = now;
 		return event;
+	}
+
+	/**
+	 * Registra um retorno da empresa e, se fizer sentido, move a candidatura para a etapa correspondente. O
+	 * movimento é ignorado (fica só o registro) quando a etapa é a mesma, a candidatura está encerrada ou falta o
+	 * currículo enviado.
+	 * @param target etapa sugerida pelo tipo de retorno; nulo para só registrar
+	 */
+	public ApplicationEvent recordResponse(ResponseType type, ResponseChannel channel, String note,
+			ApplicationStatus target, EventOrigin origin, Long emailMessageId, Instant now) {
+		boolean move = target != null && target != this.status && target != ApplicationStatus.NOVA
+				&& !this.status.isTerminal() && (!target.requiresResume() || this.resumeVersionId != null);
+		ApplicationStatus from = move ? this.status : null;
+		ApplicationStatus to = move ? target : null;
+		if (move) {
+			this.status = target;
+			if (target.requiresResume() && this.appliedAt == null) {
+				this.appliedAt = now;
+			}
+		}
+		this.updatedAt = now;
+		return ApplicationEvent.response(this.id, from, to, type, channel, origin, emailMessageId, blankToNull(note), now);
 	}
 
 	public void changeResume(long resumeVersionId, Instant now) {

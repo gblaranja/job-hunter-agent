@@ -86,6 +86,13 @@ public class JobCollector {
 			if (this.mailbox.connected()) {
 				Mailbox.SyncResult sync = this.mailbox.sync();
 				log.info("Gmail sincronizado: {} e-mails novos, {} alertas.", sync.newMessages(), sync.newAlerts());
+				try {
+					log.info("{} e-mails de retorno classificados.", this.mailbox.classifyPending(100));
+				}
+				catch (RuntimeException ex) {
+					// A classificação dos retornos não impede a coleta das vagas; os e-mails ficam para a próxima.
+					log.warn("Classificação dos retornos falhou: {}", ex.getMessage());
+				}
 			}
 			JobFilter filter = this.profiles.activeFilter();
 			for (JobSource source : this.sources) {

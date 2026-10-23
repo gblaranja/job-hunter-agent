@@ -8,6 +8,7 @@ import dev.laranja.jobhunter.shared.storage.DownloadLink;
 import dev.laranja.jobhunter.tracking.ApplicationCommands;
 import dev.laranja.jobhunter.tracking.ApplicationService;
 import dev.laranja.jobhunter.tracking.ApplicationStatus;
+import dev.laranja.jobhunter.tracking.LinkVerification;
 import dev.laranja.jobhunter.tracking.web.ApplicationViews.AppliedJob;
 import dev.laranja.jobhunter.tracking.web.ApplicationViews.AppliedListItem;
 import dev.laranja.jobhunter.tracking.web.ApplicationViews.Board;
@@ -36,9 +37,18 @@ class ApplicationController {
 
 	private final ApplicationQueries queries;
 
-	ApplicationController(ApplicationService service, ApplicationQueries queries) {
+	private final LinkVerification links;
+
+	ApplicationController(ApplicationService service, ApplicationQueries queries, LinkVerification links) {
 		this.service = service;
 		this.queries = queries;
+		this.links = links;
+	}
+
+	/** Verifica agora os links das vagas aplicadas em aberto (normalmente roda toda segunda às 8h). */
+	@PostMapping("/api/admin/verify-links")
+	LinkVerification.Summary verifyLinks() {
+		return this.links.verifyOpenApplications();
 	}
 
 	@PostMapping("/api/jobs/{jobId}/application")
@@ -62,6 +72,12 @@ class ApplicationController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	void changeStatus(@PathVariable long id, @Valid @RequestBody ApplicationCommands.ChangeStatus command) {
 		this.service.changeStatus(id, command);
+	}
+
+	@PostMapping("/api/applications/{id}/responses")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	void recordResponse(@PathVariable long id, @Valid @RequestBody ApplicationCommands.RecordResponse command) {
+		this.service.recordManualResponse(id, command);
 	}
 
 	@PatchMapping("/api/applications/{id}/resume")

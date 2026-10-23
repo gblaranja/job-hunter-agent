@@ -101,15 +101,15 @@ class JobQueries {
 			.optional()
 			.orElse(null);
 		List<JobDetail.TimelineEvent> timeline = (application == null) ? List.of() : this.jdbc.sql("""
-				select id, from_status, to_status, response_type, origin, note, created_at
+				select id, from_status, to_status, response_type, response_channel, origin, note, created_at
 				from application_event
 				where application_id = :applicationId
 				order by created_at, id
 				""")
 			.param("applicationId", application.id())
 			.query((rs, row) -> new JobDetail.TimelineEvent(rs.getLong("id"), rs.getString("from_status"),
-					rs.getString("to_status"), rs.getString("response_type"), rs.getString("origin"),
-					rs.getString("note"), JdbcRows.instant(rs, "created_at")))
+					rs.getString("to_status"), rs.getString("response_type"), rs.getString("response_channel"),
+					rs.getString("origin"), rs.getString("note"), JdbcRows.instant(rs, "created_at")))
 			.list();
 		JobDetail.Feedback feedback = this.jdbc.sql("select rating, reasons, comment from job_feedback where job_id = :jobId")
 			.param("jobId", job.id())

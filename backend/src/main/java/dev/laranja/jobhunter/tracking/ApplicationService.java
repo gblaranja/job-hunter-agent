@@ -3,6 +3,8 @@ package dev.laranja.jobhunter.tracking;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 import dev.laranja.jobhunter.jobs.JobCatalog;
@@ -20,7 +22,10 @@ import dev.laranja.jobhunter.tracking.internal.ApplicationRepository;
 import dev.laranja.jobhunter.tracking.internal.JobSnapshot;
 import dev.laranja.jobhunter.tracking.internal.JobSnapshotRepository;
 
+import org.jspecify.annotations.Nullable;
+
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,11 +55,13 @@ public class ApplicationService {
 
 	private final ApplicationEventPublisher events;
 
+	private final JdbcClient jdbc;
+
 	private final Clock clock;
 
 	ApplicationService(ApplicationRepository applications, ApplicationEventRepository history,
 			JobSnapshotRepository snapshots, JobCatalog jobs, ResumeCatalog resumes, ObjectStorage storage,
-			ApplicationEventPublisher events, Clock clock) {
+			ApplicationEventPublisher events, JdbcClient jdbc, Clock clock) {
 		this.applications = applications;
 		this.history = history;
 		this.snapshots = snapshots;
@@ -62,6 +69,7 @@ public class ApplicationService {
 		this.resumes = resumes;
 		this.storage = storage;
 		this.events = events;
+		this.jdbc = jdbc;
 		this.clock = clock;
 	}
 
@@ -95,6 +103,86 @@ public class ApplicationService {
 		captureSnapshotIfApplied(application, null, now);
 		this.events.publishEvent(new ApplicationStatusChanged(applicationId, application.getJobId(), from,
 				application.getStatus(), EventOrigin.MANUAL, now));
+	}
+
+	/** Retorno registrado à mão (WhatsApp, mensagem no LinkedIn, ligação), com o movimento opcional do card. */
+	public void recordManualResponse(long applicationId, ApplicationCommands.RecordResponse command) {
+		Application application = require(applicationId);
+		ApplicationStatus target = command.moveStatus() ? command.responseType().targetStatus().orElse(null) : null;
+		recordResponse(application, command.responseType(), command.channel(), command.note(), target,
+				EventOrigin.MANUAL, null);
+	}
+
+	/** Retorno lido de um e-mail com confiança suficiente: registra e move o card para a etapa correspondente. */
+	public void recordEmailResponse(long applicationId, ResponseType type, long emailMessageId, String subject) {
+		Application application = require(applicationId);
+		recordResponse(application, type, ResponseChannel.EMAIL, subject, type.targetStatus().orElse(null),
+				EventOrigin.EMAIL, emailMessageId);
+	}
+
+	/**
+	 * Você corrigiu um e-mail. Se ele já tinha movido um card, o movimento é desfeito com um evento compensatório
+	 * (o histórico nunca é editado) e o novo tipo é aplicado à candidatura indicada.
+	 */
+	public void applyEmailCorrection(long emailMessageId, @Nullable ResponseType type, @Nullable Long applicationId) {
+		Optional<AutoMove> previous = this.jdbc.sql("""
+				select application_id, from_status, to_status from application_event
+				where email_message_id = :email and to_status is not null
+				order by id desc limit 1
+				""")
+			.param("email", emailMessageId)
+			.query((rs, row) -> new AutoMove(rs.getLong("application_id"),
+					ApplicationStatus.valueOf(rs.getString("from_status")),
+					ApplicationStatus.valueOf(rs.getString("to_status"))))
+			.optional();
+		ApplicationStatus newTarget = (type != null) ? type.targetStatus().orElse(null) : null;
+		Instant now = this.clock.instant();
+		if (previous.isPresent()) {
+			AutoMove move = previous.get();
+			Application moved = require(move.applicationId());
+			boolean sameTarget = Objects.equals(applicationId, move.applicationId()) && newTarget == move.to();
+			if (!sameTarget && moved.getStatus() == move.to()) {
+				ApplicationStatus back = Objects.equals(applicationId, move.applicationId()) && newTarget != null ? newTarget
+						: move.from();
+				ApplicationStatus from = moved.getStatus();
+				this.history.save(moved.moveTo(back, null, "Correção da classificação de um e-mail", EventOrigin.MANUAL, now));
+				publishChange(moved, from, now);
+			}
+			if (sameTarget || Objects.equals(applicationId, move.applicationId())) {
+				return;
+			}
+		}
+		if (type != null && applicationId != null && !alreadyRecorded(emailMessageId, applicationId)) {
+			recordResponse(require(applicationId), type, ResponseChannel.EMAIL, "Retorno confirmado na revisão", newTarget,
+					EventOrigin.EMAIL, emailMessageId);
+		}
+	}
+
+	private void recordResponse(Application application, ResponseType type, ResponseChannel channel, String note,
+			ApplicationStatus target, EventOrigin origin, Long emailMessageId) {
+		ApplicationStatus from = application.getStatus();
+		Instant now = this.clock.instant();
+		this.history.save(application.recordResponse(type, channel, note, target, origin, emailMessageId, now));
+		captureSnapshotIfApplied(application, null, now);
+		if (application.getStatus() != from) {
+			publishChange(application, from, now);
+		}
+	}
+
+	private boolean alreadyRecorded(long emailMessageId, long applicationId) {
+		return this.jdbc.sql("select count(*) from application_event where email_message_id = :email and application_id = :app")
+			.param("email", emailMessageId)
+			.param("app", applicationId)
+			.query(Long.class)
+			.single() > 0;
+	}
+
+	private void publishChange(Application application, ApplicationStatus from, Instant now) {
+		this.events.publishEvent(new ApplicationStatusChanged(application.getId(), application.getJobId(), from,
+				application.getStatus(), EventOrigin.EMAIL, now));
+	}
+
+	private record AutoMove(long applicationId, ApplicationStatus from, ApplicationStatus to) {
 	}
 
 	public void changeResume(long applicationId, long resumeVersionId) {

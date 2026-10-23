@@ -4,6 +4,7 @@ import java.time.Instant;
 
 import dev.laranja.jobhunter.tracking.ApplicationStatus;
 import dev.laranja.jobhunter.tracking.EventOrigin;
+import dev.laranja.jobhunter.tracking.ResponseChannel;
 import dev.laranja.jobhunter.tracking.ResponseType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -36,6 +37,9 @@ public class ApplicationEvent {
 	private ResponseType responseType;
 
 	@Enumerated(EnumType.STRING)
+	private ResponseChannel responseChannel;
+
+	@Enumerated(EnumType.STRING)
 	private EventOrigin origin;
 
 	private Long emailMessageId;
@@ -57,6 +61,20 @@ public class ApplicationEvent {
 		event.note = note;
 		event.createdAt = now;
 		return event;
+	}
+
+	static ApplicationEvent response(long applicationId, ApplicationStatus from, ApplicationStatus to,
+			ResponseType responseType, ResponseChannel channel, EventOrigin origin, Long emailMessageId, String note,
+			Instant now) {
+		ApplicationEvent event = statusChange(applicationId, from, to, origin, note, now);
+		event.responseType = responseType;
+		event.responseChannel = channel;
+		event.emailMessageId = emailMessageId;
+		return event;
+	}
+
+	public ResponseType getResponseType() {
+		return this.responseType;
 	}
 
 	public ApplicationStatus getFromStatus() {

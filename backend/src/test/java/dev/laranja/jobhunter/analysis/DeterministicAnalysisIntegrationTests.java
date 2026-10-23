@@ -20,10 +20,10 @@ class DeterministicAnalysisIntegrationTests extends IntegrationTest {
 	void scoresWithoutLlmAndRescoresWhenTheDefaultResumeChanges() throws Exception {
 		long backend = uploadResume(TestFiles.pdfWithText("Desenvolvedor Java Senior Spring Boot Kafka AWS"), "a.pdf",
 				"Backend Sênior");
-		LlmAnalysisIntegrationTests.await(() -> count("select count(*) from resume_version where jsonb_array_length(skills) > 0") == 1);
+		await(() -> count("select count(*) from resume_version where jsonb_array_length(skills) > 0") == 1);
 
 		long jobId = createJob("Desenvolvedor Java Sênior", "Banco", "Requisitos: Java, Spring Boot, Kafka e AWS. Remoto.");
-		LlmAnalysisIntegrationTests.await(() -> count("select count(*) from job_analysis where job_id = " + jobId) == 1);
+		await(() -> count("select count(*) from job_analysis where job_id = " + jobId) == 1);
 
 		this.mvc.perform(get("/api/jobs/{id}", jobId).with(owner()))
 			.andExpect(jsonPath("$.analysis.status").value("DETERMINISTICO"))
@@ -31,12 +31,12 @@ class DeterministicAnalysisIntegrationTests extends IntegrationTest {
 			.andExpect(jsonPath("$.analysis.modelVersion").value("deterministico@v1"));
 
 		long frontend = uploadResume(TestFiles.pdfWithText("Desenvolvedora React TypeScript"), "b.pdf", "Frontend Pleno");
-		LlmAnalysisIntegrationTests.await(() -> count("select count(*) from resume_version where jsonb_array_length(skills) > 0") == 2);
+		await(() -> count("select count(*) from resume_version where jsonb_array_length(skills) > 0") == 2);
 		this.mvc.perform(patch("/api/resumes/{id}", frontend).with(owner())
 			.contentType(MediaType.APPLICATION_JSON)
 			.content("{\"makeDefault\": true}")).andExpect(status().isOk());
 
-		LlmAnalysisIntegrationTests.await(() -> count("select match_score from job_analysis where job_id = " + jobId) < 50);
+		await(() -> count("select match_score from job_analysis where job_id = " + jobId) < 50);
 		assertThat(count("select resume_version_id from job_analysis where job_id = " + jobId)).isEqualTo(frontend);
 		assertThat(backend).isNotEqualTo(frontend);
 

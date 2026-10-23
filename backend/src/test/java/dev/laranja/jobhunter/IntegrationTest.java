@@ -1,5 +1,9 @@
 package dev.laranja.jobhunter;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.function.BooleanSupplier;
+
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -80,6 +84,17 @@ public abstract class IntegrationTest {
 			.getResponse()
 			.getContentAsString();
 		return ((Number) JsonPath.read(response, "$.id")).longValue();
+	}
+
+	/** Espera uma condição assíncrona (listeners de eventos) por até 15 segundos. */
+	protected static void await(BooleanSupplier condition) throws InterruptedException {
+		Instant deadline = Instant.now().plus(Duration.ofSeconds(15));
+		while (!condition.getAsBoolean()) {
+			if (Instant.now().isAfter(deadline)) {
+				throw new AssertionError("Condição não atingida em 15 s");
+			}
+			Thread.sleep(100);
+		}
 	}
 
 	protected static String json(String value) {
