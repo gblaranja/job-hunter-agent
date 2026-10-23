@@ -4,16 +4,20 @@ import java.time.Instant;
 import java.util.List;
 
 import dev.laranja.jobhunter.jobs.JobView;
+import io.swagger.v3.oas.annotations.media.Schema;
+import org.jspecify.annotations.Nullable;
 
 /** Detalhe da vaga com a candidatura (se houver) e a linha do tempo do funil. */
-record JobDetail(JobView job, ApplicationSummary application, List<TimelineEvent> timeline) {
+record JobDetail(JobView job, @Nullable ApplicationSummary application, List<TimelineEvent> timeline) {
 
-	record ApplicationSummary(long id, String status, Instant appliedAt, String channel, Long resumeVersionId,
-			String resumeLabel, String notes, Instant nextActionAt) {
+	@Schema(name = "JobApplicationSummary")
+	record ApplicationSummary(long id, String status, @Nullable Instant appliedAt, @Nullable String channel,
+			@Nullable Long resumeVersionId, @Nullable String resumeLabel, @Nullable String notes,
+			@Nullable Instant nextActionAt) {
 	}
 
-	record TimelineEvent(long id, String fromStatus, String toStatus, String responseType, String origin, String note,
-			Instant createdAt) {
+	record TimelineEvent(long id, @Nullable String fromStatus, @Nullable String toStatus,
+			@Nullable String responseType, String origin, @Nullable String note, Instant createdAt) {
 	}
 
 }

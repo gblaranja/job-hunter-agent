@@ -17,6 +17,13 @@ class ApplicationQueriesTest {
 	}
 
 	@Test
+	void excerptDropsMarkdownMarkup() {
+		String description = "## Requisitos\n- **Apache Kafka** e `Spring Boot`";
+
+		assertThat(ApplicationQueries.excerpt(description, "kafka")).isEqualTo("Requisitos - Apache Kafka e Spring Boot");
+	}
+
+	@Test
 	void noExcerptWithoutSearchOrMatch() {
 		assertThat(ApplicationQueries.excerpt("Java e Spring", null)).isNull();
 		assertThat(ApplicationQueries.excerpt("Java e Spring", "golang")).isNull();

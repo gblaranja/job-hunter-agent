@@ -134,7 +134,8 @@ class ApplicationQueries {
 		}
 		int start = Math.max(0, index - EXCERPT_RADIUS);
 		int end = Math.min(description.length(), index + term.length() + EXCERPT_RADIUS);
-		String excerpt = description.substring(start, end).replaceAll("\\s+", " ").strip();
+		// Sem a marcação do Markdown: o trecho aparece como texto corrido na tabela.
+		String excerpt = description.substring(start, end).replaceAll("[#*_`>]+", "").replaceAll("\\s+", " ").strip();
 		return ((start > 0) ? "…" : "") + excerpt + ((end < description.length()) ? "…" : "");
 	}
 

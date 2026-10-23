@@ -16,6 +16,7 @@ import dev.laranja.jobhunter.shared.ConflictException;
 import dev.laranja.jobhunter.shared.NotFoundException;
 import dev.laranja.jobhunter.shared.storage.DownloadLink;
 import dev.laranja.jobhunter.shared.storage.ObjectStorage;
+import org.jspecify.annotations.Nullable;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -136,7 +137,8 @@ public class ResumeService {
 	 *
 	 * @param makeDefault {@code true} torna esta versão o currículo padrão
 	 */
-	public record UpdateResumeCommand(String label, String targetRole, Boolean makeDefault, Boolean archived) {
+	public record UpdateResumeCommand(@Nullable String label, @Nullable String targetRole,
+			@Nullable Boolean makeDefault, @Nullable Boolean archived) {
 	}
 
 }
