@@ -1,6 +1,14 @@
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { useCompanies, useMergeCompany, useUpdateCompany, type CompanyItem, type WatchStatus } from '@/api/queries'
+import { Link } from 'react-router'
+import {
+  useCompanies,
+  useMergeCompany,
+  useRefreshMetrics,
+  useUpdateCompany,
+  type CompanyItem,
+  type WatchStatus,
+} from '@/api/queries'
 import { PageHeader } from '@/components/PageHeader'
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/QueryState'
 import { Button } from '@/components/ui/button'
@@ -16,8 +24,8 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatDate } from '@/lib/format'
-import { watchStatusLabels } from '@/lib/labels'
-import { GitMerge, Search } from 'lucide-react'
+import { companyKindLabels, watchStatusLabels } from '@/lib/labels'
+import { GitMerge, RefreshCw, Search } from 'lucide-react'
 
 const watchStatuses = Object.keys(watchStatusLabels) as WatchStatus[]
 
@@ -25,16 +33,37 @@ const watchStatuses = Object.keys(watchStatusLabels) as WatchStatus[]
 export function CompaniesPage() {
   const companies = useCompanies()
   const update = useUpdateCompany()
+  const refresh = useRefreshMetrics()
   const [search, setSearch] = useState('')
+  const [watch, setWatch] = useState<WatchStatus | 'TODAS'>('TODAS')
   const [merging, setMerging] = useState<CompanyItem | null>(null)
   const visible = useMemo(() => {
     const term = search.trim().toLowerCase()
-    return (companies.data ?? []).filter((company) => company.name.toLowerCase().includes(term))
-  }, [companies.data, search])
+    return (companies.data ?? []).filter(
+      (company) =>
+        (watch === 'TODAS' || company.watchStatus === watch) &&
+        (company.name.toLowerCase().includes(term) ||
+          company.clientSectors.some((sector) => sector.toLowerCase().includes(term))),
+    )
+  }, [companies.data, search, watch])
+
+  function recompute() {
+    refresh.mutate(undefined, {
+      onSuccess: () => toast.success('Métricas e alertas recalculados.'),
+      onError: (error) => toast.error(error.message),
+    })
+  }
 
   function changeStatus(company: CompanyItem, watchStatus: WatchStatus) {
     update.mutate(
-      { id: company.id, watchStatus, website: company.website, atsType: company.atsType, atsSlug: company.atsSlug, notes: company.notes },
+      {
+        id: company.id,
+        watchStatus,
+        website: company.website,
+        atsType: company.atsType,
+        atsSlug: company.atsSlug,
+        notes: company.notes,
+      },
       {
         onSuccess: () => toast.success(`${company.name}: ${watchStatusLabels[watchStatus]}.`),
         onError: (error) => toast.error(error.message),
@@ -46,17 +75,37 @@ export function CompaniesPage() {
     <>
       <PageHeader
         title="Empresas"
-        description="Cadastradas automaticamente a partir das vagas. O histórico de volume e frequência chega na Fase 5."
+        description="Cadastradas a partir das vagas. Marque como alvo e informe o ATS para acompanhar todas as vagas abertas."
+        actions={
+          <Button variant="outline" onClick={recompute} disabled={refresh.isPending}>
+            <RefreshCw className={refresh.isPending ? 'animate-spin' : undefined} /> Recalcular métricas
+          </Button>
+        }
       />
-      <div className="relative mb-4 max-w-md">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-        <Input
-          className="pl-9"
-          placeholder="Buscar empresa"
-          aria-label="Buscar empresa"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
+      <div className="mb-4 flex flex-wrap gap-3">
+        <div className="relative w-full max-w-md">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Input
+            className="pl-9"
+            placeholder="Buscar empresa ou setor dos clientes"
+            aria-label="Buscar empresa"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </div>
+        <Select value={watch} onValueChange={(value) => setWatch(value as WatchStatus | 'TODAS')}>
+          <SelectTrigger className="w-44" aria-label="Filtrar por acompanhamento">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="TODAS">Todas</SelectItem>
+            {watchStatuses.map((status) => (
+              <SelectItem key={status} value={status}>
+                {watchStatusLabels[status]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       {companies.isLoading && <LoadingBlock />}
       {companies.error && <ErrorBlock error={companies.error} />}
@@ -67,8 +116,10 @@ export function CompaniesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Empresa</TableHead>
-                <TableHead className="text-right">Vagas</TableHead>
+                <TableHead className="text-right">Ativas</TableHead>
                 <TableHead className="text-right">Últimos 90 dias</TableHead>
+                <TableHead className="text-right">Reposts</TableHead>
+                <TableHead className="text-right">Dias no ar</TableHead>
                 <TableHead>Última vaga</TableHead>
                 <TableHead className="text-right">Candidaturas</TableHead>
                 <TableHead>Acompanhamento</TableHead>
@@ -78,13 +129,27 @@ export function CompaniesPage() {
             <TableBody>
               {visible.map((company) => (
                 <TableRow key={company.id}>
-                  <TableCell className="font-medium">{company.name}</TableCell>
-                  <TableCell className="text-right">{company.jobsTotal}</TableCell>
-                  <TableCell className="text-right">{company.jobsLast90Days}</TableCell>
+                  <TableCell className="font-medium">
+                    <Link to={`/companies/${company.id}`} className="hover:underline">
+                      {company.name}
+                    </Link>
+                    {company.kind !== 'CONTRATANTE' && (
+                      <span className="ml-2 text-xs text-muted-foreground">{companyKindLabels[company.kind]}</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">{company.jobsActive}</TableCell>
+                  <TableCell className="text-right tabular-nums">{company.jobsLast90Days}</TableCell>
+                  <TableCell className="text-right tabular-nums">{company.reposts}</TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {company.avgDaysOpen == null ? '—' : company.avgDaysOpen.toLocaleString('pt-BR')}
+                  </TableCell>
                   <TableCell>{formatDate(company.lastJobAt)}</TableCell>
                   <TableCell className="text-right">{company.applications}</TableCell>
                   <TableCell>
-                    <Select value={company.watchStatus} onValueChange={(value) => changeStatus(company, value as WatchStatus)}>
+                    <Select
+                      value={company.watchStatus}
+                      onValueChange={(value) => changeStatus(company, value as WatchStatus)}
+                    >
                       <SelectTrigger className="h-8 w-36" aria-label={`Acompanhamento de ${company.name}`}>
                         <SelectValue />
                       </SelectTrigger>
@@ -119,7 +184,15 @@ export function CompaniesPage() {
   )
 }
 
-function MergeDialog({ source, companies, onClose }: { source: CompanyItem; companies: CompanyItem[]; onClose: () => void }) {
+function MergeDialog({
+  source,
+  companies,
+  onClose,
+}: {
+  source: CompanyItem
+  companies: CompanyItem[]
+  onClose: () => void
+}) {
   const merge = useMergeCompany()
   const [targetId, setTargetId] = useState<string | undefined>()
 

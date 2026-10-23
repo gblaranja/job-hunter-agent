@@ -103,8 +103,10 @@ public class JobCollector {
 				stats.put(source.id(), sourceStats);
 				source.collect(raw -> {
 					try {
-						if (filter.rejectionReason(raw.title(), raw.description(), raw.location(),
-								raw.resolvedWorkModel().name()).isPresent()) {
+						boolean rejected = (source.applyExclusions() && filter.rejectionReason(raw.title(), raw.description(),
+								raw.location(), raw.resolvedWorkModel().name()).isPresent())
+								|| (source.broad() && !filter.matchesKeywords(raw.title(), raw.description()));
+						if (rejected) {
 							sourceStats.excluded++;
 							count(source, "excluded");
 							return;

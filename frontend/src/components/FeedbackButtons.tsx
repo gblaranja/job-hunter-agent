@@ -40,7 +40,7 @@ export function FeedbackButtons({ jobId, rating, reasons = [], onSaved }: Props)
   }
 
   return (
-    <div className="flex items-center gap-1" role="group" aria-label="Sua avaliação da vaga">
+    <div className="flex flex-wrap items-center gap-1" role="group" aria-label="Sua avaliação da vaga">
       <Button
         variant={rating === 'GOSTEI' ? 'default' : 'outline'}
         size="sm"

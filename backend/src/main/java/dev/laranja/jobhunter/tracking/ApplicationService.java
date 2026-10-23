@@ -86,6 +86,7 @@ public class ApplicationService {
 				command.resumeVersionId(), command.channel(), command.appliedAt(), command.notes(), now));
 		this.history.save(application.creationEvent());
 		captureSnapshotIfApplied(application, job, now);
+		closeJobIfEnded(application);
 		this.events.publishEvent(new ApplicationStatusChanged(application.getId(), jobId, null,
 				application.getStatus(), EventOrigin.MANUAL, now));
 		return application.getId();
@@ -101,6 +102,7 @@ public class ApplicationService {
 		this.history.save(application.moveTo(command.status(), command.resumeVersionId(), command.note(),
 				EventOrigin.MANUAL, now));
 		captureSnapshotIfApplied(application, null, now);
+		closeJobIfEnded(application);
 		this.events.publishEvent(new ApplicationStatusChanged(applicationId, application.getJobId(), from,
 				application.getStatus(), EventOrigin.MANUAL, now));
 	}
@@ -240,6 +242,13 @@ public class ApplicationService {
 		JobView job = (knownJob != null) ? knownJob : this.jobs.get(application.getJobId());
 		CaptureSource source = (job.origin() == JobOrigin.MANUAL) ? CaptureSource.MANUAL : CaptureSource.COLETA;
 		this.snapshots.save(JobSnapshot.capture(application.getId(), job, source, now));
+	}
+
+	// A vaga encerrada também fecha no catálogo, o que entra no "tempo no ar" das métricas da empresa.
+	private void closeJobIfEnded(Application application) {
+		if (application.getStatus() == ApplicationStatus.ENCERRADA) {
+			this.jobs.markClosed(application.getJobId());
+		}
 	}
 
 	private Application require(long applicationId) {

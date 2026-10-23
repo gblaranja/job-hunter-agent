@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 3,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "surviving_mutant::para testar que algo nao acontece no primeiro carregamento monte o componente com os dados ja em cache para que o estado de carregamento nao esconda o comportamento",
+      "text": "Para testar que algo não acontece no primeiro carregamento, monte o componente com os dados já em cache, para que o estado de carregamento não esconda o comportamento",
+      "signal": "surviving_mutant",
+      "scope": "frontend-tests",
+      "status": "candidate",
+      "features": [
+        "painel-navegacao-responsiva"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "validation.md M3 (frontend/src/layouts/AppLayout.tsx:23, NAV-11) (frontend-tests)"
+      ],
+      "created": "2026-10-23T19:42:30Z",
+      "last_seen": "2026-10-23T19:42:30Z"
+    },
+    {
+      "id": "L-002",
+      "key": "surviving_mutant::quando o codigo guarda estado em ref entre eventos teste a interacao repetida voltar a tela inicial reabrir e fechar de novo nao so a primeira",
+      "text": "Quando o código guarda estado em ref entre eventos, teste a interação repetida (voltar à tela inicial, reabrir e fechar de novo), não só a primeira",
+      "signal": "surviving_mutant",
+      "scope": "frontend-tests",
+      "status": "candidate",
+      "features": [
+        "painel-navegacao-responsiva"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "validation.md M7 (frontend/src/layouts/AppLayout.tsx:24, NAV-10) (frontend-tests)",
+        "validation.md M9 (frontend/src/layouts/MobileNav.tsx:28, NAV-04) (frontend-tests)"
+      ],
+      "created": "2026-10-23T19:49:43Z",
+      "last_seen": "2026-10-23T19:49:43Z"
+    }
+  ]
+}

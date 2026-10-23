@@ -84,6 +84,15 @@ public class CompanyDirectory {
 		}
 	}
 
+	/** Apaga uma empresa descoberta que ficou sem vagas, como as cadastradas por engano com o título da vaga. */
+	public void removeIfUnused(long id) {
+		this.jdbc.sql("""
+				delete from company
+				where id = :id and watch_status = 'DESCOBERTA'
+				  and not exists (select 1 from job where company_id = :id)
+				""").param("id", id).update();
+	}
+
 	private Company require(long id) {
 		return this.companies.findById(id).orElseThrow(() -> NotFoundException.of("Empresa", id));
 	}

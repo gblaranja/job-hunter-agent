@@ -33,6 +33,14 @@ jobhunter:
   security:
     username: ${JOBHUNTER_USER}
     password-hash: ${JOBHUNTER_PASSWORD_HASH}
+    # "Entrar com Google": a mesma credencial OAuth do Gmail, com um segundo redirect URI cadastrado
+    google:
+      client-id: ${JOBHUNTER_GOOGLE_CLIENT_ID:${JOBHUNTER_GMAIL_CLIENT_ID:}}
+      client-secret: ${JOBHUNTER_GOOGLE_CLIENT_SECRET:${JOBHUNTER_GMAIL_CLIENT_SECRET:}}
+      redirect-uri: ${JOBHUNTER_GOOGLE_REDIRECT_URI:http://localhost:8080/api/auth/google/callback}
+      allowed-email: ${JOBHUNTER_ALLOWED_EMAIL:}
+      after-login-url: ${JOBHUNTER_AFTER_LOGIN_URL:/board}
+      login-url: ${JOBHUNTER_LOGIN_URL:/login}
   storage:
     endpoint: ${JOBHUNTER_STORAGE_ENDPOINT}
     public-endpoint: ${JOBHUNTER_STORAGE_PUBLIC_ENDPOINT:${JOBHUNTER_STORAGE_ENDPOINT}}
@@ -53,5 +61,16 @@ jobhunter:
     label: ${JOBHUNTER_GMAIL_LABEL:jobs}
   sourcing:
     cron: ${JOBHUNTER_SOURCING_CRON:0 0 7 * * *}
+    remotive:
+      enabled: ${JOBHUNTER_REMOTIVE_ENABLED:false}
+    github:
+      enabled: ${JOBHUNTER_GITHUB_VAGAS_ENABLED:false}
+      token: ${JOBHUNTER_GITHUB_TOKEN:}
+    adzuna:
+      app-id: ${JOBHUNTER_ADZUNA_APP_ID:}
+      app-key: ${JOBHUNTER_ADZUNA_APP_KEY:}
   ai:
     api-key: ${JOBHUNTER_AI_API_KEY:}
+  tailoring:
+    # gera o currículo adaptado ao marcar "Tenho interesse" numa vaga (precisa da Claude API)
+    auto-generate: ${JOBHUNTER_TAILORING_AUTO:true}

@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.anthropic.client.AnthropicClient;
 import com.anthropic.client.okhttp.AnthropicOkHttpClient;
+import com.anthropic.core.RequestOptions;
 import com.anthropic.errors.AnthropicException;
 import com.anthropic.models.messages.CacheControlEphemeral;
 import com.anthropic.models.messages.MessageCreateParams;
@@ -16,6 +17,7 @@ import com.anthropic.models.messages.StructuredMessage;
 import com.anthropic.models.messages.StructuredOutputConfig;
 import com.anthropic.models.messages.StructuredTextBlock;
 import com.anthropic.models.messages.TextBlockParam;
+import com.anthropic.models.messages.ThinkingConfigAdaptive;
 import com.anthropic.models.messages.Usage;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.jspecify.annotations.Nullable;
@@ -77,19 +79,24 @@ class AnthropicLlmClient implements LlmClient, DisposableBean {
 			.format(outputType)
 			.effort(effort(request.effort()))
 			.build();
-		var params = MessageCreateParams.builder()
+		MessageCreateParams.Builder builder = MessageCreateParams.builder()
 			.model(request.model())
 			.maxTokens(request.maxTokens())
 			.systemOfTextBlockParams(List.of(TextBlockParam.builder()
 				.text(request.system())
 				.cacheControl(CacheControlEphemeral.builder().build())
-				.build()))
-			.outputConfig(output)
-			.addUserMessage(request.user())
+				.build()));
+		if (request.thinking()) {
+			builder.thinking(ThinkingConfigAdaptive.builder().build());
+		}
+		var params = builder.outputConfig(output).addUserMessage(request.user()).build();
+		// Com pensamento a resposta demora mais que o timeout padrão do cliente.
+		RequestOptions options = RequestOptions.builder()
+			.timeout(request.thinking() ? Duration.ofMinutes(5) : Duration.ofSeconds(90))
 			.build();
 		StructuredMessage<T> response;
 		try {
-			response = this.client.messages().create(params);
+			response = this.client.messages().create(params, options);
 		}
 		catch (AnthropicException ex) {
 			this.meters.counter("jobhunter.ai.errors", "task", request.task()).increment();

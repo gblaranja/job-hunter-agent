@@ -40,7 +40,8 @@ class LinkedInAlertParser implements AlertParser {
 		Map<String, Element> titleLinks = new LinkedHashMap<>();
 		for (Element link : document.select("a[href]")) {
 			Matcher matcher = JOB_LINK.matcher(link.attr("href"));
-			if (matcher.find() && !link.text().isBlank() && !NOISE.matcher(link.text().strip()).matches()) {
+			if (matcher.find() && !link.text().isBlank() && !NOISE.matcher(link.text().strip()).matches()
+					&& !wrapsAnotherLink(link)) {
 				titleLinks.putIfAbsent(matcher.group(1), link);
 			}
 		}
@@ -82,6 +83,14 @@ class LinkedInAlertParser implements AlertParser {
 		}
 		return Optional.of(new RawJob(JobOrigin.LINKEDIN_ALERTA, jobId, title, company, location, null, salary,
 				"https://www.linkedin.com/jobs/view/" + jobId + "/", null));
+	}
+
+	/**
+	 * O card inteiro costuma ser um link para a vaga, com o link do título aninhado dentro. O texto do link de
+	 * fora junta título, empresa e localidade; só o de dentro é o título.
+	 */
+	private static boolean wrapsAnotherLink(Element link) {
+		return link.select("a[href]").size() > 1;
 	}
 
 }

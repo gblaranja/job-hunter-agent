@@ -52,7 +52,7 @@ public class LinkVerification {
 		List<Target> targets = this.jdbc.sql("""
 				select s.id, s.job_url as url, s.link_consecutive_failures as failures
 				from job_snapshot s join application a on a.id = s.application_id
-				where s.job_url is not null and a.status not in ('OFERTA', 'RECUSADA', 'DESISTI')
+				where s.job_url is not null and a.status not in ('OFERTA', 'RECUSADA', 'DESISTI', 'ENCERRADA')
 				order by s.link_checked_at nulls first
 				""")
 			.query(Target.class)

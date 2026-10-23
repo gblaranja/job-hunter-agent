@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/companies/{id}/headcount": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["headcount"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{id}/snapshot": {
         parameters: {
             query?: never;
@@ -84,6 +100,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["readAll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jobs": {
         parameters: {
             query?: never;
@@ -116,6 +148,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{jobId}/tailored-resumes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tailoredResumes"];
+        put?: never;
+        post: operations["requestTailoredResume"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tailored-resumes/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tailoringAvailability"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tailored-resumes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tailoredResume"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tailored-resumes/{id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["editTailoredResume"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tailored-resumes/{id}/resume-version": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["saveTailoredResume"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tailored-resumes/{id}/docx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tailoredResumeDocx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jobs/{id}/analysis": {
         parameters: {
             query?: never;
@@ -132,6 +260,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/insights/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["generate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}/merge": {
         parameters: {
             query?: never;
@@ -142,6 +286,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["merge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies/refresh-metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refresh"];
         delete?: never;
         options?: never;
         head?: never;
@@ -226,6 +386,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["update_1"];
+        trace?: never;
+    };
+    "/api/notifications/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["read"];
         trace?: never;
     };
     "/api/emails/{id}/classification": {
@@ -324,6 +500,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["recent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jobs/{id}": {
         parameters: {
             query?: never;
@@ -332,6 +524,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/insights/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["usage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/insights/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["latest"];
         put?: never;
         post?: never;
         delete?: never;
@@ -388,6 +612,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/companies/{id}/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies/{id}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["metrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["providers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/me": {
         parameters: {
             query?: never;
@@ -396,6 +668,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["start_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/google/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["callback"];
         put?: never;
         post?: never;
         delete?: never;
@@ -475,7 +779,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["callback"];
+        get: operations["callback_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -544,11 +848,74 @@ export interface components {
             reasons?: ("SALARIO" | "STACK" | "SENIORIDADE" | "MODELO_TRABALHO" | "EMPRESA" | "LOCALIZACAO")[] | null;
             comment?: string | null;
         };
+        Headcount: {
+            /** Format: int32 */
+            headcount: number;
+        };
         SaveJobSnapshot: {
             url?: string | null;
             title: string;
             company: string;
             descriptionMd?: string | null;
+        };
+        TailorRequest: {
+            /** Format: int64 */
+            baseResumeId?: number | null;
+        };
+        ResumeChange: {
+            /** @description Seção do currículo (Resumo, Competências, uma experiência...) */
+            section: string;
+            /** @description Trecho do currículo base copiado exatamente; vazio se o trecho é novo */
+            before: string;
+            /** @description Trecho reescrito */
+            after: string;
+            /** @description Uma frase ligando a mudança a um requisito da vaga */
+            reason: string;
+        };
+        TailoredResumeView: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            jobId: number;
+            /** Format: int64 */
+            baseResumeId?: number | null;
+            baseResumeLabel?: string | null;
+            status: string;
+            content?: string | null;
+            headline?: string | null;
+            changes: components["schemas"]["ResumeChange"][];
+            notCovered: string[];
+            notes?: string | null;
+            keywords: string[];
+            coveredBefore: string[];
+            coveredAfter: string[];
+            unsupportedSkills: string[];
+            /** Format: int32 */
+            scoreBefore?: number | null;
+            /** Format: int32 */
+            scoreAfter?: number | null;
+            edited: boolean;
+            /** Format: int64 */
+            resumeVersionId?: number | null;
+            resumeLabel?: string | null;
+            modelVersion?: string | null;
+            lastError?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        Availability: {
+            enabled: boolean;
+            autoGenerate: boolean;
+        };
+        TailoredContent: {
+            content: string;
+        };
+        ResumeRef: {
+            /** Format: int64 */
+            id: number;
+            label: string;
         };
         ResumeItem: {
             /** Format: int64 */
@@ -571,6 +938,10 @@ export interface components {
             interviewRate?: number | null;
             skills: string[];
             hasText: boolean;
+            /** Format: int64 */
+            tailoredForJobId?: number | null;
+            tailoredForTitle?: string | null;
+            tailoredForCompany?: string | null;
         };
         ManualJobCommand: {
             title: string;
@@ -586,7 +957,7 @@ export interface components {
             /** Format: int64 */
             id: number;
             /** @enum {string} */
-            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA";
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA";
             title: string;
             company: string;
             location?: string | null;
@@ -600,7 +971,7 @@ export interface components {
         };
         StartApplication: {
             /** @enum {string} */
-            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";
+            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
             /** Format: int64 */
             resumeVersionId?: number | null;
             /** @enum {string|null} */
@@ -612,6 +983,96 @@ export interface components {
         CreatedApplication: {
             /** Format: int64 */
             id: number;
+        };
+        BulletRewrite: {
+            original: string;
+            rewritten: string;
+            reason: string;
+        };
+        Conversion: {
+            group: string;
+            /** Format: int32 */
+            applied: number;
+            /** Format: int32 */
+            interview: number;
+        };
+        Funnel: {
+            /** Format: int32 */
+            applied: number;
+            /** Format: int32 */
+            screening: number;
+            /** Format: int32 */
+            interview: number;
+            /** Format: int32 */
+            offer: number;
+            /** Format: int32 */
+            avgScoreApplied?: number | null;
+            bySeniority: components["schemas"]["Conversion"][];
+            scoreByRating: {
+                [key: string]: number;
+            };
+        };
+        Gap: {
+            skill: string;
+            /** Format: int32 */
+            jobs: number;
+            /** Format: int32 */
+            avgScore?: number | null;
+        };
+        GapAdvice: {
+            skill: string;
+            evidence: string;
+            suggestion: string;
+        };
+        InsightReport: {
+            /** Format: int64 */
+            id: number;
+            /** Format: date */
+            periodStart: string;
+            /** Format: date */
+            periodEnd: string;
+            topSkills: components["schemas"]["SkillDemand"][];
+            gaps: components["schemas"]["Gap"][];
+            funnel: components["schemas"]["Funnel"];
+            resumePerformance: components["schemas"]["ResumePerformance"][];
+            suggestedFilters: components["schemas"]["SuggestedFilter"][];
+            aiAccuracy?: number | null;
+            llmCostUsd?: number | null;
+            recommendations: components["schemas"]["Recommendations"];
+            modelVersion: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        Recommendations: {
+            gaps: components["schemas"]["GapAdvice"][];
+            bullets: components["schemas"]["BulletRewrite"][];
+            linkedinKeywords: string[];
+            diagnosis: string;
+            diagnosisExplanation: string;
+            source: string;
+        };
+        ResumePerformance: {
+            /** Format: int64 */
+            resumeVersionId: number;
+            label: string;
+            /** Format: int32 */
+            applied: number;
+            /** Format: int32 */
+            interview: number;
+        };
+        SkillDemand: {
+            skill: string;
+            /** Format: int32 */
+            jobs: number;
+            covered?: boolean | null;
+        };
+        SuggestedFilter: {
+            reason: string;
+            /** Format: int32 */
+            count: number;
+            title: string;
+            detail: string;
+            keyword?: string | null;
         };
         MergeCompany: {
             /** Format: int64 */
@@ -693,12 +1154,20 @@ export interface components {
             notes?: string | null;
             /** Format: date-time */
             firstSeenAt: string;
+            clientSectors: string[];
+            contractTypes: string[];
             /** Format: int64 */
             jobsTotal: number;
             /** Format: int64 */
+            jobsActive: number;
+            /** Format: int64 */
             jobsLast90Days: number;
+            /** Format: int64 */
+            reposts: number;
             /** Format: date-time */
             lastJobAt?: string | null;
+            /** Format: double */
+            avgDaysOpen?: number | null;
             /** Format: int64 */
             applications: number;
         };
@@ -709,7 +1178,7 @@ export interface components {
         };
         ChangeApplicationStatus: {
             /** @enum {string} */
-            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";
+            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
             /** Format: int64 */
             resumeVersionId?: number | null;
             note?: string | null;
@@ -724,6 +1193,18 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
         };
+        NotificationView: {
+            /** Format: int64 */
+            id: number;
+            type: string;
+            title: string;
+            body?: string | null;
+            link?: string | null;
+            /** Format: date-time */
+            readAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
         JobListItem: {
             /** Format: int64 */
             id: number;
@@ -736,7 +1217,7 @@ export interface components {
             workModel: "REMOTO" | "HIBRIDO" | "PRESENCIAL" | "NAO_INFORMADO";
             url?: string | null;
             /** @enum {string} */
-            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA";
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA";
             /** Format: date-time */
             collectedAt: string;
             preview?: string | null;
@@ -822,6 +1303,19 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        LlmUsage: {
+            task: string;
+            model: string;
+            /** Format: int32 */
+            calls: number;
+            /** Format: int64 */
+            inputTokens: number;
+            /** Format: int64 */
+            outputTokens: number;
+            /** Format: int64 */
+            cacheReadTokens: number;
+            costUsd: number;
+        };
         EmailItem: {
             /** Format: int64 */
             id: number;
@@ -856,8 +1350,58 @@ export interface components {
             /** Format: double */
             rate?: number | null;
         };
+        CompanyJob: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+            /** Format: date-time */
+            firstSeenAt: string;
+            /** Format: date-time */
+            closedAt?: string | null;
+            /** Format: int64 */
+            repostOfJobId?: number | null;
+            applicationStatus?: string | null;
+            /** Format: int32 */
+            matchScore?: number | null;
+        };
+        CompanyOverview: {
+            bySeniority: {
+                [key: string]: number;
+            };
+            byWorkModel: {
+                [key: string]: number;
+            };
+            topSkills: components["schemas"]["SkillCount"][];
+            jobs: components["schemas"]["CompanyJob"][];
+        };
+        SkillCount: {
+            skill: string;
+            /** Format: int32 */
+            count: number;
+        };
+        WeeklyMetrics: {
+            /** Format: date */
+            weekStart: string;
+            /** Format: int32 */
+            jobsOpened: number;
+            /** Format: int32 */
+            jobsClosed: number;
+            /** Format: int32 */
+            jobsActive: number;
+            /** Format: int32 */
+            reposts: number;
+            /** Format: double */
+            avgDaysOpen?: number | null;
+            /** Format: int32 */
+            headcount?: number | null;
+        };
+        LoginProviders: {
+            password: boolean;
+            google: boolean;
+        };
         CurrentUser: {
             username: string;
+            displayName: string;
         };
         AppliedListItem: {
             /** Format: int64 */
@@ -867,7 +1411,7 @@ export interface components {
             title: string;
             company: string;
             /** @enum {string} */
-            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";
+            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
             /** Format: date-time */
             appliedAt?: string | null;
             /** @enum {string|null} */
@@ -886,7 +1430,7 @@ export interface components {
             /** Format: int64 */
             jobId: number;
             /** @enum {string} */
-            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";
+            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
             /** Format: date-time */
             appliedAt?: string | null;
             /** @enum {string|null} */
@@ -927,7 +1471,7 @@ export interface components {
             title: string;
             company: string;
             /** @enum {string} */
-            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";
+            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
             /** Format: int64 */
             daysInStatus: number;
             /** Format: int64 */
@@ -940,7 +1484,7 @@ export interface components {
         };
         BoardColumn: {
             /** @enum {string} */
-            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";
+            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
             cards: components["schemas"]["BoardCard"][];
         };
         MailboxStatus: {
@@ -1018,6 +1562,30 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["Feedback"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    headcount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Headcount"];
             };
         };
         responses: {
@@ -1170,6 +1738,24 @@ export interface operations {
             };
         };
     };
+    readAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     list_2: {
         parameters: {
             query?: {
@@ -1267,6 +1853,26 @@ export interface operations {
             };
         };
     };
+    generate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InsightReport"];
+                };
+            };
+        };
+    };
     merge: {
         parameters: {
             query?: never;
@@ -1281,6 +1887,24 @@ export interface operations {
                 "application/json": components["schemas"]["MergeCompany"];
             };
         };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    refresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description No Content */
             204: {
@@ -1427,6 +2051,26 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["ResumeItem"];
                 };
+            };
+        };
+    };
+    read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1596,6 +2240,26 @@ export interface operations {
             };
         };
     };
+    recent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NotificationView"][];
+                };
+            };
+        };
+    };
     detail: {
         parameters: {
             query?: never;
@@ -1614,6 +2278,46 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["JobDetail"];
+                };
+            };
+        };
+    };
+    usage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LlmUsage"][];
+                };
+            };
+        };
+    };
+    latest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InsightReport"];
                 };
             };
         };
@@ -1663,7 +2367,10 @@ export interface operations {
     };
     list_4: {
         parameters: {
-            query?: never;
+            query?: {
+                watch?: "DESCOBERTA" | "MONITORADA" | "ALVO" | "IGNORADA";
+                kind?: "CONTRATANTE" | "CONSULTORIA_TI" | "RECRUTAMENTO";
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1677,6 +2384,73 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CompanyItem"][];
+                };
+            };
+        };
+    };
+    overview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyOverview"];
+                };
+            };
+        };
+    };
+    metrics: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["WeeklyMetrics"][];
+                };
+            };
+        };
+    };
+    providers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoginProviders"];
                 };
             };
         };
@@ -1701,10 +2475,50 @@ export interface operations {
             };
         };
     };
+    start_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    callback: {
+        parameters: {
+            query?: {
+                code?: string;
+                state?: string;
+                error?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     list_5: {
         parameters: {
             query?: {
-                status?: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";
+                status?: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
                 q?: string;
             };
             header?: never;
@@ -1782,7 +2596,7 @@ export interface operations {
             };
         };
     };
-    callback: {
+    callback_1: {
         parameters: {
             query?: {
                 code?: string;
@@ -1839,6 +2653,167 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    tailoredResumes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TailoredResumeView"][];
+                };
+            };
+        };
+    };
+    requestTailoredResume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TailorRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TailoredResumeView"];
+                };
+            };
+        };
+    };
+    tailoredResume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TailoredResumeView"];
+                };
+            };
+        };
+    };
+    editTailoredResume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TailoredContent"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TailoredResumeView"];
+                };
+            };
+        };
+    };
+    saveTailoredResume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ResumeRef"];
+                };
+            };
+        };
+    };
+    tailoredResumeDocx: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /** Format: byte */
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": string;
+                };
+            };
+        };
+    };
+    tailoringAvailability: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Availability"];
+                };
             };
         };
     };

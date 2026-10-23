@@ -18,6 +18,19 @@ public interface JobSource {
 		return true;
 	}
 
+	/** Fonte ampla (busca em agregadores): só entram vagas com alguma palavra-chave dos perfis de busca. */
+	default boolean broad() {
+		return false;
+	}
+
+	/**
+	 * Aplica as exclusões dos perfis. Os ATS das empresas acompanhadas entram completos, para as métricas da
+	 * empresa enxergarem todas as vagas; a análise e o score cuidam do resto.
+	 */
+	default boolean applyExclusions() {
+		return true;
+	}
+
 	void collect(Consumer<RawJob> sink);
 
 }
