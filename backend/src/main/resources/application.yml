@@ -53,3 +53,5 @@ jobhunter:
     label: ${JOBHUNTER_GMAIL_LABEL:jobs}
   sourcing:
     cron: ${JOBHUNTER_SOURCING_CRON:0 0 7 * * *}
+  ai:
+    api-key: ${JOBHUNTER_AI_API_KEY:}

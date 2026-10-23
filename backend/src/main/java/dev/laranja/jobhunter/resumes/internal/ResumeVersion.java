@@ -76,6 +76,14 @@ public class ResumeVersion {
 		this.targetRole = (targetRole == null || targetRole.isBlank()) ? null : targetRole.strip();
 	}
 
+	public void useExtractedText(String text) {
+		this.extractedText = text;
+	}
+
+	public void useSkills(List<String> skills) {
+		this.skills = List.copyOf(skills);
+	}
+
 	public void markAsDefault() {
 		if (this.archived) {
 			throw new BusinessRuleException("Desarquive o currículo antes de defini-lo como padrão.");
@@ -116,6 +124,18 @@ public class ResumeVersion {
 
 	public boolean isArchived() {
 		return this.archived;
+	}
+
+	public String getExtractedText() {
+		return this.extractedText;
+	}
+
+	public List<String> getSkills() {
+		return (this.skills != null) ? this.skills : List.of();
+	}
+
+	public String getTargetRole() {
+		return this.targetRole;
 	}
 
 }

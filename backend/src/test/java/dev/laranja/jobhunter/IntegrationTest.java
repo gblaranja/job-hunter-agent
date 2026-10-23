@@ -35,7 +35,7 @@ public abstract class IntegrationTest {
 	void cleanDatabase() {
 		this.jdbc.sql("""
 				truncate application_event, job_snapshot, application, job_feedback, job, resume_version, email_message,
-				         gmail_sync_state, oauth_credential, collection_run, company_alias, company
+				         gmail_sync_state, oauth_credential, collection_run, company_alias, company, job_analysis, llm_usage
 				restart identity cascade
 				""").update();
 	}
@@ -83,7 +83,15 @@ public abstract class IntegrationTest {
 	}
 
 	protected static String json(String value) {
-		return (value == null) ? "null" : "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+		if (value == null) {
+			return "null";
+		}
+		String escaped = value.replace("\\", "\\\\")
+			.replace("\"", "\\\"")
+			.replace("\n", "\\n")
+			.replace("\r", "\\r")
+			.replace("\t", "\\t");
+		return "\"" + escaped + "\"";
 	}
 
 }

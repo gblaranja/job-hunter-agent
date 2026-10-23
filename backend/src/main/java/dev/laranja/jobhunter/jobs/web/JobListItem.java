@@ -14,8 +14,10 @@ import org.jspecify.annotations.Nullable;
  *
  * @param status status da candidatura, ou {@code NOVA} quando a vaga ainda não tem candidatura
  * @param preview começo da descrição em texto corrido
+ * @param matchScore aderência ao currículo padrão (0 a 100); nulo antes da análise ou sem currículo
  */
 record JobListItem(long id, String title, String company, @Nullable Long companyId, @Nullable String location,
 		WorkModel workModel, @Nullable String url, JobOrigin origin, Instant collectedAt, @Nullable String preview,
-		@Nullable Long applicationId, String status, @Nullable FeedbackRating rating, List<FeedbackReason> reasons) {
+		@Nullable Long applicationId, String status, @Nullable FeedbackRating rating, List<FeedbackReason> reasons,
+		@Nullable Integer matchScore, @Nullable String summary, List<String> matchedSkills, List<String> gaps) {
 }
