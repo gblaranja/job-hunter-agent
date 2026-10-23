@@ -164,6 +164,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/applications/{id}/responses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["recordResponse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/verify-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["verifyLinks"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/collect": {
         parameters: {
             query?: never;
@@ -194,6 +226,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["update_1"];
+        trace?: never;
+    };
+    "/api/emails/{id}/classification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["review"];
         trace?: never;
     };
     "/api/companies/{id}": {
@@ -292,7 +340,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/companies": {
+    "/api/emails": {
         parameters: {
             query?: never;
             header?: never;
@@ -300,6 +348,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["list_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/emails/accuracy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["accuracy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -331,7 +411,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_4"];
+        get: operations["list_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -537,6 +617,24 @@ export interface components {
             /** Format: int64 */
             targetId: number;
         };
+        RecordResponse: {
+            /** @enum {string} */
+            responseType: "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "OUTRO";
+            /** @enum {string} */
+            channel: "EMAIL" | "WHATSAPP" | "LINKEDIN" | "TELEFONE" | "OUTRO";
+            note?: string | null;
+            moveStatus: boolean;
+        };
+        Summary: {
+            /** Format: int32 */
+            checked: number;
+            /** Format: int32 */
+            active: number;
+            /** Format: int32 */
+            removed: number;
+            /** Format: int32 */
+            indeterminate: number;
+        };
         CollectionRun: {
             /** Format: int64 */
             id: number;
@@ -566,6 +664,12 @@ export interface components {
             targetRole?: string | null;
             makeDefault?: boolean | null;
             archived?: boolean | null;
+        };
+        Review: {
+            /** @enum {string} */
+            classification: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "OUTRO" | "IRRELEVANTE";
+            /** Format: int64 */
+            applicationId?: number | null;
         };
         UpdateCompanyCommand: {
             /** @enum {string|null} */
@@ -712,10 +816,45 @@ export interface components {
             fromStatus?: string | null;
             toStatus?: string | null;
             responseType?: string | null;
+            responseChannel?: string | null;
             origin: string;
             note?: string | null;
             /** Format: date-time */
             createdAt: string;
+        };
+        EmailItem: {
+            /** Format: int64 */
+            id: number;
+            sender: string;
+            subject?: string | null;
+            snippet?: string | null;
+            /** Format: date-time */
+            receivedAt: string;
+            /** @enum {string|null} */
+            aiClassification?: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "OUTRO" | "IRRELEVANTE" | null;
+            /** Format: double */
+            aiConfidence?: number | null;
+            /** @enum {string|null} */
+            finalClassification?: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "OUTRO" | "IRRELEVANTE" | null;
+            classifiedBy?: string | null;
+            companyGuess?: string | null;
+            jobGuess?: string | null;
+            rationale?: string | null;
+            needsReview: boolean;
+            /** Format: int64 */
+            applicationId?: number | null;
+            applicationTitle?: string | null;
+            applicationCompany?: string | null;
+        };
+        Accuracy: {
+            /** Format: int64 */
+            reviewed: number;
+            /** Format: int64 */
+            agreed: number;
+            /** Format: int64 */
+            pending: number;
+            /** Format: double */
+            rate?: number | null;
         };
         CurrentUser: {
             username: string;
@@ -754,6 +893,7 @@ export interface components {
             channel?: "EASY_APPLY" | "SITE_EMPRESA" | "INDICACAO" | "EMAIL" | "OUTRO" | null;
             resume?: components["schemas"]["AppliedJobResume"] | null;
             snapshot: components["schemas"]["AppliedJobSnapshot"];
+            hasResponse: boolean;
         };
         AppliedJobResume: {
             /** Format: int64 */
@@ -1200,6 +1340,50 @@ export interface operations {
             };
         };
     };
+    recordResponse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordResponse"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    verifyLinks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Summary"];
+                };
+            };
+        };
+    };
     collect: {
         parameters: {
             query?: never;
@@ -1243,6 +1427,30 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["ResumeItem"];
                 };
+            };
+        };
+    };
+    review: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Review"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1412,6 +1620,49 @@ export interface operations {
     };
     list_3: {
         parameters: {
+            query?: {
+                pending?: boolean;
+                classification?: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "OUTRO" | "IRRELEVANTE";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["EmailItem"][];
+                };
+            };
+        };
+    };
+    accuracy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Accuracy"];
+                };
+            };
+        };
+    };
+    list_4: {
+        parameters: {
             query?: never;
             header?: never;
             path?: never;
@@ -1450,7 +1701,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_5: {
         parameters: {
             query?: {
                 status?: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";

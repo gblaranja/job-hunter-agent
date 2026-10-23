@@ -28,6 +28,7 @@ export function appliedJob(overrides: Partial<AppliedJob['snapshot']> = {}): App
     appliedAt: '2026-10-10T12:00:00Z',
     channel: 'SITE_EMPRESA',
     resume: { id: 1, label: 'Backend Java', fileName: 'cv-backend.pdf' },
+    hasResponse: false,
     snapshot: {
       url: 'https://empresa.example/vagas/42',
       linkStatus: 'ATIVO',

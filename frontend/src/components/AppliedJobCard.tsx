@@ -113,6 +113,7 @@ export function AppliedJobCardView({ applied }: { applied: AppliedJob }) {
             <AlertTitle>A vaga saiu do ar</AlertTitle>
             <AlertDescription>
               Você está vendo a cópia salva em {formatDate(snapshot.capturedAt)}, data da aplicação.
+              {!applied.hasResponse && ' Sem nenhum retorno até aqui, é provável que a posição já tenha sido preenchida.'}
             </AlertDescription>
           </Alert>
         )}

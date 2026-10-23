@@ -357,3 +357,48 @@ export function useReanalyze() {
       Promise.all([client.invalidateQueries({ queryKey: ['job'] }), client.invalidateQueries({ queryKey: ['jobs'] })]),
   })
 }
+
+// Retornos
+
+export type EmailItem = Schemas['EmailItem']
+export type EmailClassification = NonNullable<EmailItem['aiClassification']>
+export type ResponseType = Schemas['RecordResponse']['responseType']
+export type ResponseChannel = Schemas['RecordResponse']['channel']
+
+export function useEmails(pending: boolean) {
+  return useQuery({
+    queryKey: ['emails', { pending }],
+    queryFn: () => unwrap(api.GET('/api/emails', { params: { query: { pending } } })),
+  })
+}
+
+export function useEmailAccuracy() {
+  return useQuery({ queryKey: ['emails', 'accuracy'], queryFn: () => unwrap(api.GET('/api/emails/accuracy')) })
+}
+
+export function useReviewEmail() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: number } & Schemas['Review']) =>
+      unwrap(api.PATCH('/api/emails/{id}/classification', { params: { path: { id } }, body })),
+    onSuccess: () =>
+      Promise.all([client.invalidateQueries({ queryKey: ['emails'] }), invalidateTracking(client)]),
+  })
+}
+
+export function useRecordResponse() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ applicationId, ...body }: { applicationId: number } & Schemas['RecordResponse']) =>
+      unwrap(api.POST('/api/applications/{id}/responses', { params: { path: { id: applicationId } }, body })),
+    onSuccess: () => invalidateTracking(client),
+  })
+}
+
+export function useVerifyLinks() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: () => unwrap(api.POST('/api/admin/verify-links')),
+    onSuccess: () => invalidateTracking(client),
+  })
+}

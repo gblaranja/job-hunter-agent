@@ -1,9 +1,12 @@
 import type {
   ApplicationChannel,
   ApplicationStatus,
+  EmailClassification,
   FeedbackReason,
   JobListItem,
   LinkStatus,
+  ResponseChannel,
+  ResponseType,
   WatchStatus,
   WorkModel,
 } from '@/api/queries'
@@ -96,4 +99,32 @@ export const watchStatusLabels: Record<WatchStatus, string> = {
 export function sameAsWorkModel(location: string, workModel: WorkModel): boolean {
   const normalize = (value: string) => value.normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase()
   return normalize(location) === normalize(workModelLabels[workModel])
+}
+
+export const classificationLabels: Record<EmailClassification, string> = {
+  ALERTA_VAGA: 'Alerta de vaga',
+  CONVITE_ENTREVISTA: 'Convite para entrevista',
+  TESTE_TECNICO: 'Teste técnico',
+  PEDIDO_INFORMACAO: 'Pedido de informação',
+  OFERTA: 'Oferta',
+  RECUSA: 'Recusa',
+  OUTRO: 'Outro',
+  IRRELEVANTE: 'Irrelevante',
+}
+
+export const responseTypeLabels: Record<ResponseType, string> = {
+  CONVITE_ENTREVISTA: 'Convite para entrevista',
+  TESTE_TECNICO: 'Teste técnico',
+  PEDIDO_INFORMACAO: 'Pedido de informação',
+  OFERTA: 'Oferta',
+  RECUSA: 'Recusa',
+  OUTRO: 'Outro retorno',
+}
+
+export const responseChannelLabels: Record<ResponseChannel, string> = {
+  EMAIL: 'E-mail',
+  WHATSAPP: 'WhatsApp',
+  LINKEDIN: 'LinkedIn',
+  TELEFONE: 'Ligação',
+  OUTRO: 'Outro',
 }

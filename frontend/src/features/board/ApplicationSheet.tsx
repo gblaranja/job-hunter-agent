@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { ApplicationDetailsForm } from '@/features/applications/ApplicationDetailsForm'
+import { ResponseDialog } from '@/features/applications/ResponseDialog'
 import { Timeline } from '@/features/applications/Timeline'
 import { ArrowUpRight } from 'lucide-react'
 
@@ -43,6 +44,7 @@ export function ApplicationSheet({ card, onClose }: { card: BoardCard; onClose: 
                 notes={application.notes}
                 nextActionAt={application.nextActionAt}
               />
+              <ResponseDialog applicationId={application.id} />
               <section>
                 <h3 className="mb-3 text-sm font-semibold">Histórico</h3>
                 <Timeline events={job.data?.timeline ?? []} />

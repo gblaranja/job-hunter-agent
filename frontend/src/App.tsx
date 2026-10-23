@@ -15,6 +15,11 @@ const router = createBrowserRouter([
         lazy: () => import('@/features/inbox/InboxPage').then((module) => ({ Component: module.InboxPage })),
       },
       {
+        path: 'responses',
+        lazy: () =>
+          import('@/features/responses/ResponsesPage').then((module) => ({ Component: module.ResponsesPage })),
+      },
+      {
         path: 'companies',
         lazy: () =>
           import('@/features/companies/CompaniesPage').then((module) => ({ Component: module.CompaniesPage })),

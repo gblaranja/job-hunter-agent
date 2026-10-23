@@ -11,6 +11,7 @@ import {
   KanbanSquare,
   ListChecks,
   LogOut,
+  MailCheck,
   PlusCircle,
   Settings,
 } from 'lucide-react'
@@ -19,6 +20,7 @@ const navigation = [
   { to: '/inbox', label: 'Caixa de vagas', Icon: Inbox },
   { to: '/board', label: 'Kanban', Icon: KanbanSquare },
   { to: '/applications', label: 'Minhas candidaturas', Icon: ListChecks },
+  { to: '/responses', label: 'Retornos', Icon: MailCheck },
   { to: '/jobs/new', label: 'Nova vaga', Icon: PlusCircle },
   { to: '/resumes', label: 'Currículos', Icon: FileText },
   { to: '/companies', label: 'Empresas', Icon: Building2 },

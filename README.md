@@ -88,6 +88,6 @@ Sem chave, a análise usa só o dicionário de skills e as regras, e o score fun
 | 1 | Fundação, tracker de candidaturas e currículos | Concluída |
 | 2 | Coleta via Gmail, feedback e cadastro de empresas | Concluída (falta conectar o Gmail) |
 | 3 | Análise por IA e score de aderência | Concluída |
-| 4 | Classificação dos retornos e verificação de links | — |
+| 4 | Classificação dos retornos e verificação de links | Concluída |
 | 5 | Insights semanais e monitoramento de empresas | — |
 | 6 | Nichos (financeiro, consultorias) e selo GPTW | — |

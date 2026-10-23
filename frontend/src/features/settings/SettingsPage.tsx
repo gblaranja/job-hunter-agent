@@ -9,6 +9,7 @@ import {
   useGmailStatus,
   useSaveSearchProfile,
   useSearchProfiles,
+  useVerifyLinks,
   type CollectionRun,
   type SearchProfile,
 } from '@/api/queries'
@@ -28,7 +29,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatDateTime } from '@/lib/format'
-import { Mail, Pencil, Play, Plus, Trash2 } from 'lucide-react'
+import { Link2, Mail, Pencil, Play, Plus, Trash2 } from 'lucide-react'
 
 export function SettingsPage() {
   const [params, setParams] = useSearchParams()
@@ -112,6 +113,17 @@ function GmailCard() {
 function CollectionCard() {
   const runs = useCollectionRuns()
   const collect = useCollectNow()
+  const verify = useVerifyLinks()
+
+  function checkLinks() {
+    verify.mutate(undefined, {
+      onSuccess: (summary) =>
+        toast.success(
+          `${summary.checked} links verificados: ${summary.active} no ar, ${summary.removed} fora do ar, ${summary.indeterminate} sem resposta clara.`,
+        ),
+      onError: (error) => toast.error(error.message),
+    })
+  }
 
   function run() {
     collect.mutate(undefined, {
@@ -128,8 +140,13 @@ function CollectionCard() {
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Coleta de vagas</CardTitle>
-        <CardDescription>Roda todo dia às 7h. As exclusões dos perfis de busca ativos são aplicadas aqui.</CardDescription>
-        <CardAction>
+        <CardDescription>
+          A coleta roda todo dia às 7h e classifica os retornos; os links das vagas aplicadas são verificados toda segunda.
+        </CardDescription>
+        <CardAction className="flex gap-2">
+          <Button variant="outline" onClick={checkLinks} disabled={verify.isPending}>
+            <Link2 /> {verify.isPending ? 'Verificando…' : 'Verificar links'}
+          </Button>
           <Button onClick={run} disabled={collect.isPending}>
             <Play /> {collect.isPending ? 'Coletando…' : 'Coletar agora'}
           </Button>

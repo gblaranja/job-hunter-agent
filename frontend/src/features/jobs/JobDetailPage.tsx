@@ -23,6 +23,7 @@ import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/componen
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ApplicationDetailsForm } from '@/features/applications/ApplicationDetailsForm'
+import { ResponseDialog } from '@/features/applications/ResponseDialog'
 import { Timeline } from '@/features/applications/Timeline'
 import { useStatusMove } from '@/features/applications/useStatusMove'
 import { sameAsWorkModel, statusesRequiringResume, statusLabels, workModelLabels } from '@/lib/labels'
@@ -195,6 +196,7 @@ function StatusPanel({
             </SelectContent>
           </Select>
         </div>
+        <ResponseDialog applicationId={applicationId} />
       </CardContent>
       {dialog}
     </Card>
