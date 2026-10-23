@@ -11,6 +11,7 @@ import {
 } from '@/api/queries'
 import { AppliedJobCard } from '@/components/AppliedJobCard'
 import { FeedbackButtons } from '@/components/FeedbackButtons'
+import { AnalysisCard } from './AnalysisCard'
 import { Markdown } from '@/components/Markdown'
 import { PageHeader } from '@/components/PageHeader'
 import { ErrorBlock, LoadingBlock } from '@/components/QueryState'
@@ -24,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ApplicationDetailsForm } from '@/features/applications/ApplicationDetailsForm'
 import { Timeline } from '@/features/applications/Timeline'
 import { useStatusMove } from '@/features/applications/useStatusMove'
-import { statusesRequiringResume, statusLabels, workModelLabels } from '@/lib/labels'
+import { sameAsWorkModel, statusesRequiringResume, statusLabels, workModelLabels } from '@/lib/labels'
 import { ExternalLink } from 'lucide-react'
 
 const movableStatuses = (Object.keys(statusLabels) as ApplicationStatus[]).filter((status) => status !== 'NOVA')
@@ -51,7 +52,7 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
         actions={application && <StatusBadge status={application.status as ApplicationStatus} />}
       />
       <div className="mb-6 flex flex-wrap items-center gap-2">
-        {job.location && <Badge variant="secondary">{job.location}</Badge>}
+        {job.location && !sameAsWorkModel(job.location, job.workModel) && <Badge variant="secondary">{job.location}</Badge>}
         {job.workModel !== 'NAO_INFORMADO' && <Badge variant="secondary">{workModelLabels[job.workModel]}</Badge>}
         {job.salaryRange && <Badge variant="secondary">{job.salaryRange}</Badge>}
         <div className="ml-auto">
@@ -59,7 +60,7 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="space-y-6">
           {hasSnapshot && application ? (
             <AppliedJobCard applicationId={application.id} />
@@ -104,6 +105,7 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
         </div>
 
         <aside className="space-y-6">
+          <AnalysisCard jobId={job.id} analysis={detail.analysis} />
           {application ? (
             <>
               <StatusPanel

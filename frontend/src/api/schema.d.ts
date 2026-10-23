@@ -116,6 +116,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{id}/analysis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reanalyze"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}/merge": {
         parameters: {
             query?: never;
@@ -473,6 +489,8 @@ export interface components {
             interviews: number;
             /** Format: double */
             interviewRate?: number | null;
+            skills: string[];
+            hasText: boolean;
         };
         ManualJobCommand: {
             title: string;
@@ -624,6 +642,11 @@ export interface components {
             /** @enum {string|null} */
             rating?: "GOSTEI" | "NEUTRO" | "NAO_GOSTEI" | null;
             reasons: ("SALARIO" | "STACK" | "SENIORIDADE" | "MODELO_TRABALHO" | "EMPRESA" | "LOCALIZACAO")[];
+            /** Format: int32 */
+            matchScore?: number | null;
+            summary?: string | null;
+            matchedSkills: string[];
+            gaps: string[];
         };
         PageResponseJobListItem: {
             items: components["schemas"]["JobListItem"][];
@@ -633,6 +656,28 @@ export interface components {
             size: number;
             /** Format: int64 */
             total: number;
+        };
+        JobAnalysis: {
+            status: string;
+            seniority?: string | null;
+            requiredSkills: string[];
+            niceToHave: string[];
+            summary?: string | null;
+            employerKind?: string | null;
+            contractType?: string | null;
+            /** Format: int32 */
+            deterministicScore?: number | null;
+            /** Format: int32 */
+            llmAdjustment?: number | null;
+            /** Format: int32 */
+            matchScore?: number | null;
+            matchedSkills: string[];
+            gaps: string[];
+            justification?: string | null;
+            modelVersion: string;
+            lastError?: string | null;
+            /** Format: date-time */
+            analyzedAt: string;
         };
         JobApplicationSummary: {
             /** Format: int64 */
@@ -653,6 +698,7 @@ export interface components {
             application?: components["schemas"]["JobApplicationSummary"] | null;
             timeline: components["schemas"]["TimelineEvent"][];
             feedback?: components["schemas"]["JobFeedback"] | null;
+            analysis?: components["schemas"]["JobAnalysis"] | null;
         };
         JobFeedback: {
             /** @enum {string} */
@@ -1058,6 +1104,26 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["CreatedApplication"];
                 };
+            };
+        };
+    };
+    reanalyze: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

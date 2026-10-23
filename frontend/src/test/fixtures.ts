@@ -14,6 +14,8 @@ export function resume(overrides: Partial<ResumeItem> = {}): ResumeItem {
     applications: 3,
     interviews: 1,
     interviewRate: 1 / 3,
+    skills: ['Java', 'Spring Boot'],
+    hasText: true,
     ...overrides,
   }
 }
@@ -117,6 +119,10 @@ export function inboxJob(overrides: Partial<JobListItem> = {}): JobListItem {
     status: 'NOVA',
     rating: null,
     reasons: [],
+    matchScore: 82,
+    summary: 'Evoluir o motor de crédito em Java com eventos em Kafka.',
+    matchedSkills: ['Java', 'Kafka'],
+    gaps: ['AWS'],
     ...overrides,
   }
 }

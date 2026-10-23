@@ -91,3 +91,9 @@ export const watchStatusLabels: Record<WatchStatus, string> = {
   ALVO: 'Alvo',
   IGNORADA: 'Ignorada',
 }
+
+/** A localidade só repete o modelo de trabalho ("Remoto" com modelo REMOTO); nesse caso basta um selo. */
+export function sameAsWorkModel(location: string, workModel: WorkModel): boolean {
+  const normalize = (value: string) => value.normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase()
+  return normalize(location) === normalize(workModelLabels[workModel])
+}

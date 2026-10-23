@@ -55,6 +55,7 @@ services:
       JOBHUNTER_GMAIL_REDIRECT_URI: ${JOBHUNTER_GMAIL_REDIRECT_URI:-http://localhost:8081/api/admin/gmail/callback}
       JOBHUNTER_GMAIL_AFTER_CONNECT_URL: ${JOBHUNTER_GMAIL_AFTER_CONNECT_URL:-http://localhost:8081/settings}
       JOBHUNTER_GMAIL_LABEL: ${JOBHUNTER_GMAIL_LABEL:-jobs}
+      JOBHUNTER_AI_API_KEY: ${JOBHUNTER_AI_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy

@@ -71,3 +71,9 @@ React: react, reactjs, react.js
 Angular: angular
 Scrum: scrum
 Inglês: inglês, ingles, english
+Spark: apache spark, pyspark
+Airflow: apache airflow
+Databricks: databricks
+dbt: dbt
+Pandas: pandas
+Power BI: power bi, powerbi
