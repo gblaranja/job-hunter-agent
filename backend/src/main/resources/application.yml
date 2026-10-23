@@ -42,3 +42,14 @@ jobhunter:
     bucket: ${JOBHUNTER_STORAGE_BUCKET:jobhunter-resumes}
     path-style: ${JOBHUNTER_STORAGE_PATH_STYLE:true}
     create-bucket-if-missing: ${JOBHUNTER_STORAGE_CREATE_BUCKET:false}
+  encryption:
+    key: ${JOBHUNTER_ENCRYPTION_KEY}
+    salt: ${JOBHUNTER_ENCRYPTION_SALT}
+  gmail:
+    client-id: ${JOBHUNTER_GMAIL_CLIENT_ID:}
+    client-secret: ${JOBHUNTER_GMAIL_CLIENT_SECRET:}
+    redirect-uri: ${JOBHUNTER_GMAIL_REDIRECT_URI:http://localhost:8080/api/admin/gmail/callback}
+    after-connect-url: ${JOBHUNTER_GMAIL_AFTER_CONNECT_URL:/settings}
+    label: ${JOBHUNTER_GMAIL_LABEL:jobs}
+  sourcing:
+    cron: ${JOBHUNTER_SOURCING_CRON:0 0 7 * * *}

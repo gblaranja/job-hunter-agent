@@ -1,4 +1,4 @@
-import type { AppliedJob, AppliedListItem, Board, ResumeItem } from '@/api/queries'
+import type { AppliedJob, AppliedListItem, Board, JobListItem, ResumeItem } from '@/api/queries'
 
 export function resume(overrides: Partial<ResumeItem> = {}): ResumeItem {
   return {
@@ -98,5 +98,25 @@ export function board(): Board {
       },
       { status: 'ENTREVISTA', cards: [] },
     ],
+  }
+}
+
+export function inboxJob(overrides: Partial<JobListItem> = {}): JobListItem {
+  return {
+    id: 30,
+    title: 'Desenvolvedor Java Sênior',
+    company: 'Banco Exemplo',
+    companyId: 5,
+    location: 'São Paulo, SP (Remoto)',
+    workModel: 'REMOTO',
+    url: 'https://www.linkedin.com/jobs/view/4012345678/',
+    origin: 'LINKEDIN_ALERTA',
+    collectedAt: '2026-10-23T10:00:00Z',
+    preview: 'Buscamos pessoa desenvolvedora backend com Java e Kafka.',
+    applicationId: null,
+    status: 'NOVA',
+    rating: null,
+    reasons: [],
+    ...overrides,
   }
 }

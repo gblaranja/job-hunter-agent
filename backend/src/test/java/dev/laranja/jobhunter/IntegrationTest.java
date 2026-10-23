@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /** Base dos testes de integração: Postgres e storage S3 reais via Testcontainers, banco limpo a cada teste. */
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
+@Import({ TestcontainersConfiguration.class, GoogleApiStubConfiguration.class })
 public abstract class IntegrationTest {
 
 	@Autowired
@@ -33,8 +33,11 @@ public abstract class IntegrationTest {
 
 	@BeforeEach
 	void cleanDatabase() {
-		this.jdbc.sql("truncate application_event, job_snapshot, application, job, resume_version restart identity cascade")
-			.update();
+		this.jdbc.sql("""
+				truncate application_event, job_snapshot, application, job_feedback, job, resume_version, email_message,
+				         gmail_sync_state, oauth_credential, collection_run, company_alias, company
+				restart identity cascade
+				""").update();
 	}
 
 	/** Usuário logado com o token CSRF, como o frontend faz. */

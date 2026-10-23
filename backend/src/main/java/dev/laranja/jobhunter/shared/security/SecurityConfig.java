@@ -29,7 +29,7 @@ import org.springframework.security.web.csrf.CsrfFilter;
  * resposta é 401.
  */
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(SecurityProperties.class)
+@EnableConfigurationProperties({ SecurityProperties.class, SecretCipher.EncryptionProperties.class })
 class SecurityConfig {
 
 	@Bean

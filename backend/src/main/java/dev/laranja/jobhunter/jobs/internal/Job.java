@@ -48,10 +48,16 @@ public class Job {
 
 	private Instant collectedAt;
 
+	private Long companyId;
+
+	private Instant firstSeenAt;
+
+	private Instant lastSeenAt;
+
 	protected Job() {
 	}
 
-	public static Job manual(ManualJobCommand command, String fingerprint, Instant now) {
+	public static Job manual(ManualJobCommand command, String fingerprint, long companyId, Instant now) {
 		Job job = new Job();
 		job.origin = JobOrigin.MANUAL;
 		job.fingerprint = fingerprint;
@@ -63,6 +69,9 @@ public class Job {
 		job.url = blankToNull(command.url());
 		job.rawDescription = blankToNull(command.description());
 		job.collectedAt = now;
+		job.companyId = companyId;
+		job.firstSeenAt = now;
+		job.lastSeenAt = now;
 		return job;
 	}
 

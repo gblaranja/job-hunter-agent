@@ -69,12 +69,20 @@ cd frontend && npm run lint && npx vitest run && npm run build
 
 Depois de mudar a API, com o backend rodando: `cd frontend && npm run gen:api`.
 
+### Conectar o Gmail
+
+1. No Google Cloud, crie um projeto, ative a Gmail API e configure a tela de consentimento (External, escopo `gmail.readonly`). Publique o app como **In production**: no modo Testing o refresh token expira em 7 dias.
+2. Crie uma credencial OAuth do tipo **Aplicativo da Web** com o redirect URI `http://localhost:8080/api/admin/gmail/callback` (desenvolvimento) ou o da sua instalação.
+3. Defina `JOBHUNTER_GMAIL_CLIENT_ID` e `JOBHUNTER_GMAIL_CLIENT_SECRET` e reinicie o backend.
+4. No Gmail, crie a label `jobs` e filtros que a apliquem aos alertas do LinkedIn e da Gupy e aos e-mails de recrutadores.
+5. Em **Configurações → Conectar Gmail**, autorize o acesso. A coleta roda todo dia às 7h ou em **Coletar agora**.
+
 ## Roadmap
 
 | Fase | Entrega | Status |
 | --- | --- | --- |
 | 1 | Fundação, tracker de candidaturas e currículos | Concluída |
-| 2 | Coleta via Gmail, feedback e cadastro de empresas | — |
+| 2 | Coleta via Gmail, feedback e cadastro de empresas | Concluída (falta conectar o Gmail) |
 | 3 | Análise por IA e score de aderência | — |
 | 4 | Classificação dos retornos e verificação de links | — |
 | 5 | Insights semanais e monitoramento de empresas | — |

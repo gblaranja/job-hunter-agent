@@ -1,4 +1,12 @@
-import type { ApplicationChannel, ApplicationStatus, LinkStatus, WorkModel } from '@/api/queries'
+import type {
+  ApplicationChannel,
+  ApplicationStatus,
+  FeedbackReason,
+  JobListItem,
+  LinkStatus,
+  WatchStatus,
+  WorkModel,
+} from '@/api/queries'
 
 export const statusLabels: Record<ApplicationStatus, string> = {
   NOVA: 'Nova',
@@ -60,4 +68,26 @@ export const linkStatusLabels: Record<NonNullable<LinkStatus>, string> = {
   ATIVO: 'Ativo',
   REMOVIDO: 'Removido',
   NAO_VERIFICADO: 'Não verificado',
+}
+
+export const feedbackReasonLabels: Record<FeedbackReason, string> = {
+  SALARIO: 'Salário',
+  STACK: 'Stack',
+  SENIORIDADE: 'Senioridade',
+  MODELO_TRABALHO: 'Modelo de trabalho',
+  EMPRESA: 'Empresa',
+  LOCALIZACAO: 'Localização',
+}
+
+export const originLabels: Record<JobListItem['origin'], string> = {
+  MANUAL: 'Manual',
+  LINKEDIN_ALERTA: 'LinkedIn',
+  GUPY_ALERTA: 'Gupy',
+}
+
+export const watchStatusLabels: Record<WatchStatus, string> = {
+  DESCOBERTA: 'Descoberta',
+  MONITORADA: 'Monitorada',
+  ALVO: 'Alvo',
+  IGNORADA: 'Ignorada',
 }

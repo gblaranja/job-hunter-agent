@@ -3,13 +3,26 @@ import { useCurrentUser, useLogout } from '@/api/queries'
 import { LoadingBlock } from '@/components/QueryState'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { BriefcaseBusiness, FileText, KanbanSquare, ListChecks, LogOut, PlusCircle } from 'lucide-react'
+import {
+  BriefcaseBusiness,
+  Building2,
+  FileText,
+  Inbox,
+  KanbanSquare,
+  ListChecks,
+  LogOut,
+  PlusCircle,
+  Settings,
+} from 'lucide-react'
 
 const navigation = [
+  { to: '/inbox', label: 'Caixa de vagas', Icon: Inbox },
   { to: '/board', label: 'Kanban', Icon: KanbanSquare },
   { to: '/applications', label: 'Minhas candidaturas', Icon: ListChecks },
   { to: '/jobs/new', label: 'Nova vaga', Icon: PlusCircle },
   { to: '/resumes', label: 'Currículos', Icon: FileText },
+  { to: '/companies', label: 'Empresas', Icon: Building2 },
+  { to: '/settings', label: 'Configurações', Icon: Settings },
 ]
 
 /** Casca do backoffice; sem sessão, manda para o login e volta para a mesma tela depois. */

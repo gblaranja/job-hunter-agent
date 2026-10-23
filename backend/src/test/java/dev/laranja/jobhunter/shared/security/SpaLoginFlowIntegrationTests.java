@@ -7,6 +7,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+import dev.laranja.jobhunter.GoogleApiStubConfiguration;
 import dev.laranja.jobhunter.TestcontainersConfiguration;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * {@code XSRF-TOKEN}, o login devolve o token no header e a sessão abre a API.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestcontainersConfiguration.class)
+@Import({ TestcontainersConfiguration.class, GoogleApiStubConfiguration.class })
 class SpaLoginFlowIntegrationTests {
 
 	@LocalServerPort
