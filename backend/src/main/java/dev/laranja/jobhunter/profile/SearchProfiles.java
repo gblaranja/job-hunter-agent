@@ -36,7 +36,8 @@ public class SearchProfiles {
 			.distinct()
 			.toList();
 		boolean remoteOnly = active.stream().allMatch(SearchProfile::isRemoteOnly);
-		return new JobFilter(excluded, remoteOnly);
+		List<String> keywords = active.stream().flatMap(profile -> profile.getKeywords().stream()).distinct().toList();
+		return new JobFilter(excluded, remoteOnly, keywords);
 	}
 
 	@Transactional(readOnly = true)

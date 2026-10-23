@@ -7,7 +7,10 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.DynamicPropertyRegistrar;
 
-/** Simula o OAuth do Google e a Gmail API num WireMock; os testes registram as respostas de que precisam. */
+/**
+ * Simula o OAuth do Google, a Gmail API e as APIs de vagas (ATS e agregadores) num WireMock; os testes registram as
+ * respostas de que precisam.
+ */
 @TestConfiguration(proxyBeanMethods = false)
 public class GoogleApiStubConfiguration {
 
@@ -28,6 +31,13 @@ public class GoogleApiStubConfiguration {
 			registry.add("jobhunter.gmail.api-base-url", googleApi::baseUrl);
 			registry.add("jobhunter.gmail.after-connect-url", () -> "http://localhost:5173/settings");
 			registry.add("jobhunter.sourcing.scheduler-enabled", () -> "false");
+			// Os ATS e as fontes amplas respondem no mesmo WireMock (os caminhos não colidem).
+			registry.add("jobhunter.sourcing.ats.greenhouse-base-url", googleApi::baseUrl);
+			registry.add("jobhunter.sourcing.ats.lever-base-url", googleApi::baseUrl);
+			registry.add("jobhunter.sourcing.ats.ashby-base-url", googleApi::baseUrl);
+			registry.add("jobhunter.sourcing.remotive.base-url", googleApi::baseUrl);
+			registry.add("jobhunter.sourcing.github.base-url", googleApi::baseUrl);
+			registry.add("jobhunter.sourcing.adzuna.base-url", googleApi::baseUrl);
 		};
 	}
 

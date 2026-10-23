@@ -2,7 +2,9 @@ package dev.laranja.jobhunter.jobs;
 
 import java.sql.Timestamp;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Optional;
 
 import dev.laranja.jobhunter.companies.CompanyDirectory;
@@ -53,6 +55,8 @@ public class JobCatalog {
 		});
 		long companyId = this.companies.resolveOrRegister(command.company());
 		Job job = this.jobs.save(Job.manual(command, fingerprint, companyId, this.clock.instant()));
+		this.jobs.flush();
+		linkRepost(job.getId(), companyId, command.title(), this.clock.instant());
 		this.events.publishEvent(new JobCollected(job.getId(), job.getOrigin()));
 		return job.toView();
 	}
@@ -82,7 +86,7 @@ public class JobCatalog {
 				                 url, raw_description, collected_at, company_id, first_seen_at, last_seen_at)
 				values (:source, :externalId, :fingerprint, :title, :company, :location, :workModel, :salaryRange,
 				        :url, :description, :now, :companyId, :now, :now)
-				on conflict (fingerprint) do update set last_seen_at = excluded.last_seen_at
+				on conflict (fingerprint) do update set last_seen_at = excluded.last_seen_at, closed_at = null
 				returning id, (xmax = 0) as created
 				""")
 			.param("source", raw.origin().name())
@@ -100,13 +104,54 @@ public class JobCatalog {
 			.query((rs, row) -> new IngestResult(rs.getLong("id"), rs.getBoolean("created")))
 			.single();
 		if (result.created()) {
+			linkRepost(result.jobId(), companyId, raw.title(), now);
 			this.events.publishEvent(new JobCollected(result.jobId(), raw.origin()));
 		}
 		return result;
 	}
 
+	/**
+	 * Fecha as vagas da empresa, vindas de uma fonte que lista tudo (ATS), que não apareceram na listagem atual.
+	 * @return quantas vagas foram fechadas
+	 */
+	@Transactional
+	public int closeMissing(JobOrigin origin, long companyId, Collection<String> listedExternalIds) {
+		return this.jdbc.sql("""
+				update job set closed_at = :now
+				where source = :source and company_id = :companyId and closed_at is null
+				  and not (external_id = any(string_to_array(:listed, chr(31))))
+				""")
+			.param("now", Timestamp.from(this.clock.instant()))
+			.param("source", origin.name())
+			.param("companyId", companyId)
+			.param("listed", String.join(String.valueOf((char) 31), listedExternalIds))
+			.update();
+	}
+
+	/**
+	 * Vaga republicada: mesma empresa e título parecido (similaridade trigram acima de 0,8) nos últimos 90 dias.
+	 * Prefere a anterior já fechada, que é o caso típico de vaga reaberta.
+	 */
+	private void linkRepost(long jobId, long companyId, String title, Instant now) {
+		this.jdbc.sql("""
+				update job set repost_of_job_id = (
+				    select previous.id from job previous
+				    where previous.company_id = :companyId and previous.id <> :jobId
+				      and previous.first_seen_at >= :since
+				      and similarity(lower(previous.title), lower(:title)) > 0.8
+				    order by (previous.closed_at is not null) desc, previous.first_seen_at desc
+				    limit 1)
+				where id = :jobId
+				""")
+			.param("companyId", companyId)
+			.param("jobId", jobId)
+			.param("since", Timestamp.from(now.minus(Duration.ofDays(90))))
+			.param("title", title)
+			.update();
+	}
+
 	private void touch(long jobId, Instant now) {
-		this.jdbc.sql("update job set last_seen_at = :now where id = :id")
+		this.jdbc.sql("update job set last_seen_at = :now, closed_at = null where id = :id")
 			.param("now", Timestamp.from(now))
 			.param("id", jobId)
 			.update();

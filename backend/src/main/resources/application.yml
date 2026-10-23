@@ -53,5 +53,13 @@ jobhunter:
     label: ${JOBHUNTER_GMAIL_LABEL:jobs}
   sourcing:
     cron: ${JOBHUNTER_SOURCING_CRON:0 0 7 * * *}
+    remotive:
+      enabled: ${JOBHUNTER_REMOTIVE_ENABLED:false}
+    github:
+      enabled: ${JOBHUNTER_GITHUB_VAGAS_ENABLED:false}
+      token: ${JOBHUNTER_GITHUB_TOKEN:}
+    adzuna:
+      app-id: ${JOBHUNTER_ADZUNA_APP_ID:}
+      app-key: ${JOBHUNTER_ADZUNA_APP_KEY:}
   ai:
     api-key: ${JOBHUNTER_AI_API_KEY:}

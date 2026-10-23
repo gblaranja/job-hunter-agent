@@ -12,8 +12,15 @@ public interface LlmClient {
 	 * @param system instruções fixas (e o currículo, quando houver); ficam em cache entre as chamadas
 	 * @param user conteúdo variável da chamada
 	 * @param effort LOW para extração e classificação; HIGH para o relatório semanal
+	 * @param thinking pensamento adaptativo, para as tarefas que pedem raciocínio (o relatório semanal)
 	 */
-	record LlmRequest(String task, String model, String system, String user, long maxTokens, Effort effort) {
+	record LlmRequest(String task, String model, String system, String user, long maxTokens, Effort effort,
+			boolean thinking) {
+
+		public LlmRequest(String task, String model, String system, String user, long maxTokens, Effort effort) {
+			this(task, model, system, user, maxTokens, effort, false);
+		}
+
 	}
 
 	enum Effort {
