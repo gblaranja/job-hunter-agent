@@ -21,21 +21,26 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
 
 /**
- * Login único por sessão (cookie) com CSRF no modo SPA: o token vai no cookie {@code XSRF-TOKEN} e o
+ * Login do dono da instalação, com senha ou com Google, por sessão (cookie) e CSRF no modo SPA: o token vai no cookie {@code XSRF-TOKEN} e o
  * frontend o devolve no header {@code X-XSRF-TOKEN}. Nenhuma rota da API redireciona: sem sessão, a
  * resposta é 401.
  */
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties({ SecurityProperties.class, SecretCipher.EncryptionProperties.class })
+@EnableConfigurationProperties({ SecurityProperties.class, GoogleLoginProperties.class,
+		SecretCipher.EncryptionProperties.class })
 class SecurityConfig {
 
 	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http, JsonMapper jsonMapper) throws Exception {
+	SecurityFilterChain securityFilterChain(HttpSecurity http, JsonMapper jsonMapper,
+			SecurityContextRepository securityContextRepository) throws Exception {
 		http.authorizeHttpRequests(auth -> auth
-			.requestMatchers("/actuator/health/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/error")
+			.requestMatchers("/actuator/health/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/error",
+					"/api/auth/providers", "/api/auth/google", "/api/auth/google/callback")
 			.permitAll()
 			.anyRequest()
 			.authenticated())
@@ -49,9 +54,16 @@ class SecurityConfig {
 				.logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler()))
 			.exceptionHandling(exceptions -> exceptions
 				.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+			.securityContext(context -> context.securityContextRepository(securityContextRepository))
 			.csrf(csrf -> csrf.spa())
 			.addFilterAfter(new CsrfCookieFilter(), CsrfFilter.class);
 		return http.build();
+	}
+
+	/** Compartilhado com o login com Google, que abre a sessão fora do formulário. */
+	@Bean
+	SecurityContextRepository securityContextRepository() {
+		return new HttpSessionSecurityContextRepository();
 	}
 
 	@Bean

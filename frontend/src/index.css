@@ -31,6 +31,10 @@
   --sidebar-accent: oklch(0.32 0.05 255);
   --sidebar-accent-foreground: oklch(0.99 0 0);
   --sidebar-border: oklch(0.3 0.04 255);
+  /* marca: tinta azul-marinho, papel claro e o laranja de destaque */
+  --brand-ink: oklch(0.27 0.05 260);
+  --brand-paper: oklch(0.98 0.004 250);
+  --brand-accent: #eb6834;
   /* séries dos gráficos: azul e laranja, par validado para daltonismo */
   --series-1: #2a78d6;
   --series-2: #eb6834;
@@ -64,6 +68,8 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --series-1: #3987e5;
   --series-2: #d95926;
+  --brand-ink: oklch(0.33 0.06 258);
+  --brand-accent: #f07a48;
 }
 
 @theme inline {

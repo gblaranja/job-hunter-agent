@@ -1,11 +1,11 @@
-import { Navigate, NavLink, Outlet, useLocation } from 'react-router'
+import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router'
 import { useCurrentUser, useLogout } from '@/api/queries'
+import { Logo } from '@/components/brand/Logo'
 import { NotificationBell } from '@/components/NotificationBell'
 import { LoadingBlock } from '@/components/QueryState'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
-  BriefcaseBusiness,
   Building2,
   FileText,
   Inbox,
@@ -49,8 +49,9 @@ export function AppLayout() {
     <div className="flex min-h-svh flex-col md:flex-row">
       <aside className="flex shrink-0 flex-col gap-1 bg-sidebar p-3 text-sidebar-foreground md:w-60 md:p-4">
         <div className="mb-2 flex items-center gap-2 px-2 py-1 md:mb-6">
-          <BriefcaseBusiness className="size-5" aria-hidden />
-          <span className="font-semibold tracking-tight">Job Hunter</span>
+          <Link to="/" aria-label="Página inicial">
+            <Logo compact />
+          </Link>
           <NotificationBell className="ml-auto text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
           <Button
             variant="ghost"

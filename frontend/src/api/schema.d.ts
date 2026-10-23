@@ -548,6 +548,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["providers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/me": {
         parameters: {
             query?: never;
@@ -556,6 +572,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["start_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/google/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["callback"];
         put?: never;
         post?: never;
         delete?: never;
@@ -635,7 +683,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["callback"];
+        get: operations["callback_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1187,6 +1235,10 @@ export interface components {
             avgDaysOpen?: number | null;
             /** Format: int32 */
             headcount?: number | null;
+        };
+        LoginProviders: {
+            password: boolean;
+            google: boolean;
         };
         CurrentUser: {
             username: string;
@@ -2223,6 +2275,26 @@ export interface operations {
             };
         };
     };
+    providers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoginProviders"];
+                };
+            };
+        };
+    };
     me: {
         parameters: {
             query?: never;
@@ -2240,6 +2312,46 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["CurrentUser"];
                 };
+            };
+        };
+    };
+    start_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    callback: {
+        parameters: {
+            query?: {
+                code?: string;
+                state?: string;
+                error?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -2324,7 +2436,7 @@ export interface operations {
             };
         };
     };
-    callback: {
+    callback_1: {
         parameters: {
             query?: {
                 code?: string;

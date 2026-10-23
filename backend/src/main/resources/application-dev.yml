@@ -4,6 +4,9 @@ jobhunter:
     username: ${JOBHUNTER_USER:admin}
     # senha "jobhunter"
     password-hash: ${JOBHUNTER_PASSWORD_HASH:{bcrypt}$2a$10$iIYdsL/jCnchsQCSW.ZeyeHVFnFAsE7dUEwoDOzetJ4ydIl8v466m}
+    google:
+      after-login-url: ${JOBHUNTER_AFTER_LOGIN_URL:http://localhost:5173/board}
+      login-url: ${JOBHUNTER_LOGIN_URL:http://localhost:5173/login}
   storage:
     endpoint: ${JOBHUNTER_STORAGE_ENDPOINT:http://localhost:9000}
     public-endpoint: ${JOBHUNTER_STORAGE_PUBLIC_ENDPOINT:http://localhost:9000}

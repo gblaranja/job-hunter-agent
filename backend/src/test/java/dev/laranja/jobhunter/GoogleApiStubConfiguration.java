@@ -31,6 +31,14 @@ public class GoogleApiStubConfiguration {
 			registry.add("jobhunter.gmail.api-base-url", googleApi::baseUrl);
 			registry.add("jobhunter.gmail.after-connect-url", () -> "http://localhost:5173/settings");
 			registry.add("jobhunter.sourcing.scheduler-enabled", () -> "false");
+			registry.add("jobhunter.security.google.client-id", () -> "test-client-id");
+			registry.add("jobhunter.security.google.client-secret", () -> "test-client-secret");
+			registry.add("jobhunter.security.google.allowed-email", () -> "Dono@Example.com");
+			registry.add("jobhunter.security.google.auth-uri", () -> googleApi.baseUrl() + "/o/oauth2/v2/auth");
+			registry.add("jobhunter.security.google.token-uri", () -> googleApi.baseUrl() + "/token");
+			registry.add("jobhunter.security.google.user-info-uri", () -> googleApi.baseUrl() + "/v1/userinfo");
+			registry.add("jobhunter.security.google.after-login-url", () -> "http://localhost:5173/board");
+			registry.add("jobhunter.security.google.login-url", () -> "http://localhost:5173/login");
 			// Os ATS e as fontes amplas respondem no mesmo WireMock (os caminhos não colidem).
 			registry.add("jobhunter.sourcing.ats.greenhouse-base-url", googleApi::baseUrl);
 			registry.add("jobhunter.sourcing.ats.lever-base-url", googleApi::baseUrl);

@@ -50,6 +50,15 @@ export function useCurrentUser() {
   })
 }
 
+/** Formas de login habilitadas na instalação (o botão do Google só aparece se estiver configurado). */
+export function useLoginProviders() {
+  return useQuery({
+    queryKey: ['auth-providers'],
+    queryFn: () => unwrap(api.GET('/api/auth/providers')),
+    staleTime: Infinity,
+  })
+}
+
 export function useLogin() {
   const client = useQueryClient()
   return useMutation({
