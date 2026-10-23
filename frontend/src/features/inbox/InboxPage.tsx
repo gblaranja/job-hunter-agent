@@ -4,6 +4,8 @@ import { toast } from 'sonner'
 import { useInboxJobs, useStartApplication, type JobListItem } from '@/api/queries'
 import { FeedbackButtons } from '@/components/FeedbackButtons'
 import { PageHeader } from '@/components/PageHeader'
+import { ScoreBadge } from '@/components/ScoreBadge'
+import { SkillChips } from '@/components/SkillChips'
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/QueryState'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -11,7 +13,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { formatDate } from '@/lib/format'
-import { originLabels, workModelLabels } from '@/lib/labels'
+import { originLabels, sameAsWorkModel, workModelLabels } from '@/lib/labels'
 import { ExternalLink, Search, Star } from 'lucide-react'
 
 /** Vagas novas, ainda sem candidatura: avalie, marque interesse ou descarte. */
@@ -24,7 +26,7 @@ export function InboxPage() {
     <>
       <PageHeader
         title="Caixa de vagas"
-        description="Vagas coletadas dos alertas que ainda não viraram candidatura. As marcadas com “Não gostei” saem daqui."
+        description="Vagas que ainda não viraram candidatura, da maior para a menor aderência ao seu currículo padrão. As marcadas com “Não gostei” saem daqui."
         actions={jobs.data && <span className="text-sm text-muted-foreground">{jobs.data.total} vagas</span>}
       />
       <div className="relative mb-4 max-w-xl">
@@ -72,7 +74,8 @@ function InboxCard({ job }: { job: JobListItem }) {
     <Card>
       <CardContent className="space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0">
+          <ScoreBadge score={job.matchScore} />
+          <div className="min-w-0 flex-1">
             <Link to={`/jobs/${job.id}`} className="font-medium hover:underline">
               {job.title}
             </Link>
@@ -80,12 +83,17 @@ function InboxCard({ job }: { job: JobListItem }) {
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <Badge variant="outline">{originLabels[job.origin]}</Badge>
-            {job.location && <Badge variant="secondary">{job.location}</Badge>}
+            {job.location && !sameAsWorkModel(job.location, job.workModel) && <Badge variant="secondary">{job.location}</Badge>}
             {job.workModel !== 'NAO_INFORMADO' && <Badge variant="secondary">{workModelLabels[job.workModel]}</Badge>}
             <span>{formatDate(job.collectedAt)}</span>
           </div>
         </div>
-        {job.preview && <p className="line-clamp-3 text-sm text-muted-foreground">{job.preview}</p>}
+        {(job.summary ?? job.preview) && (
+          <p className="line-clamp-3 text-sm text-muted-foreground">{job.summary ?? job.preview}</p>
+        )}
+        {job.matchedSkills.length + job.gaps.length > 0 && (
+          <SkillChips skills={[...job.matchedSkills, ...job.gaps]} owned={job.matchedSkills} gaps={job.gaps} limit={10} />
+        )}
         <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
           <FeedbackButtons jobId={job.id} rating={job.rating} reasons={job.reasons} />
           <div className="flex gap-2">

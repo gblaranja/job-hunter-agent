@@ -57,6 +57,11 @@ class S3ObjectStorage implements ObjectStorage, DisposableBean {
 	}
 
 	@Override
+	public byte[] get(String key) {
+		return this.client.getObjectAsBytes(request -> request.bucket(this.bucket).key(key)).asByteArray();
+	}
+
+	@Override
 	public void delete(String key) {
 		this.client.deleteObject(request -> request.bucket(this.bucket).key(key));
 	}

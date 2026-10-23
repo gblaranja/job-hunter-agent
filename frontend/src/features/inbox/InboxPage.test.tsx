@@ -20,6 +20,9 @@ describe('InboxPage', () => {
 
     expect(await screen.findByText('Desenvolvedor Java Sênior')).toBeInTheDocument()
     expect(screen.getByText('LinkedIn')).toBeInTheDocument()
+    expect(screen.getByLabelText('Aderência 82')).toBeInTheDocument()
+    expect(screen.getByText(/motor de crédito/)).toBeInTheDocument()
+    expect(screen.getAllByLabelText('lacuna')).toHaveLength(1)
 
     await userEvent.click(screen.getByRole('button', { name: /não gostei/i }))
     await userEvent.click(await screen.findByRole('button', { name: 'Salário' }))

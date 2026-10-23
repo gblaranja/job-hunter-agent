@@ -7,6 +7,8 @@ import java.util.List;
 import dev.laranja.jobhunter.shared.NotFoundException;
 import dev.laranja.jobhunter.shared.jdbc.JdbcRows;
 
+import tools.jackson.databind.json.JsonMapper;
+
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +18,7 @@ class ResumeQueries {
 
 	private static final String SELECT = """
 			select r.id, r.label, r.target_role, r.file_name, r.content_type, r.size_bytes, r.is_default, r.archived,
-			       r.created_at,
+			       r.created_at, coalesce(r.skills, '[]'::jsonb)::text as skills, r.extracted_text is not null as has_text,
 			       count(a.id) as applications,
 			       count(a.id) filter (where exists (
 			           select 1 from application_event e
@@ -28,8 +30,11 @@ class ResumeQueries {
 
 	private final JdbcClient jdbc;
 
-	ResumeQueries(JdbcClient jdbc) {
+	private final JsonMapper json;
+
+	ResumeQueries(JdbcClient jdbc, JsonMapper json) {
 		this.jdbc = jdbc;
+		this.json = json;
 	}
 
 	List<ResumeItem> list() {
@@ -46,14 +51,16 @@ class ResumeQueries {
 			.orElseThrow(() -> NotFoundException.of("Currículo", id));
 	}
 
-	private static ResumeItem toItem(ResultSet rs) throws SQLException {
+	@SuppressWarnings("unchecked")
+	private ResumeItem toItem(ResultSet rs) throws SQLException {
 		long applications = rs.getLong("applications");
 		long interviews = rs.getLong("interviews");
 		Double interviewRate = (applications > 0) ? (double) interviews / applications : null;
 		return new ResumeItem(rs.getLong("id"), rs.getString("label"), rs.getString("target_role"),
 				rs.getString("file_name"), rs.getString("content_type"), rs.getLong("size_bytes"),
 				rs.getBoolean("is_default"), rs.getBoolean("archived"), JdbcRows.instant(rs, "created_at"),
-				applications, interviews, interviewRate);
+				applications, interviews, interviewRate, (List<String>) this.json.readValue(rs.getString("skills"), List.class),
+				rs.getBoolean("has_text"));
 	}
 
 }

@@ -344,3 +344,16 @@ export function useDeleteSearchProfile() {
     onSuccess: () => client.invalidateQueries({ queryKey: ['search-profiles'] }),
   })
 }
+
+// Análise
+
+export type JobAnalysis = Schemas['JobAnalysis']
+
+export function useReanalyze() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (jobId: number) => unwrap(api.POST('/api/jobs/{id}/analysis', { params: { path: { id: jobId } } })),
+    onSuccess: () =>
+      Promise.all([client.invalidateQueries({ queryKey: ['job'] }), client.invalidateQueries({ queryKey: ['jobs'] })]),
+  })
+}

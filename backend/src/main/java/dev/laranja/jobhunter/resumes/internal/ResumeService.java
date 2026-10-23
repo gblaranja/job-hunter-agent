@@ -33,16 +33,19 @@ public class ResumeService {
 
 	private final ResumeFileValidator validator;
 
+	private final ResumeTextExtractor textExtractor;
+
 	private final ObjectStorage storage;
 
 	private final ApplicationEventPublisher events;
 
 	private final Clock clock;
 
-	ResumeService(ResumeVersionRepository resumes, ResumeFileValidator validator, ObjectStorage storage,
-			ApplicationEventPublisher events, Clock clock) {
+	ResumeService(ResumeVersionRepository resumes, ResumeFileValidator validator, ResumeTextExtractor textExtractor,
+			ObjectStorage storage, ApplicationEventPublisher events, Clock clock) {
 		this.resumes = resumes;
 		this.validator = validator;
+		this.textExtractor = textExtractor;
 		this.storage = storage;
 		this.events = events;
 		this.clock = clock;
@@ -68,6 +71,7 @@ public class ResumeService {
 			ResumeVersion resume = ResumeVersion.create(resolvedLabel, null, fileKey, fileName, type, content.length,
 					sha256, firstDefault, this.clock.instant());
 			resume.changeTargetRole(targetRole);
+			resume.useExtractedText(this.textExtractor.extract(content));
 			saved = this.resumes.saveAndFlush(resume);
 		}
 		catch (RuntimeException ex) {

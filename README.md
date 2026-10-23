@@ -69,6 +69,10 @@ cd frontend && npm run lint && npx vitest run && npm run build
 
 Depois de mudar a API, com o backend rodando: `cd frontend && npm run gen:api`.
 
+### Ligar a análise por IA
+
+Sem chave, a análise usa só o dicionário de skills e as regras, e o score funciona do mesmo jeito. Com `JOBHUNTER_AI_API_KEY` (Claude API), o Claude Haiku refina a extração dos requisitos e ajusta o score em até ±10 pontos, com justificativa. Configure um limite de gasto mensal no Console da Anthropic; o uso de tokens de cada chamada fica na tabela `llm_usage`.
+
 ### Conectar o Gmail
 
 1. No Google Cloud, crie um projeto, ative a Gmail API e configure a tela de consentimento (External, escopo `gmail.readonly`). Publique o app como **In production**: no modo Testing o refresh token expira em 7 dias.
@@ -83,7 +87,7 @@ Depois de mudar a API, com o backend rodando: `cd frontend && npm run gen:api`.
 | --- | --- | --- |
 | 1 | Fundação, tracker de candidaturas e currículos | Concluída |
 | 2 | Coleta via Gmail, feedback e cadastro de empresas | Concluída (falta conectar o Gmail) |
-| 3 | Análise por IA e score de aderência | — |
+| 3 | Análise por IA e score de aderência | Concluída |
 | 4 | Classificação dos retornos e verificação de links | — |
 | 5 | Insights semanais e monitoramento de empresas | — |
 | 6 | Nichos (financeiro, consultorias) e selo GPTW | — |

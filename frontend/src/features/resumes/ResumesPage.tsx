@@ -2,6 +2,7 @@ import { useRef, useState, type DragEvent, type FormEvent } from 'react'
 import { toast } from 'sonner'
 import { fetchResumeLink, useResumes, useUpdateResume, useUploadResume, type ResumeItem } from '@/api/queries'
 import { PageHeader } from '@/components/PageHeader'
+import { SkillChips } from '@/components/SkillChips'
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/QueryState'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -169,6 +170,17 @@ function ResumeRow({ resume }: { resume: ResumeItem }) {
             {resume.targetRole ? `${resume.targetRole} · ` : ''}
             {resume.fileName} · {formatFileSize(resume.sizeBytes)} · enviado em {formatDate(resume.createdAt)}
           </p>
+          {resume.skills.length > 0 ? (
+            <div className="mt-2">
+              <SkillChips skills={resume.skills} owned={resume.skills} limit={14} />
+            </div>
+          ) : (
+            !resume.hasText && (
+              <p className="mt-2 text-xs text-destructive">
+                Não foi possível ler o texto do arquivo (PDF escaneado?). O score usa o texto do currículo.
+              </p>
+            )
+          )}
         </div>
         <dl className="flex gap-6 text-center text-sm">
           <div>

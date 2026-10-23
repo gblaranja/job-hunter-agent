@@ -35,6 +35,7 @@
 		<shedlock.version>7.10.1</shedlock.version>
 		<jsoup.version>1.23.2</jsoup.version>
 		<wiremock.version>3.13.2</wiremock.version>
+		<anthropic.version>3.1.0</anthropic.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -103,6 +104,16 @@
 			<version>${tika.version}</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.anthropic</groupId>
+			<artifactId>anthropic-java</artifactId>
+			<version>${anthropic.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-parsers-standard-package</artifactId>
+			<version>${tika.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>org.jsoup</groupId>
 			<artifactId>jsoup</artifactId>
