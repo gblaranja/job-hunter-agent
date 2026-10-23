@@ -10,3 +10,8 @@ jobhunter:
     access-key: ${JOBHUNTER_STORAGE_ACCESS_KEY:jobhunter}
     secret-key: ${JOBHUNTER_STORAGE_SECRET_KEY:jobhunter-secret}
     create-bucket-if-missing: ${JOBHUNTER_STORAGE_CREATE_BUCKET:true}
+  encryption:
+    key: ${JOBHUNTER_ENCRYPTION_KEY:dev-only-encryption-key}
+    salt: ${JOBHUNTER_ENCRYPTION_SALT:5c0744940b5c369b}
+  gmail:
+    after-connect-url: ${JOBHUNTER_GMAIL_AFTER_CONNECT_URL:http://localhost:5173/settings}

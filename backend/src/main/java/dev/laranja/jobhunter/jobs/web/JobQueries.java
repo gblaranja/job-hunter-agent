@@ -1,8 +1,14 @@
 package dev.laranja.jobhunter.jobs.web;
 
+import java.sql.Array;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Arrays;
 import java.util.List;
 
+import dev.laranja.jobhunter.jobs.FeedbackRating;
+import dev.laranja.jobhunter.jobs.FeedbackReason;
 import dev.laranja.jobhunter.jobs.JobOrigin;
 import dev.laranja.jobhunter.jobs.JobView;
 import dev.laranja.jobhunter.jobs.WorkModel;
@@ -19,9 +25,15 @@ import org.springframework.stereotype.Component;
 @Component
 class JobQueries {
 
-	private static final String LIST_FILTER = """
+	private static final String LIST_FROM = """
+			from job j
+			left join application a on a.job_id = j.id
+			left join job_feedback f on f.job_id = j.id
 			where (cast(:status as text) is null or coalesce(a.status, 'NOVA') = :status)
+			  and (cast(:rating as text) is null or f.rating = :rating)
 			  and (cast(:pattern as text) is null or j.title ilike :pattern or j.company ilike :pattern)
+			  -- caixa de vagas: sem candidatura e sem "não gostei"
+			  and (not :inbox or (a.id is null and coalesce(f.rating, '') <> 'NAO_GOSTEI'))
 			""";
 
 	private final JdbcClient jdbc;
@@ -30,29 +42,35 @@ class JobQueries {
 		this.jdbc = jdbc;
 	}
 
-	PageResponse<JobListItem> list(String status, String query, int page, int size) {
-		String pattern = JdbcRows.containsPattern(query);
+	PageResponse<JobListItem> list(JobListFilter filter, int page, int size) {
+		String pattern = JdbcRows.containsPattern(filter.query());
 		List<JobListItem> items = this.jdbc.sql("""
-				select j.id, j.title, j.company, j.location, j.work_model, j.url, j.source, j.collected_at,
-				       a.id as application_id, coalesce(a.status, 'NOVA') as status
-				from job j
-				left join application a on a.job_id = j.id
-				""" + LIST_FILTER + """
+				select j.id, j.title, j.company, j.company_id, j.location, j.work_model, j.url, j.source, j.collected_at,
+				       j.raw_description, a.id as application_id, coalesce(a.status, 'NOVA') as status,
+				       f.rating, f.reasons
+				""" + LIST_FROM + """
 				order by j.collected_at desc, j.id desc
 				limit :size offset :offset
 				""")
-			.param("status", status, Types.VARCHAR)
+			.param("status", filter.status(), Types.VARCHAR)
+			.param("rating", (filter.rating() != null) ? filter.rating().name() : null, Types.VARCHAR)
 			.param("pattern", pattern, Types.VARCHAR)
+			.param("inbox", filter.inbox())
 			.param("size", size)
 			.param("offset", page * size)
 			.query((rs, row) -> new JobListItem(rs.getLong("id"), rs.getString("title"), rs.getString("company"),
-					rs.getString("location"), WorkModel.valueOf(rs.getString("work_model")), rs.getString("url"),
+					JdbcRows.nullableLong(rs, "company_id"), rs.getString("location"),
+					WorkModel.valueOf(rs.getString("work_model")), rs.getString("url"),
 					JobOrigin.valueOf(rs.getString("source")), JdbcRows.instant(rs, "collected_at"),
-					JdbcRows.nullableLong(rs, "application_id"), rs.getString("status")))
+					preview(rs.getString("raw_description")), JdbcRows.nullableLong(rs, "application_id"),
+					rs.getString("status"), JdbcRows.nullableEnum(rs, "rating", FeedbackRating.class),
+					reasons(rs)))
 			.list();
-		long total = this.jdbc.sql("select count(*) from job j left join application a on a.job_id = j.id " + LIST_FILTER)
-			.param("status", status, Types.VARCHAR)
+		long total = this.jdbc.sql("select count(*) " + LIST_FROM)
+			.param("status", filter.status(), Types.VARCHAR)
+			.param("rating", (filter.rating() != null) ? filter.rating().name() : null, Types.VARCHAR)
 			.param("pattern", pattern, Types.VARCHAR)
+			.param("inbox", filter.inbox())
 			.query(Long.class)
 			.single();
 		return new PageResponse<>(items, page, size, total);
@@ -84,7 +102,33 @@ class JobQueries {
 					rs.getString("to_status"), rs.getString("response_type"), rs.getString("origin"),
 					rs.getString("note"), JdbcRows.instant(rs, "created_at")))
 			.list();
-		return new JobDetail(job, application, timeline);
+		JobDetail.Feedback feedback = this.jdbc.sql("select rating, reasons, comment from job_feedback where job_id = :jobId")
+			.param("jobId", job.id())
+			.query((rs, row) -> new JobDetail.Feedback(FeedbackRating.valueOf(rs.getString("rating")), reasons(rs),
+					rs.getString("comment")))
+			.optional()
+			.orElse(null);
+		return new JobDetail(job, application, timeline, feedback);
+	}
+
+	private static List<FeedbackReason> reasons(ResultSet rs) throws SQLException {
+		Array array = rs.getArray("reasons");
+		if (array == null) {
+			return List.of();
+		}
+		return Arrays.stream((String[]) array.getArray()).map(FeedbackReason::valueOf).toList();
+	}
+
+	// Começo da descrição em texto corrido, para o card da caixa de vagas (o resumo por IA chega na Fase 3).
+	private static String preview(String description) {
+		if (description == null) {
+			return null;
+		}
+		String text = description.replaceAll("[#*_`>]+", "").replaceAll("\\s+", " ").strip();
+		return (text.length() <= 280) ? text : text.substring(0, 280).strip() + "…";
+	}
+
+	record JobListFilter(String status, FeedbackRating rating, String query, boolean inbox) {
 	}
 
 }
