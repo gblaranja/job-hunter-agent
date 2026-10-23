@@ -1,4 +1,4 @@
-import type { AppliedJob, AppliedListItem, Board, JobListItem, ResumeItem } from '@/api/queries'
+import type { AppliedJob, AppliedListItem, Board, JobListItem, ResumeItem, TailoredResume } from '@/api/queries'
 
 export function resume(overrides: Partial<ResumeItem> = {}): ResumeItem {
   return {
@@ -28,6 +28,7 @@ export function appliedJob(overrides: Partial<AppliedJob['snapshot']> = {}): App
     appliedAt: '2026-10-10T12:00:00Z',
     channel: 'SITE_EMPRESA',
     resume: { id: 1, label: 'Backend Java', fileName: 'cv-backend.pdf' },
+    hasResponse: false,
     snapshot: {
       url: 'https://empresa.example/vagas/42',
       linkStatus: 'ATIVO',
@@ -123,6 +124,42 @@ export function inboxJob(overrides: Partial<JobListItem> = {}): JobListItem {
     summary: 'Evoluir o motor de crédito em Java com eventos em Kafka.',
     matchedSkills: ['Java', 'Kafka'],
     gaps: ['AWS'],
+    ...overrides,
+  }
+}
+
+export function tailoredResume(overrides: Partial<TailoredResume> = {}): TailoredResume {
+  return {
+    id: 5,
+    jobId: 20,
+    baseResumeId: 1,
+    baseResumeLabel: 'Backend Java',
+    status: 'PRONTO',
+    content: '# Ana Lima\n## Resumo\nDesenvolvedora backend Java com Spring Boot, Kafka e AWS.',
+    headline: 'Desenvolvedora Backend Java Sênior',
+    changes: [
+      {
+        section: 'Resumo',
+        before: 'Desenvolvedora Java.',
+        after: 'Desenvolvedora backend Java com Spring Boot.',
+        reason: 'A vaga pede Spring Boot.',
+      },
+    ],
+    notCovered: ['Kubernetes'],
+    notes: 'Preencha o volume de transações.',
+    keywords: ['Java', 'Spring Boot', 'Kafka', 'AWS', 'Kubernetes'],
+    coveredBefore: ['Java', 'Spring Boot', 'Kafka'],
+    coveredAfter: ['Java', 'Spring Boot', 'Kafka', 'AWS'],
+    unsupportedSkills: ['AWS'],
+    scoreBefore: 68,
+    scoreAfter: 85,
+    edited: false,
+    resumeVersionId: null,
+    resumeLabel: null,
+    modelVersion: 'claude-opus-5-5|tailor-resume@v1',
+    lastError: null,
+    createdAt: '2026-10-23T12:00:00Z',
+    updatedAt: '2026-10-23T12:02:00Z',
     ...overrides,
   }
 }

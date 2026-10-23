@@ -36,7 +36,8 @@ record JobDetail(JobView job, @Nullable ApplicationSummary application, List<Tim
 	}
 
 	record TimelineEvent(long id, @Nullable String fromStatus, @Nullable String toStatus,
-			@Nullable String responseType, String origin, @Nullable String note, Instant createdAt) {
+			@Nullable String responseType, @Nullable String responseChannel, String origin, @Nullable String note,
+			Instant createdAt) {
 	}
 
 }

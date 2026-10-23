@@ -1,23 +1,38 @@
 import { createBrowserRouter, Navigate } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
 import { LoginPage } from '@/features/auth/LoginPage'
+import { HomePage } from '@/features/home/HomePage'
 import { AppLayout } from '@/layouts/AppLayout'
 
 // Cada tela é carregada sob demanda, para o primeiro acesso baixar só o necessário.
 const router = createBrowserRouter([
+  { path: '/', element: <HomePage /> },
   { path: '/login', element: <LoginPage /> },
   {
     element: <AppLayout />,
     children: [
-      { index: true, element: <Navigate to="/board" replace /> },
       {
         path: 'inbox',
         lazy: () => import('@/features/inbox/InboxPage').then((module) => ({ Component: module.InboxPage })),
       },
       {
+        path: 'responses',
+        lazy: () =>
+          import('@/features/responses/ResponsesPage').then((module) => ({ Component: module.ResponsesPage })),
+      },
+      {
         path: 'companies',
         lazy: () =>
           import('@/features/companies/CompaniesPage').then((module) => ({ Component: module.CompaniesPage })),
+      },
+      {
+        path: 'companies/:companyId',
+        lazy: () =>
+          import('@/features/companies/CompanyDetailPage').then((module) => ({ Component: module.CompanyDetailPage })),
+      },
+      {
+        path: 'insights',
+        lazy: () => import('@/features/insights/InsightsPage').then((module) => ({ Component: module.InsightsPage })),
       },
       {
         path: 'settings',

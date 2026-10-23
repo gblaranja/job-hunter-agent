@@ -97,7 +97,9 @@ class ApplicationQueries {
 				select a.id, a.job_id, a.status, a.applied_at, a.channel,
 				       r.id as resume_id, r.label as resume_label, r.file_name as resume_file_name,
 				       s.job_url, s.link_status, s.link_checked_at, s.title, s.company, s.description_md,
-				       s.capture_source, s.page_pdf_key, s.captured_at
+				       s.capture_source, s.page_pdf_key, s.captured_at,
+				       exists (select 1 from application_event e where e.application_id = a.id
+				               and e.response_type is not null) as has_response
 				from application a
 				join job_snapshot s on s.application_id = a.id
 				left join resume_version r on r.id = a.resume_version_id
@@ -116,7 +118,8 @@ class ApplicationQueries {
 						JdbcRows.instant(rs, "captured_at"));
 				return new AppliedJob(rs.getLong("id"), rs.getLong("job_id"),
 						ApplicationStatus.valueOf(rs.getString("status")), JdbcRows.instant(rs, "applied_at"),
-						JdbcRows.nullableEnum(rs, "channel", ApplicationChannel.class), resume, snapshot);
+						JdbcRows.nullableEnum(rs, "channel", ApplicationChannel.class), resume, snapshot,
+						rs.getBoolean("has_response"));
 			})
 			.optional()
 			.orElseThrow(() -> new NotFoundException("A candidatura " + applicationId + " ainda não tem a vaga salva."));

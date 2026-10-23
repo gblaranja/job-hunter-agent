@@ -35,6 +35,7 @@ describe('AppliedJobCard', () => {
     expect(screen.getByText('A vaga saiu do ar')).toBeInTheDocument()
     expect(screen.getByText(/cópia salva em/i)).toBeInTheDocument()
     expect(screen.getByText('Link removido')).toBeInTheDocument()
+    expect(screen.getByText(/posição já tenha sido preenchida/)).toBeInTheDocument()
   })
 
   it('oferece salvar o PDF da página quando ainda não existe', () => {

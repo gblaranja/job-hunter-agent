@@ -30,6 +30,15 @@ public final class ApplicationCommands {
 			@Nullable String note) {
 	}
 
+	/**
+	 * Retorno recebido fora do e-mail.
+	 * @param moveStatus move o card para a etapa do retorno (convite leva a Entrevista, recusa a Recusada…)
+	 */
+	@Schema(name = "RecordResponse")
+	public record RecordResponse(@NotNull ResponseType responseType, @NotNull ResponseChannel channel,
+			@Nullable String note, boolean moveStatus) {
+	}
+
 	@Schema(name = "ChangeApplicationResume")
 	public record ChangeResume(@NotNull Long resumeVersionId) {
 	}

@@ -1,8 +1,5 @@
 package dev.laranja.jobhunter.analysis;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.function.BooleanSupplier;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -106,16 +103,6 @@ class LlmAnalysisIntegrationTests extends IntegrationTest {
 
 	private long count(String sql) {
 		return this.jdbc.sql(sql).query(Long.class).single();
-	}
-
-	static void await(BooleanSupplier condition) throws InterruptedException {
-		Instant deadline = Instant.now().plus(Duration.ofSeconds(15));
-		while (!condition.getAsBoolean()) {
-			if (Instant.now().isAfter(deadline)) {
-				throw new AssertionError("Condição não atingida em 15 s");
-			}
-			Thread.sleep(100);
-		}
 	}
 
 }

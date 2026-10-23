@@ -1,5 +1,9 @@
 package dev.laranja.jobhunter;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.function.BooleanSupplier;
+
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -10,6 +14,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
@@ -31,11 +36,19 @@ public abstract class IntegrationTest {
 	@Autowired
 	protected JdbcClient jdbc;
 
+	@Autowired
+	private ThreadPoolTaskExecutor applicationTaskExecutor;
+
 	@BeforeEach
-	void cleanDatabase() {
+	void cleanDatabase() throws InterruptedException {
+		// Os listeners assíncronos do teste anterior ainda podem estar rodando: o truncate disputaria lock com eles
+		// (deadlock) e eles gravariam dados no teste seguinte.
+		await(() -> this.applicationTaskExecutor.getActiveCount() == 0
+				&& this.applicationTaskExecutor.getThreadPoolExecutor().getQueue().isEmpty());
 		this.jdbc.sql("""
 				truncate application_event, job_snapshot, application, job_feedback, job, resume_version, email_message,
-				         gmail_sync_state, oauth_credential, collection_run, company_alias, company, job_analysis, llm_usage
+				         gmail_sync_state, oauth_credential, collection_run, company_alias, company, job_analysis, llm_usage,
+				         insight_report, company_metrics_weekly, notification, tailored_resume
 				restart identity cascade
 				""").update();
 	}
@@ -80,6 +93,17 @@ public abstract class IntegrationTest {
 			.getResponse()
 			.getContentAsString();
 		return ((Number) JsonPath.read(response, "$.id")).longValue();
+	}
+
+	/** Espera uma condição assíncrona (listeners de eventos) por até 15 segundos. */
+	protected static void await(BooleanSupplier condition) throws InterruptedException {
+		Instant deadline = Instant.now().plus(Duration.ofSeconds(15));
+		while (!condition.getAsBoolean()) {
+			if (Instant.now().isAfter(deadline)) {
+				throw new AssertionError("Condição não atingida em 15 s");
+			}
+			Thread.sleep(100);
+		}
 	}
 
 	protected static String json(String value) {

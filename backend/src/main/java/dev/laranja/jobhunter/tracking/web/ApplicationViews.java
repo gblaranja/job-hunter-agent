@@ -44,9 +44,12 @@ final class ApplicationViews {
 			@Nullable String excerpt) {
 	}
 
-	/** Tudo o que o AppliedJobCard mostra. */
+	/**
+	 * Tudo o que o AppliedJobCard mostra.
+	 * @param hasResponse a empresa já deu algum retorno; vaga removida sem retorno sugere posição preenchida
+	 */
 	record AppliedJob(long applicationId, long jobId, ApplicationStatus status, @Nullable Instant appliedAt,
-			@Nullable ApplicationChannel channel, @Nullable Resume resume, Snapshot snapshot) {
+			@Nullable ApplicationChannel channel, @Nullable Resume resume, Snapshot snapshot, boolean hasResponse) {
 
 		@Schema(name = "AppliedJobResume")
 		record Resume(long id, String label, String fileName) {

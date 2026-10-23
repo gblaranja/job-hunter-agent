@@ -13,13 +13,18 @@ import java.util.Set;
 import dev.laranja.jobhunter.inbox.internal.GmailAccess;
 import dev.laranja.jobhunter.inbox.internal.GmailAccess.AlertBody;
 import dev.laranja.jobhunter.inbox.internal.GmailAccess.Metadata;
+import dev.laranja.jobhunter.inbox.internal.ResponseClassifier;
 import dev.laranja.jobhunter.shared.jdbc.JdbcRows;
+import org.jsoup.Jsoup;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * Caixa de entrada da label de vagas no Gmail: sincroniza os e-mails novos, separa os alertas de vaga e entrega
@@ -36,12 +41,22 @@ public class Mailbox {
 
 	private final JdbcClient jdbc;
 
+	private final ResponseClassifier classifier;
+
+	private final ApplicationEventPublisher events;
+
+	private final TransactionTemplate transactions;
+
 	private final Clock clock;
 
-	Mailbox(GmailAccess gmail, GmailProperties properties, JdbcClient jdbc, Clock clock) {
+	Mailbox(GmailAccess gmail, GmailProperties properties, JdbcClient jdbc, ResponseClassifier classifier,
+			ApplicationEventPublisher events, PlatformTransactionManager transactionManager, Clock clock) {
 		this.gmail = gmail;
 		this.properties = properties;
 		this.jdbc = jdbc;
+		this.classifier = classifier;
+		this.events = events;
+		this.transactions = new TransactionTemplate(transactionManager);
 		this.clock = clock;
 	}
 
@@ -151,6 +166,96 @@ public class Mailbox {
 					body.get().html()));
 		}
 		return alerts;
+	}
+
+	/**
+	 * Classifica os e-mails novos que não são alertas e publica {@link EmailClassified} para os retornos. Retornos
+	 * ficam na fila de revisão até o tracking ligá-los a uma candidatura com confiança suficiente.
+	 * @return quantos e-mails foram classificados
+	 */
+	public int classifyPending(int limit) {
+		List<PendingEmail> pending = this.jdbc.sql("""
+				select id, gmail_id, sender, subject, snippet, received_at from email_message
+				where kind = 'OUTRO' and classified_at is null
+				order by received_at
+				limit :limit
+				""")
+			.param("limit", limit)
+			.query((rs, row) -> new PendingEmail(rs.getLong("id"), rs.getString("gmail_id"), rs.getString("sender"),
+					rs.getString("subject"), rs.getString("snippet"), JdbcRows.instant(rs, "received_at")))
+			.list();
+		List<ResponseClassifier.Correction> corrections = recentCorrections();
+		// Uma transação por e-mail: o evento só sai depois do commit, e uma falha não desfaz os outros.
+		pending.forEach(email -> this.transactions.executeWithoutResult(status -> classifyOne(email, corrections)));
+		return pending.size();
+	}
+
+	private void classifyOne(PendingEmail email, List<ResponseClassifier.Correction> corrections) {
+		String body = bodyText(email.gmailId()).orElse((email.snippet() != null) ? email.snippet() : "");
+		body = body.substring(0, Math.min(6000, body.length()));
+		ResponseClassifier.Result result = this.classifier.classify(email.sender(), email.subject(), body, corrections);
+		boolean review = result.classification().isResponse() || result.confidence() < 0.7;
+		this.jdbc.sql("""
+				update email_message
+				set ai_classification = :classification, ai_confidence = :confidence, company_guess = :company,
+				    job_guess = :job, ai_rationale = :rationale, classified_at = :now, needs_review = :review
+				where id = :id
+				""")
+			.param("classification", result.classification().name())
+			.param("confidence", BigDecimal.valueOf(result.confidence()))
+			.param("company", truncate(result.company(), 200))
+			.param("job", truncate(result.jobTitle(), 300))
+			.param("rationale", result.rationale())
+			.param("now", Timestamp.from(this.clock.instant()))
+			.param("review", review)
+			.param("id", email.id())
+			.update();
+		if (result.classification().isResponse()) {
+			this.events.publishEvent(new EmailClassified(email.id(), result.classification(), result.confidence(),
+					result.company(), email.sender(), email.subject(), email.receivedAt()));
+		}
+	}
+
+	private record PendingEmail(long id, String gmailId, String sender, @Nullable String subject,
+			@Nullable String snippet, Instant receivedAt) {
+	}
+
+	private Optional<String> bodyText(String gmailId) {
+		try {
+			return this.gmail.body(gmailId).map(AlertBody::html).map(html -> Jsoup.parse(html).text());
+		}
+		catch (RuntimeException ex) {
+			log.warn("Corpo do e-mail {} indisponível; a classificação usa o trecho: {}", gmailId, ex.getMessage());
+			return Optional.empty();
+		}
+	}
+
+	/** O tracking aplicou o retorno a uma candidatura: o e-mail sai da fila de revisão. */
+	public void markHandled(long emailId, long applicationId) {
+		this.jdbc.sql("update email_message set application_id = :app, processed = true, needs_review = false where id = :id")
+			.param("app", applicationId)
+			.param("id", emailId)
+			.update();
+	}
+
+	/** Candidatura provável, sugerida para a sua revisão (confiança baixa). */
+	public void suggestApplication(long emailId, long applicationId) {
+		this.jdbc.sql("update email_message set application_id = :app where id = :id and application_id is null")
+			.param("app", applicationId)
+			.param("id", emailId)
+			.update();
+	}
+
+	private List<ResponseClassifier.Correction> recentCorrections() {
+		return this.jdbc.sql("""
+				select sender, coalesce(subject, '') as subject, final_classification from email_message
+				where classified_by = 'USUARIO' and final_classification is not null
+				order by reviewed_at desc
+				limit 20
+				""")
+			.query((rs, row) -> new ResponseClassifier.Correction(rs.getString("sender"), rs.getString("subject"),
+					EmailClassification.valueOf(rs.getString("final_classification"))))
+			.list();
 	}
 
 	public void markParsed(long emailId, int jobsFound) {
