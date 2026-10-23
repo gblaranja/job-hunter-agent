@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "@fontsource-variable/bricolage-grotesque/opsz.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -34,7 +35,12 @@
   /* marca: tinta azul-marinho, papel claro e o laranja de destaque */
   --brand-ink: oklch(0.27 0.05 260);
   --brand-paper: oklch(0.98 0.004 250);
-  --brand-accent: #eb6834;
+  /* texto secundário sobre a tinta: cor própria em vez de opacidade, para o contraste não depender do fundo */
+  --brand-paper-muted: oklch(0.82 0.03 255);
+  /* o laranja só preenche marcas e superfícies; em texto pequeno ele não passa 4,5:1, então usa o tom escuro */
+  --brand-accent: oklch(0.671 0.175 40.6);
+  --brand-accent-text: oklch(0.54 0.16 40);
+  --selection: oklch(0.9 0.06 45);
   /* séries dos gráficos: azul e laranja, par validado para daltonismo */
   --series-1: #2a78d6;
   --series-2: #eb6834;
@@ -69,7 +75,9 @@
   --series-1: #3987e5;
   --series-2: #d95926;
   --brand-ink: oklch(0.33 0.06 258);
-  --brand-accent: #f07a48;
+  --brand-accent: oklch(0.706 0.159 42.5);
+  --brand-accent-text: oklch(0.75 0.15 42);
+  --selection: oklch(0.42 0.1 42);
 }
 
 @theme inline {
@@ -102,6 +110,38 @@
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-paper: var(--brand-paper);
+  --color-brand-paper-muted: var(--brand-paper-muted);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-text: var(--brand-accent-text);
+}
+
+/* Voz de display da página pública e do login. O painel continua na fonte do sistema. */
+@theme {
+  --font-display: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
+  --text-display: clamp(2.5rem, 1.7rem + 3.4vw, 4.25rem);
+  --text-display--line-height: 1.02;
+  --text-display--letter-spacing: -0.03em;
+  --text-headline: clamp(1.75rem, 1.35rem + 1.6vw, 2.5rem);
+  --text-headline--line-height: 1.1;
+  --text-headline--letter-spacing: -0.02em;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  /* o único momento animado da home: a vaga avançando pelas etapas na prévia do hero */
+  --animate-stage-fill: stage-fill 700ms var(--ease-out-expo) both;
+  --animate-rise-in: rise-in 600ms var(--ease-out-expo) both;
+
+  @keyframes stage-fill {
+    from {
+      transform: scaleX(0);
+    }
+  }
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+  }
 }
 
 @layer base {
@@ -110,5 +150,26 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    caret-color: var(--brand-accent);
+  }
+  ::selection {
+    background-color: var(--selection);
+    color: var(--foreground);
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  a {
+    text-underline-offset: 0.2em;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
   }
 }

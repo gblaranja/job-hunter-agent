@@ -1,14 +1,14 @@
 package dev.laranja.jobhunter.shared.security;
 
 import java.net.URI;
+import java.time.Clock;
+import java.time.Duration;
 import java.util.Locale;
-import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +36,12 @@ import org.springframework.web.util.UriComponentsBuilder;
  * "Entrar com Google" (OpenID Connect, authorization code). O navegador vai ao Google e volta no callback; se a
  * conta tiver o e-mail autorizado e verificado, a sessão é aberta como o dono da instalação, igual ao login com
  * senha.
+ *
+ * <p>
+ * O {@code state} não depende de sessão: é o instante da chamada cifrado (AES-GCM, igual aos tokens do Gmail),
+ * conferido no callback. Isso evita problemas quando o cookie de sessão não sobrevive à ida e volta ao Google
+ * (proxy do frontend em dev, porta diferente do redirect URI etc.) — antes de entrar, ainda não existe uma
+ * sessão autenticada para ancorar o {@code state}.
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -43,7 +49,7 @@ class GoogleLoginController {
 
 	private static final Logger log = LoggerFactory.getLogger(GoogleLoginController.class);
 
-	private static final String STATE_ATTRIBUTE = GoogleLoginController.class.getName() + ".state";
+	private static final Duration STATE_TTL = Duration.ofMinutes(10);
 
 	private final GoogleLoginProperties google;
 
@@ -53,14 +59,20 @@ class GoogleLoginController {
 
 	private final SecurityContextRepository contexts;
 
+	private final SecretCipher cipher;
+
+	private final Clock clock;
+
 	private final RestClient http;
 
 	GoogleLoginController(GoogleLoginProperties google, SecurityProperties owner, UserDetailsService users,
-			SecurityContextRepository contexts, RestClient.Builder http) {
+			SecurityContextRepository contexts, SecretCipher cipher, Clock clock, RestClient.Builder http) {
 		this.google = google;
 		this.owner = owner;
 		this.users = users;
 		this.contexts = contexts;
+		this.cipher = cipher;
+		this.clock = clock;
 		this.http = http.build();
 	}
 
@@ -71,19 +83,17 @@ class GoogleLoginController {
 	}
 
 	@GetMapping("/google")
-	ResponseEntity<Void> start(HttpSession session) {
+	ResponseEntity<Void> start() {
 		if (!this.google.configured()) {
 			return redirect(back("indisponivel"));
 		}
-		String state = UUID.randomUUID().toString();
-		session.setAttribute(STATE_ATTRIBUTE, state);
 		return redirect(UriComponentsBuilder.fromUri(this.google.authUri())
 			.queryParam("client_id", this.google.clientId())
 			.queryParam("redirect_uri", this.google.redirectUri())
 			.queryParam("response_type", "code")
 			.queryParam("scope", GoogleLoginProperties.SCOPE)
 			.queryParam("prompt", "select_account")
-			.queryParam("state", state)
+			.queryParam("state", toUrlSafe(this.cipher.encrypt(String.valueOf(this.clock.millis()))))
 			.encode()
 			.build()
 			.toUri());
@@ -94,11 +104,9 @@ class GoogleLoginController {
 			@RequestParam(required = false) @Nullable String state,
 			@RequestParam(required = false) @Nullable String error, HttpServletRequest request,
 			HttpServletResponse response) {
-		HttpSession session = request.getSession();
-		Object expected = session.getAttribute(STATE_ATTRIBUTE);
-		session.removeAttribute(STATE_ATTRIBUTE);
-		if (!this.google.configured() || error != null || code == null || state == null || !state.equals(expected)) {
-			log.warn("Login com Google cancelado ou inválido (error={}).", error);
+		if (!this.google.configured() || error != null || code == null || state == null || !validState(state)) {
+			log.warn("Login com Google cancelado ou inválido (error={}, configured={}, hasCode={}, validState={}).",
+					error, this.google.configured(), code != null, state != null && validState(state));
 			return redirect(back("erro"));
 		}
 		UserInfo user;
@@ -151,12 +159,37 @@ class GoogleLoginController {
 
 	/** Mesma sessão do login com senha: troca o id da sessão (contra fixation) e guarda o contexto. */
 	private void signIn(HttpServletRequest request, HttpServletResponse response) {
+		// changeSessionId() exige uma sessão existente; como o state não depende mais dela, cria uma agora.
+		request.getSession(true);
 		request.changeSessionId();
 		UserDetails user = this.users.loadUserByUsername(this.owner.username());
 		SecurityContext context = SecurityContextHolder.createEmptyContext();
 		context.setAuthentication(UsernamePasswordAuthenticationToken.authenticated(user, null, user.getAuthorities()));
 		SecurityContextHolder.setContext(context);
 		this.contexts.saveContext(context, request, response);
+	}
+
+	/** O state é o instante da chamada cifrado; decifra (rejeita adulteração) e confere a validade de 10 minutos. */
+	private boolean validState(String state) {
+		long issuedAt;
+		try {
+			issuedAt = Long.parseLong(this.cipher.decrypt(fromUrlSafe(state)));
+		}
+		catch (RuntimeException ex) {
+			return false;
+		}
+		Duration age = Duration.ofMillis(this.clock.millis() - issuedAt);
+		return !age.isNegative() && age.compareTo(STATE_TTL) <= 0;
+	}
+
+	// O Base64 padrão do SecretCipher usa "+" e "/"; o Tomcat decodifica "+" da query string como espaço
+	// (convenção de formulário), corrompendo o valor. Troca para o alfabeto seguro em URL só no trânsito.
+	private static String toUrlSafe(String base64) {
+		return base64.replace('+', '-').replace('/', '_');
+	}
+
+	private static String fromUrlSafe(String value) {
+		return value.replace('-', '+').replace('_', '/');
 	}
 
 	private URI back(String result) {

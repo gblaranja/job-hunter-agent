@@ -16,6 +16,7 @@ Procurar emprego gera muito trabalho repetitivo e pouca informação: alertas es
 
 - **Coleta** vagas dos alertas por e-mail (LinkedIn, Gupy) e de APIs públicas, sem scraping e sem automação na conta do LinkedIn.
 - **Analisa** cada vaga com a Claude API: requisitos, resumo e um score de aderência híbrido (determinístico, com ajuste do LLM).
+- **Adapta o currículo para cada vaga**: reescreve o currículo com os termos da vaga para passar no ATS, sem inventar experiência, mostra o score e as palavras-chave cobertas antes e depois e gera um DOCX que vira uma versão do currículo para a candidatura.
 - **Acompanha** o funil num kanban, guarda uma cópia congelada de cada vaga aplicada e registra qual currículo foi enviado a cada empresa.
 - **Lê os retornos** no Gmail, classifica com IA e move o card sozinho quando a confiança é alta.
 - **Monitora empresas**: volume e frequência de vagas por semana, tempo no ar, reposts e alertas das empresas-alvo.
@@ -86,6 +87,8 @@ Depois de mudar a API, com o backend rodando: `cd frontend && npm run gen:api`.
 ### Ligar a análise por IA
 
 Sem chave, a análise usa só o dicionário de skills e as regras, e o score funciona do mesmo jeito. Com `JOBHUNTER_AI_API_KEY` (Claude API), o Claude Haiku refina a extração dos requisitos e ajusta o score em até ±10 pontos, com justificativa. Configure um limite de gasto mensal no Console da Anthropic; o uso de tokens de cada chamada fica na tabela `llm_usage`.
+
+Com a chave, a vaga ganha também o card **Currículo para esta vaga**: o Claude Opus reescreve o currículo padrão (ou outro que você escolher) a partir da análise da vaga. As regras do prompt proíbem inventar empresas, números ou tecnologias; o que a vaga pede e o currículo não comprova fica listado à parte, e as skills que aparecerem no texto adaptado sem estar no original são sinalizadas para você conferir. Dá para editar o texto, baixar o DOCX (uma coluna, sem tabelas nem imagens, como os ATS leem melhor) e salvá-lo em Currículos, onde ele entra na taxa de entrevistas por versão. Ao marcar "Tenho interesse" numa vaga, a primeira versão é gerada sozinha; desligue com `JOBHUNTER_TAILORING_AUTO=false`. O modelo pode ser trocado em `jobhunter.ai.models.tailoring`.
 
 ### Conectar o Gmail
 

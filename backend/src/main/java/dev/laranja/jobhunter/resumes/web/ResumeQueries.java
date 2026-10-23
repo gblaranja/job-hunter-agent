@@ -23,10 +23,18 @@ class ResumeQueries {
 			       count(a.id) filter (where exists (
 			           select 1 from application_event e
 			           where e.application_id = a.id and e.to_status in ('ENTREVISTA', 'TESTE_TECNICO', 'OFERTA')
-			       )) as interviews
+			       )) as interviews,
+			       tj.id as tailored_job_id, tj.title as tailored_title, tj.company as tailored_company
 			from resume_version r
 			left join application a on a.resume_version_id = r.id
+			-- versões geradas pelo módulo tailoring: a vaga para a qual o texto foi adaptado
+			left join lateral (
+			    select j.id, j.title, j.company from tailored_resume t join job j on j.id = t.job_id
+			    where t.resume_version_id = r.id limit 1
+			) tj on true
 			""";
+
+	private static final String GROUP_BY = " group by r.id, tj.id, tj.title, tj.company";
 
 	private final JdbcClient jdbc;
 
@@ -38,13 +46,13 @@ class ResumeQueries {
 	}
 
 	List<ResumeItem> list() {
-		return this.jdbc.sql(SELECT + " group by r.id order by r.archived, r.is_default desc, r.created_at desc")
+		return this.jdbc.sql(SELECT + GROUP_BY + " order by r.archived, r.is_default desc, r.created_at desc")
 			.query((rs, row) -> toItem(rs))
 			.list();
 	}
 
 	ResumeItem get(long id) {
-		return this.jdbc.sql(SELECT + " where r.id = :id group by r.id")
+		return this.jdbc.sql(SELECT + " where r.id = :id" + GROUP_BY)
 			.param("id", id)
 			.query((rs, row) -> toItem(rs))
 			.optional()
@@ -60,7 +68,8 @@ class ResumeQueries {
 				rs.getString("file_name"), rs.getString("content_type"), rs.getLong("size_bytes"),
 				rs.getBoolean("is_default"), rs.getBoolean("archived"), JdbcRows.instant(rs, "created_at"),
 				applications, interviews, interviewRate, (List<String>) this.json.readValue(rs.getString("skills"), List.class),
-				rs.getBoolean("has_text"));
+				rs.getBoolean("has_text"), JdbcRows.nullableLong(rs, "tailored_job_id"), rs.getString("tailored_title"),
+				rs.getString("tailored_company"));
 	}
 
 }

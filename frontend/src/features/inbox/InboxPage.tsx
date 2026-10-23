@@ -13,8 +13,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { formatDate } from '@/lib/format'
-import { originLabels, sameAsWorkModel, workModelLabels } from '@/lib/labels'
-import { ExternalLink, Search, Star } from 'lucide-react'
+import { closedJobNote, originLabels, sameAsWorkModel, workModelLabels } from '@/lib/labels'
+import { Ban, ExternalLink, Search, Star } from 'lucide-react'
 
 /** Vagas novas, ainda sem candidatura: avalie, marque interesse ou descarte. */
 export function InboxPage() {
@@ -26,7 +26,7 @@ export function InboxPage() {
     <>
       <PageHeader
         title="Caixa de vagas"
-        description="Vagas que ainda não viraram candidatura, da maior para a menor aderência ao seu currículo padrão. As marcadas com “Não gostei” saem daqui."
+        description="Vagas que ainda não viraram candidatura, da maior para a menor aderência ao seu currículo padrão. As marcadas com “Não gostei” ou como encerradas saem daqui."
         actions={jobs.data && <span className="text-sm text-muted-foreground">{jobs.data.total} vagas</span>}
       />
       <div className="relative mb-4 max-w-xl">
@@ -70,6 +70,16 @@ function InboxCard({ job }: { job: JobListItem }) {
     )
   }
 
+  function closed() {
+    start.mutate(
+      { jobId: job.id, body: { status: 'ENCERRADA', notes: closedJobNote } },
+      {
+        onSuccess: () => toast.success('Vaga encerrada: saiu da caixa e ficou registrada no kanban.'),
+        onError: (error) => toast.error(error.message),
+      },
+    )
+  }
+
   return (
     <Card>
       <CardContent className="space-y-3">
@@ -83,7 +93,7 @@ function InboxCard({ job }: { job: JobListItem }) {
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <Badge variant="outline">{originLabels[job.origin]}</Badge>
-            {job.location && !sameAsWorkModel(job.location, job.workModel) && <Badge variant="secondary">{job.location}</Badge>}
+            {job.location && !sameAsWorkModel(job.location, job.workModel) && <Badge variant="secondary" className="max-w-full whitespace-normal">{job.location}</Badge>}
             {job.workModel !== 'NAO_INFORMADO' && <Badge variant="secondary">{workModelLabels[job.workModel]}</Badge>}
             <span>{formatDate(job.collectedAt)}</span>
           </div>
@@ -96,7 +106,7 @@ function InboxCard({ job }: { job: JobListItem }) {
         )}
         <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
           <FeedbackButtons jobId={job.id} rating={job.rating} reasons={job.reasons} />
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {job.url && (
               <Button asChild variant="ghost" size="sm">
                 <a href={job.url} target="_blank" rel="noopener noreferrer">
@@ -104,6 +114,9 @@ function InboxCard({ job }: { job: JobListItem }) {
                 </a>
               </Button>
             )}
+            <Button variant="ghost" size="sm" onClick={closed} disabled={start.isPending}>
+              <Ban /> Vaga encerrada
+            </Button>
             <Button size="sm" onClick={interest} disabled={start.isPending}>
               <Star /> Tenho interesse
             </Button>

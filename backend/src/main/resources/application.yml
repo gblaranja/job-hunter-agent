@@ -71,3 +71,6 @@ jobhunter:
       app-key: ${JOBHUNTER_ADZUNA_APP_KEY:}
   ai:
     api-key: ${JOBHUNTER_AI_API_KEY:}
+  tailoring:
+    # gera o currículo adaptado ao marcar "Tenho interesse" numa vaga (precisa da Claude API)
+    auto-generate: ${JOBHUNTER_TAILORING_AUTO:true}

@@ -40,7 +40,7 @@ public abstract class IntegrationTest {
 		this.jdbc.sql("""
 				truncate application_event, job_snapshot, application, job_feedback, job, resume_version, email_message,
 				         gmail_sync_state, oauth_credential, collection_run, company_alias, company, job_analysis, llm_usage,
-				         insight_report, company_metrics_weekly, notification
+				         insight_report, company_metrics_weekly, notification, tailored_resume
 				restart identity cascade
 				""").update();
 	}

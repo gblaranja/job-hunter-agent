@@ -23,6 +23,8 @@ type Props = {
   requireNote?: boolean
   /** Pede a escolha do currículo enviado. */
   requireResume?: boolean
+  /** Versão marcada de início no lugar da padrão (a adaptada para a vaga). */
+  preferredResumeId?: number
   pending?: boolean
   onCancel: () => void
   onConfirm: (choice: { resumeVersionId?: number; note?: string }) => void
@@ -35,13 +37,15 @@ export function ResumePickerDialog({
   description,
   requireNote = false,
   requireResume = true,
+  preferredResumeId,
   pending = false,
   onCancel,
   onConfirm,
 }: Props) {
   const resumes = useResumes()
   const selectable = (resumes.data ?? []).filter((resume) => !resume.archived)
-  const defaultId = selectable.find((resume) => resume.isDefault)?.id
+  const defaultId =
+    selectable.find((resume) => resume.id === preferredResumeId)?.id ?? selectable.find((resume) => resume.isDefault)?.id
   const [chosen, setChosen] = useState<number | undefined>()
   const [note, setNote] = useState('')
   const resumeVersionId = chosen ?? defaultId

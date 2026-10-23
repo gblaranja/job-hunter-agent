@@ -5,6 +5,7 @@ import { ApiError } from '@/api/client'
 import { queryKeys } from '@/api/queries'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { ThemeProvider } from '@/lib/theme'
 import { App } from './App'
 import './index.css'
 
@@ -26,10 +27,12 @@ const queryClient: QueryClient = new QueryClient({
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider delayDuration={300}>
-        <App />
-        <Toaster richColors position="top-right" />
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider delayDuration={300}>
+          <App />
+          <Toaster richColors position="top-right" />
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   </StrictMode>,
 )

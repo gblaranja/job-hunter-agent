@@ -22,12 +22,14 @@ export const queryKeys = {
   applied: (applicationId: number) => ['applied', applicationId] as const,
   job: (jobId: number) => ['job', jobId] as const,
   resumes: ['resumes'] as const,
+  tailored: (jobId: number) => ['tailored-resumes', jobId] as const,
 }
 
 /** Tudo o que depende das candidaturas é recarregado depois de qualquer mudança no funil. */
 function invalidateTracking(client: QueryClient) {
   return Promise.all(
-    ['board', 'applications', 'applied', 'job', 'resumes'].map((key) =>
+    // 'jobs': a vaga que vira candidatura sai da caixa de vagas
+    ['board', 'applications', 'applied', 'job', 'jobs', 'resumes'].map((key) =>
       client.invalidateQueries({ queryKey: [key] }),
     ),
   )
@@ -410,6 +412,78 @@ export function useReanalyze() {
     onSuccess: () =>
       Promise.all([client.invalidateQueries({ queryKey: ['job'] }), client.invalidateQueries({ queryKey: ['jobs'] })]),
   })
+}
+
+// Currículos adaptados por vaga
+
+export type TailoredResume = Schemas['TailoredResumeView']
+export type ResumeChange = Schemas['ResumeChange']
+
+/** Se a instalação tem a Claude API configurada para adaptar currículos. */
+export function useTailoringAvailability() {
+  return useQuery({
+    queryKey: ['tailored-resumes', 'availability'],
+    queryFn: () => unwrap(api.GET('/api/tailored-resumes/availability')),
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+/** Versões adaptadas da vaga; enquanto uma estiver sendo gerada, consulta de novo a cada 3 segundos. */
+export function useTailoredResumes(jobId: number) {
+  return useQuery({
+    queryKey: queryKeys.tailored(jobId),
+    queryFn: () => unwrap(api.GET('/api/jobs/{jobId}/tailored-resumes', { params: { path: { jobId } } })),
+    refetchInterval: (query) => (query.state.data?.some((version) => version.status === 'GERANDO') ? 3000 : false),
+  })
+}
+
+export function useRequestTailoredResume() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ jobId, baseResumeId }: { jobId: number; baseResumeId?: number }) =>
+      unwrap(
+        api.POST('/api/jobs/{jobId}/tailored-resumes', {
+          params: { path: { jobId } },
+          body: { baseResumeId: baseResumeId ?? null },
+        }),
+      ),
+    onSuccess: (_created, { jobId }) => client.invalidateQueries({ queryKey: queryKeys.tailored(jobId) }),
+  })
+}
+
+export function useEditTailoredResume() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, content }: { id: number; content: string }) =>
+      unwrap(api.PUT('/api/tailored-resumes/{id}/content', { params: { path: { id } }, body: { content } })),
+    onSuccess: (updated) => client.invalidateQueries({ queryKey: queryKeys.tailored(updated.jobId) }),
+  })
+}
+
+/** Gera o DOCX e salva como versão do currículo, para escolher ao registrar a aplicação. */
+export function useSaveTailoredResume() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id }: { id: number; jobId: number }) =>
+      unwrap(api.POST('/api/tailored-resumes/{id}/resume-version', { params: { path: { id } } })),
+    onSuccess: (_saved, { jobId }) =>
+      Promise.all([
+        client.invalidateQueries({ queryKey: queryKeys.tailored(jobId) }),
+        client.invalidateQueries({ queryKey: queryKeys.resumes }),
+      ]),
+  })
+}
+
+/** Baixa o DOCX gerado do texto adaptado. */
+export async function downloadTailoredDocx(id: number): Promise<void> {
+  const response = await send(`/api/tailored-resumes/${id}/docx`, { method: 'GET' })
+  const fileName = /filename="?([^";]+)"?/.exec(response.headers.get('Content-Disposition') ?? '')?.[1] ?? 'curriculo.docx'
+  const url = URL.createObjectURL(await response.blob())
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName
+  link.click()
+  URL.revokeObjectURL(url)
 }
 
 // Retornos

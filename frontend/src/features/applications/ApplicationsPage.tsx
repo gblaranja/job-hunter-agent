@@ -21,8 +21,9 @@ import { statusesRequiringResume, statusLabels } from '@/lib/labels'
 import { ArrowDownUp, ExternalLink, Search } from 'lucide-react'
 
 const ALL = 'TODAS'
-const appliedStatuses = (Object.keys(statusLabels) as ApplicationStatus[]).filter((status) =>
-  statusesRequiringResume.has(status),
+// Uma vaga aplicada pode ser encerrada depois; ela continua na lista das aplicadas.
+const appliedStatuses = (Object.keys(statusLabels) as ApplicationStatus[]).filter(
+  (status) => statusesRequiringResume.has(status) || status === 'ENCERRADA',
 )
 
 const columns: ColumnDef<AppliedListItem>[] = [

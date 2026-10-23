@@ -41,7 +41,7 @@ export function LoginPage() {
         <Card>
           <CardHeader>
             <LogoMark className="mb-2 size-10" />
-            <CardTitle className="text-xl">{BRAND.name}</CardTitle>
+            <CardTitle className="font-display text-2xl tracking-tight">{BRAND.name}</CardTitle>
             <CardDescription>Entre para acompanhar suas vagas e candidaturas.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

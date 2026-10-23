@@ -67,7 +67,8 @@ export function BoardPage() {
           onDragEnd={handleDragEnd}
           onDragCancel={() => setDragging(null)}
         >
-          <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-4 md:-mx-8 md:px-8">
+          {/* relative: os textos sr-only (absolutos) dos cards ficam presos ao quadro e não alargam a página. */}
+          <div className="relative -mx-4 flex gap-3 overflow-x-auto px-4 pb-4 md:-mx-8 md:px-8">
             {board.data.columns.map((column) => (
               <BoardColumn key={column.status} column={column} onOpen={setSelected} />
             ))}

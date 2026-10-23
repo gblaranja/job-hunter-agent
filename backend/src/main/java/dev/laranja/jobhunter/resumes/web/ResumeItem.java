@@ -11,8 +11,10 @@ import org.jspecify.annotations.Nullable;
  * @param skills skills extraídas do currículo, usadas no score
  * @param hasText o texto do arquivo foi extraído (PDF escaneado não tem)
  * @param interviewRate entrevistas sobre candidaturas com esta versão; {@code null} sem candidaturas
+ * @param tailoredForJobId vaga para a qual esta versão foi adaptada pelo agente; {@code null} num upload comum
  */
 record ResumeItem(long id, String label, @Nullable String targetRole, String fileName, String contentType,
 		long sizeBytes, boolean isDefault, boolean archived, Instant createdAt, long applications, long interviews,
-		@Nullable Double interviewRate, List<String> skills, boolean hasText) {
+		@Nullable Double interviewRate, List<String> skills, boolean hasText, @Nullable Long tailoredForJobId,
+		@Nullable String tailoredForTitle, @Nullable String tailoredForCompany) {
 }

@@ -128,6 +128,15 @@ public class JobCatalog {
 			.update();
 	}
 
+	/** Você viu que a vaga não aceita mais candidaturas: fecha agora, se ainda estava aberta. */
+	@Transactional
+	public void markClosed(long jobId) {
+		this.jdbc.sql("update job set closed_at = coalesce(closed_at, :now) where id = :id")
+			.param("now", Timestamp.from(this.clock.instant()))
+			.param("id", jobId)
+			.update();
+	}
+
 	/**
 	 * Vaga republicada: mesma empresa e título parecido (similaridade trigram acima de 0,8) nos últimos 90 dias.
 	 * Prefere a anterior já fechada, que é o caso típico de vaga reaberta.

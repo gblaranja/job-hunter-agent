@@ -97,7 +97,7 @@ public class JobAnalyzer {
 		List<Long> open = this.jdbc.sql("""
 				select ja.job_id from job_analysis ja
 				left join application a on a.job_id = ja.job_id
-				where a.id is null or a.status not in ('OFERTA', 'RECUSADA', 'DESISTI')
+				where a.id is null or a.status not in ('OFERTA', 'RECUSADA', 'DESISTI', 'ENCERRADA')
 				""")
 			.query(Long.class)
 			.list();

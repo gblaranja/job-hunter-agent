@@ -21,6 +21,7 @@ export const statusLabels: Record<ApplicationStatus, string> = {
   OFERTA: 'Oferta',
   RECUSADA: 'Recusada',
   DESISTI: 'Desisti',
+  ENCERRADA: 'Vaga encerrada',
 }
 
 /** Etapas em que a candidatura já precisa ter o currículo enviado registrado. */
@@ -34,10 +35,13 @@ export const statusesRequiringResume = new Set<ApplicationStatus>([
 ])
 
 /** Etapas que encerram a candidatura; sair delas exige uma nota. */
-export const terminalStatuses = new Set<ApplicationStatus>(['OFERTA', 'RECUSADA', 'DESISTI'])
+export const terminalStatuses = new Set<ApplicationStatus>(['OFERTA', 'RECUSADA', 'DESISTI', 'ENCERRADA'])
 
 /** Etapas em que uma candidatura pode começar. */
 export const startableStatuses: ApplicationStatus[] = ['INTERESSE', 'APLICADA', 'TRIAGEM', 'ENTREVISTA', 'TESTE_TECNICO']
+
+/** Nota da candidatura criada ao marcar, antes de aplicar, que a vaga não aceita mais candidaturas. */
+export const closedJobNote = 'A vaga já não aceitava candidaturas quando foi aberta.'
 
 /** Cor de destaque de cada coluna do kanban. */
 export const statusAccent: Record<ApplicationStatus, string> = {
@@ -50,6 +54,7 @@ export const statusAccent: Record<ApplicationStatus, string> = {
   OFERTA: 'bg-emerald-500',
   RECUSADA: 'bg-rose-500',
   DESISTI: 'bg-zinc-400',
+  ENCERRADA: 'bg-stone-500',
 }
 
 export const channelLabels: Record<ApplicationChannel, string> = {
@@ -174,4 +179,5 @@ export const notificationTypeLabels: Record<string, string> = {
   EMPRESA_VOLTOU: 'Voltou a contratar',
   VOLUME_CAIU: 'Volume caiu',
   RELATORIO_SEMANAL: 'Relatório semanal',
+  CURRICULO_ADAPTADO: 'Currículo adaptado',
 }

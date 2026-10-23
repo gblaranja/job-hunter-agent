@@ -1,5 +1,7 @@
 package dev.laranja.jobhunter.shared.security;
 
+import java.time.Instant;
+
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import dev.laranja.jobhunter.IntegrationTest;
@@ -20,10 +22,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+/**
+ * O {@code state} não depende de cookie/sessão (é o instante cifrado), por isso cada chamada aqui é independente,
+ * como duas abas diferentes do navegador seriam na vida real.
+ */
 class GoogleLoginIntegrationTests extends IntegrationTest {
 
 	@Autowired
 	private WireMockServer google;
+
+	@Autowired
+	private SecretCipher cipher;
 
 	@BeforeEach
 	void reset() {
@@ -43,15 +52,14 @@ class GoogleLoginIntegrationTests extends IntegrationTest {
 	@Test
 	void theAllowedVerifiedAccountGetsASession() throws Exception {
 		stubUser("dono@example.com", true);
-		MockHttpSession session = new MockHttpSession();
-		String state = start(session);
+		String state = start();
 
-		MvcResult result = this.mvc.perform(get("/api/auth/google/callback").session(session)
-			.param("code", "codigo-ok")
-			.param("state", state)).andExpect(redirectedUrl("http://localhost:5173/board")).andReturn();
+		MvcResult result = this.mvc
+			.perform(get("/api/auth/google/callback").param("code", "codigo-ok").param("state", state))
+			.andExpect(redirectedUrl("http://localhost:5173/board"))
+			.andReturn();
 
-		MockHttpSession signedIn = (MockHttpSession) result.getRequest().getSession();
-		this.mvc.perform(get("/api/auth/me").session(signedIn))
+		this.mvc.perform(get("/api/auth/me").session((MockHttpSession) result.getRequest().getSession()))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.username").value("admin"));
 		this.google.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/v1/userinfo"))
@@ -61,37 +69,40 @@ class GoogleLoginIntegrationTests extends IntegrationTest {
 	@Test
 	void anotherAccountIsRefused() throws Exception {
 		stubUser("outra@example.com", true);
-		MockHttpSession session = new MockHttpSession();
-		String state = start(session);
+		String state = start();
 
-		this.mvc.perform(get("/api/auth/google/callback").session(session).param("code", "codigo-ok").param("state", state))
+		this.mvc.perform(get("/api/auth/google/callback").param("code", "codigo-ok").param("state", state))
 			.andExpect(redirectedUrl("http://localhost:5173/login?google=negado"));
-		this.mvc.perform(get("/api/auth/me").session(session)).andExpect(status().isUnauthorized());
 	}
 
 	@Test
 	void unverifiedEmailIsRefused() throws Exception {
 		stubUser("dono@example.com", false);
-		MockHttpSession session = new MockHttpSession();
-		String state = start(session);
+		String state = start();
 
-		this.mvc.perform(get("/api/auth/google/callback").session(session).param("code", "codigo-ok").param("state", state))
+		this.mvc.perform(get("/api/auth/google/callback").param("code", "codigo-ok").param("state", state))
 			.andExpect(redirectedUrl("http://localhost:5173/login?google=negado"));
 	}
 
 	@Test
 	void aForgedStateIsRejectedWithoutCallingGoogle() throws Exception {
-		MockHttpSession session = new MockHttpSession();
-		start(session);
-
-		this.mvc.perform(get("/api/auth/google/callback").session(session).param("code", "codigo-ok").param("state", "forjado"))
+		this.mvc.perform(get("/api/auth/google/callback").param("code", "codigo-ok").param("state", "forjado"))
 			.andExpect(redirectedUrl("http://localhost:5173/login?google=erro"));
 		assertThat(this.google.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo("/token")))).isEmpty();
 	}
 
-	/** Começa o fluxo e devolve o state que o Google mandaria de volta. */
-	private String start(MockHttpSession session) throws Exception {
-		String location = this.mvc.perform(get("/api/auth/google").session(session))
+	/** Um state de mais de 10 minutos (por exemplo, uma aba de login esquecida aberta) não serve mais. */
+	@Test
+	void anExpiredStateIsRejected() throws Exception {
+		String expired = this.cipher.encrypt(String.valueOf(Instant.now().minusSeconds(11 * 60).toEpochMilli()));
+
+		this.mvc.perform(get("/api/auth/google/callback").param("code", "codigo-ok").param("state", expired))
+			.andExpect(redirectedUrl("http://localhost:5173/login?google=erro"));
+	}
+
+	/** Começa o fluxo (sem sessão nenhuma) e devolve o state que o Google mandaria de volta. */
+	private String start() throws Exception {
+		String location = this.mvc.perform(get("/api/auth/google"))
 			.andExpect(status().isFound())
 			.andReturn()
 			.getResponse()

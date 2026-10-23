@@ -1,4 +1,5 @@
 import { useRef, useState, type DragEvent, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { fetchResumeLink, useResumes, useUpdateResume, useUploadResume, type ResumeItem } from '@/api/queries'
 import { PageHeader } from '@/components/PageHeader'
@@ -19,7 +20,7 @@ import { Label } from '@/components/ui/label'
 import { formatDate, formatFileSize, formatPercent } from '@/lib/format'
 import { openInNewTab } from '@/lib/open'
 import { cn } from '@/lib/utils'
-import { Archive, ArchiveRestore, Eye, Pencil, Star, Upload } from 'lucide-react'
+import { Archive, ArchiveRestore, Eye, Pencil, Sparkles, Star, Upload } from 'lucide-react'
 
 const ACCEPTED = '.pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
@@ -165,6 +166,13 @@ function ResumeRow({ resume }: { resume: ResumeItem }) {
             <h3 className="font-medium">{resume.label}</h3>
             {resume.isDefault && <Badge>Padrão</Badge>}
             {resume.archived && <Badge variant="outline">Arquivado</Badge>}
+            {resume.tailoredForJobId != null && (
+              <Badge variant="secondary" asChild>
+                <Link to={`/jobs/${resume.tailoredForJobId}`} title="Versão adaptada pelo agente para esta vaga">
+                  <Sparkles aria-hidden /> Adaptado: {resume.tailoredForCompany}
+                </Link>
+              </Badge>
+            )}
           </div>
           <p className="text-xs text-muted-foreground">
             {resume.targetRole ? `${resume.targetRole} · ` : ''}

@@ -22,7 +22,7 @@ export function Logo({ className, compact = false }: { className?: string; compa
       <span className="font-semibold tracking-tight">
         {compact ? BRAND.shortName : (
           <>
-            Job Hunter <span className="text-[var(--brand-accent)]">Agent</span>
+            Job Hunter <span className="text-brand-accent-text">Agent</span>
           </>
         )}
       </span>
