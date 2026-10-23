@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
+import { ThemeProvider } from '@/lib/theme'
 import { renderWithProviders } from '@/test/render'
 import { server } from '@/test/server'
 import { SettingsPage } from './SettingsPage'
@@ -13,6 +14,14 @@ const run = {
   finishedAt: '2026-10-23T10:00:05Z',
   stats: { GMAIL_ALERTAS: { created: 4, duplicate: 1, excluded: 1, errors: 0 } },
   error: null,
+}
+
+function renderSettingsPage() {
+  return renderWithProviders(
+    <ThemeProvider>
+      <SettingsPage />
+    </ThemeProvider>,
+  )
 }
 
 function serveSettings(runs: unknown[] = []) {
@@ -38,9 +47,14 @@ function serveSettings(runs: unknown[] = []) {
 }
 
 describe('SettingsPage', () => {
+  beforeEach(() => {
+    window.localStorage.removeItem('job-hunter-theme')
+    document.documentElement.classList.remove('dark')
+  })
+
   it('mostra a conexão do Gmail e o perfil de busca', async () => {
     serveSettings()
-    renderWithProviders(<SettingsPage />)
+    renderSettingsPage()
 
     expect(await screen.findByText('eu@example.com')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Reconectar' })).toHaveAttribute('href', '/api/admin/gmail/connect')
@@ -57,12 +71,26 @@ describe('SettingsPage', () => {
         return HttpResponse.json(run)
       }),
     )
-    renderWithProviders(<SettingsPage />)
+    renderSettingsPage()
 
     await userEvent.click(await screen.findByRole('button', { name: /coletar agora/i }))
 
     await vi.waitFor(() => expect(collected).toBe(true))
     expect(await screen.findByText('Concluída')).toBeInTheDocument()
     expect(screen.getByText('4')).toBeInTheDocument()
+  })
+
+  it('permite escolher e salva o tema escuro', async () => {
+    serveSettings()
+    const user = userEvent.setup()
+    renderSettingsPage()
+
+    const themeSelect = await screen.findByRole('combobox', { name: 'Tema' })
+    expect(themeSelect).toHaveTextContent('Padrão do sistema')
+    await user.click(themeSelect)
+    await user.click(screen.getByRole('option', { name: 'Escuro' }))
+
+    expect(window.localStorage.getItem('job-hunter-theme')).toBe('dark')
+    expect(document.documentElement).toHaveClass('dark')
   })
 })

@@ -47,4 +47,22 @@ describe('InboxPage', () => {
 
     await vi.waitFor(() => expect(body).toEqual({ jobId: '30', status: 'INTERESSE' }))
   })
+
+  it('registra a vaga que não aceita mais candidaturas como encerrada', async () => {
+    let body: unknown
+    server.use(
+      http.get('/api/jobs', () => HttpResponse.json({ items: [inboxJob()], page: 0, size: 50, total: 1 })),
+      http.post('/api/jobs/:id/application', async ({ request, params }) => {
+        body = { jobId: params.id, ...((await request.json()) as object) }
+        return HttpResponse.json({ id: 1 }, { status: 201 })
+      }),
+    )
+    renderWithProviders(<InboxPage />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /vaga encerrada/i }))
+
+    await vi.waitFor(() =>
+      expect(body).toEqual({ jobId: '30', status: 'ENCERRADA', notes: expect.stringContaining('não aceitava') }),
+    )
+  })
 })

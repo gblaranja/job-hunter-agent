@@ -27,9 +27,11 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatDateTime } from '@/lib/format'
-import { Link2, Mail, Pencil, Play, Plus, Trash2 } from 'lucide-react'
+import { useTheme } from '@/lib/useTheme'
+import { Link2, Mail, Monitor, Moon, Pencil, Play, Plus, Sun, Trash2 } from 'lucide-react'
 
 export function SettingsPage() {
   const [params, setParams] = useSearchParams()
@@ -47,10 +49,39 @@ export function SettingsPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader title="Configurações" description="Conexão com o Gmail, coleta de vagas e perfis de busca." />
+      <AppearanceCard />
       <GmailCard />
       <CollectionCard />
       <ProfilesCard />
     </div>
+  )
+}
+
+function AppearanceCard() {
+  const { theme, setTheme } = useTheme()
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Sun className="size-4" aria-hidden /> Aparência
+        </CardTitle>
+        <CardDescription>Escolha como o aplicativo será exibido. A preferência fica salva neste navegador.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <Label htmlFor="theme-preference">Tema</Label>
+        <Select value={theme} onValueChange={(value) => setTheme(value as 'system' | 'light' | 'dark')}>
+          <SelectTrigger id="theme-preference" className="w-full sm:w-72" aria-label="Tema">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="system"><Monitor aria-hidden /> Padrão do sistema</SelectItem>
+            <SelectItem value="light"><Sun aria-hidden /> Claro</SelectItem>
+            <SelectItem value="dark"><Moon aria-hidden /> Escuro</SelectItem>
+          </SelectContent>
+        </Select>
+      </CardContent>
+    </Card>
   )
 }
 

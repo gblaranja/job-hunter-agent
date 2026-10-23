@@ -1,5 +1,7 @@
 package dev.laranja.jobhunter.tracking;
 
+import java.util.List;
+
 import dev.laranja.jobhunter.IntegrationTest;
 import dev.laranja.jobhunter.TestFiles;
 import org.junit.jupiter.api.Test;
@@ -7,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.MediaType;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
@@ -144,6 +147,53 @@ class ApplicationFlowIntegrationTests extends IntegrationTest {
 		assertThatThrownBy(() -> this.jdbc.sql("update application_event set note = 'editado'").update())
 			.isInstanceOf(DataAccessException.class)
 			.hasMessageContaining("append-only");
+	}
+
+	@Test
+	void closedJobLeavesTheInboxAndGoesToTheBoardWithItsHistory() throws Exception {
+		long jobId = createJob("IA Developer", "CI&T", "Java e IA");
+		long otherJobId = createJob("Dev Kotlin", "Empresa K", "Kotlin");
+		long otherApplicationId = startApplication(otherJobId, """
+				{"status": "INTERESSE"}
+				""");
+
+		long applicationId = startApplication(jobId, """
+				{"status": "ENCERRADA", "notes": "Não aceita mais candidaturas."}
+				""");
+		this.mvc
+			.perform(patch("/api/applications/{id}/status", otherApplicationId).with(owner())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"status": "ENCERRADA"}
+						"""))
+			.andExpect(status().isNoContent());
+
+		this.mvc.perform(get("/api/jobs").param("inbox", "true").with(owner()))
+			.andExpect(jsonPath("$.total").value(0));
+		this.mvc.perform(get("/api/applications/board").with(owner()))
+			.andExpect(jsonPath("$.columns[?(@.status == 'ENCERRADA')].cards[*].applicationId",
+					hasItem((int) applicationId)))
+			.andExpect(jsonPath("$.columns[?(@.status == 'ENCERRADA')].cards[*].applicationId",
+					hasItem((int) otherApplicationId)));
+		this.mvc.perform(get("/api/jobs/{id}", jobId).with(owner()))
+			.andExpect(jsonPath("$.timeline", hasSize(1)))
+			.andExpect(jsonPath("$.timeline[0].toStatus").value("ENCERRADA"))
+			.andExpect(jsonPath("$.timeline[0].note").value("Não aceita mais candidaturas."));
+		this.mvc.perform(get("/api/jobs/{id}", otherJobId).with(owner()))
+			.andExpect(jsonPath("$.timeline[1].fromStatus").value("INTERESSE"))
+			.andExpect(jsonPath("$.timeline[1].toStatus").value("ENCERRADA"));
+		assertThat(this.jdbc.sql("select count(*) from job where closed_at is not null and id in (:ids)")
+			.param("ids", List.of(jobId, otherJobId))
+			.query(Long.class)
+			.single()).isEqualTo(2);
+
+		this.mvc
+			.perform(patch("/api/applications/{id}/status", applicationId).with(owner())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"status": "INTERESSE"}
+						"""))
+			.andExpect(status().is(422));
 	}
 
 	@Test

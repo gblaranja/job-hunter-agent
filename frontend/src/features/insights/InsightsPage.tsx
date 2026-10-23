@@ -137,7 +137,8 @@ function Report({ report }: { report: InsightReport }) {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* grid-cols-1 (minmax(0, 1fr)): no celular a coluna não cresce até a largura das tabelas, que rolam dentro do card. */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Por currículo</CardTitle>

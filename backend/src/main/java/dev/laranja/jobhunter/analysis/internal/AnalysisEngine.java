@@ -122,6 +122,13 @@ public class AnalysisEngine {
 				null, version, null);
 	}
 
+	/** Só o score determinístico, para um conjunto de skills qualquer (a prévia de um currículo adaptado). */
+	public Fit fit(StoredRequirements requirements, List<String> resumeSkills, @Nullable String targetRole) {
+		DeterministicScorer.Result result = this.scorer.score(requirements.toRequirements(), resumeSkills,
+				Seniority.detect(targetRole));
+		return new Fit(result.score(), result.matchedSkills(), result.gaps());
+	}
+
 	private ScoreAdjustment adjust(JobView job, JobRequirements requirements, DeterministicScorer.Result base,
 			ResumeProfile resume, List<FeedbackExample> feedback) {
 		// O currículo fica no bloco de sistema (em cache); vaga, cálculo e feedback variam a cada chamada.
@@ -198,6 +205,9 @@ public class AnalysisEngine {
 	}
 
 	public record FeedbackExample(String title, String company, String rating, List<String> reasons) {
+	}
+
+	public record Fit(int score, List<String> matchedSkills, List<String> gaps) {
 	}
 
 }

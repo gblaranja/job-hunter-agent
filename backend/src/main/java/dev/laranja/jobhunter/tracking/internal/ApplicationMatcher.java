@@ -25,7 +25,7 @@ class ApplicationMatcher {
 
 	private static final Set<String> SECOND_LEVEL = Set.of("com", "net", "org", "gov", "edu", "co", "ind");
 
-	private static final String OPEN = "a.status not in ('OFERTA', 'RECUSADA', 'DESISTI')";
+	private static final String OPEN = "a.status not in ('OFERTA', 'RECUSADA', 'DESISTI', 'ENCERRADA')";
 
 	private final JdbcClient jdbc;
 

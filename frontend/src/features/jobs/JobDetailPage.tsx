@@ -6,12 +6,14 @@ import {
   useJob,
   useResumes,
   useStartApplication,
+  useTailoredResumes,
   type ApplicationStatus,
   type JobDetail,
 } from '@/api/queries'
 import { AppliedJobCard } from '@/components/AppliedJobCard'
 import { FeedbackButtons } from '@/components/FeedbackButtons'
 import { AnalysisCard } from './AnalysisCard'
+import { TailoredResumeCard } from './TailoredResumeCard'
 import { Markdown } from '@/components/Markdown'
 import { PageHeader } from '@/components/PageHeader'
 import { ErrorBlock, LoadingBlock } from '@/components/QueryState'
@@ -26,7 +28,7 @@ import { ApplicationDetailsForm } from '@/features/applications/ApplicationDetai
 import { ResponseDialog } from '@/features/applications/ResponseDialog'
 import { Timeline } from '@/features/applications/Timeline'
 import { useStatusMove } from '@/features/applications/useStatusMove'
-import { sameAsWorkModel, statusesRequiringResume, statusLabels, workModelLabels } from '@/lib/labels'
+import { closedJobNote, sameAsWorkModel, statusesRequiringResume, statusLabels, workModelLabels } from '@/lib/labels'
 import { ExternalLink } from 'lucide-react'
 
 const movableStatuses = (Object.keys(statusLabels) as ApplicationStatus[]).filter((status) => status !== 'NOVA')
@@ -88,6 +90,7 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
               </CardContent>
             </Card>
           )}
+          <TailoredResumeCard jobId={job.id} />
           {application && (
             <Card>
               <CardHeader>
@@ -205,11 +208,14 @@ function StatusPanel({
 
 function StartPanel({ jobId }: { jobId: number }) {
   const start = useStartApplication()
+  const tailored = useTailoredResumes(jobId)
   const [picking, setPicking] = useState(false)
+  // A versão adaptada mais recente já salva em Currículos vem marcada na escolha do currículo enviado.
+  const tailoredResumeId = tailored.data?.find((version) => version.resumeVersionId != null)?.resumeVersionId ?? undefined
 
-  function begin(status: ApplicationStatus, resumeVersionId?: number) {
+  function begin(status: ApplicationStatus, resumeVersionId?: number, notes?: string) {
     start.mutate(
-      { jobId, body: { status, resumeVersionId, channel: null } },
+      { jobId, body: { status, resumeVersionId, channel: null, notes } },
       {
         onSuccess: () => toast.success(`Candidatura registrada em ${statusLabels[status]}.`),
         onError: (error) => toast.error(error.message),
@@ -229,12 +235,16 @@ function StartPanel({ jobId }: { jobId: number }) {
         <Button onClick={() => setPicking(true)} disabled={start.isPending}>
           Registrar aplicação
         </Button>
+        <Button variant="ghost" onClick={() => begin('ENCERRADA', undefined, closedJobNote)} disabled={start.isPending}>
+          Vaga encerrada
+        </Button>
       </CardContent>
       {picking && (
         <ResumePickerDialog
           open
           title="Registrar aplicação"
           description="Qual versão do currículo você enviou para esta vaga?"
+          preferredResumeId={tailoredResumeId}
           onCancel={() => setPicking(false)}
           onConfirm={({ resumeVersionId }) => {
             setPicking(false)

@@ -5,6 +5,7 @@ import dev.laranja.jobhunter.companies.CompanyAlertRaised;
 import dev.laranja.jobhunter.jobs.JobCatalog;
 import dev.laranja.jobhunter.jobs.JobView;
 import dev.laranja.jobhunter.notifications.Notifications;
+import dev.laranja.jobhunter.tailoring.TailoredResumeReady;
 
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
@@ -33,6 +34,15 @@ class NotificationTriggers {
 		JobView job = this.jobs.get(event.jobId());
 		this.notifications.notify("VAGA_ADERENTE", "Vaga com " + event.matchScore() + "% de aderência: " + job.title(),
 				job.company(), "/jobs/" + job.id(), "vaga-aderente-" + job.id());
+	}
+
+	@ApplicationModuleListener
+	void on(TailoredResumeReady event) {
+		JobView job = this.jobs.get(event.jobId());
+		this.notifications.notify("CURRICULO_ADAPTADO", "Currículo adaptado para " + job.title(),
+				job.company() + " · " + event.coveredKeywords() + " de " + event.keywords()
+						+ " palavras-chave da vaga no texto",
+				"/jobs/" + job.id(), "curriculo-adaptado-" + event.tailoredResumeId());
 	}
 
 	@ApplicationModuleListener

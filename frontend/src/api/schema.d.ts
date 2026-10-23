@@ -148,6 +148,102 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{jobId}/tailored-resumes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tailoredResumes"];
+        put?: never;
+        post: operations["requestTailoredResume"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tailored-resumes/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tailoringAvailability"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tailored-resumes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tailoredResume"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tailored-resumes/{id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["editTailoredResume"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tailored-resumes/{id}/resume-version": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["saveTailoredResume"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tailored-resumes/{id}/docx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tailoredResumeDocx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jobs/{id}/analysis": {
         parameters: {
             query?: never;
@@ -548,6 +644,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["providers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/me": {
         parameters: {
             query?: never;
@@ -556,6 +668,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/google": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["start_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/google/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["callback"];
         put?: never;
         post?: never;
         delete?: never;
@@ -635,7 +779,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["callback"];
+        get: operations["callback_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -714,6 +858,65 @@ export interface components {
             company: string;
             descriptionMd?: string | null;
         };
+        TailorRequest: {
+            /** Format: int64 */
+            baseResumeId?: number | null;
+        };
+        ResumeChange: {
+            /** @description Seção do currículo (Resumo, Competências, uma experiência...) */
+            section: string;
+            /** @description Trecho do currículo base copiado exatamente; vazio se o trecho é novo */
+            before: string;
+            /** @description Trecho reescrito */
+            after: string;
+            /** @description Uma frase ligando a mudança a um requisito da vaga */
+            reason: string;
+        };
+        TailoredResumeView: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            jobId: number;
+            /** Format: int64 */
+            baseResumeId?: number | null;
+            baseResumeLabel?: string | null;
+            status: string;
+            content?: string | null;
+            headline?: string | null;
+            changes: components["schemas"]["ResumeChange"][];
+            notCovered: string[];
+            notes?: string | null;
+            keywords: string[];
+            coveredBefore: string[];
+            coveredAfter: string[];
+            unsupportedSkills: string[];
+            /** Format: int32 */
+            scoreBefore?: number | null;
+            /** Format: int32 */
+            scoreAfter?: number | null;
+            edited: boolean;
+            /** Format: int64 */
+            resumeVersionId?: number | null;
+            resumeLabel?: string | null;
+            modelVersion?: string | null;
+            lastError?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        Availability: {
+            enabled: boolean;
+            autoGenerate: boolean;
+        };
+        TailoredContent: {
+            content: string;
+        };
+        ResumeRef: {
+            /** Format: int64 */
+            id: number;
+            label: string;
+        };
         ResumeItem: {
             /** Format: int64 */
             id: number;
@@ -735,6 +938,10 @@ export interface components {
             interviewRate?: number | null;
             skills: string[];
             hasText: boolean;
+            /** Format: int64 */
+            tailoredForJobId?: number | null;
+            tailoredForTitle?: string | null;
+            tailoredForCompany?: string | null;
         };
         ManualJobCommand: {
             title: string;
@@ -764,7 +971,7 @@ export interface components {
         };
         StartApplication: {
             /** @enum {string} */
-            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";
+            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
             /** Format: int64 */
             resumeVersionId?: number | null;
             /** @enum {string|null} */
@@ -971,7 +1178,7 @@ export interface components {
         };
         ChangeApplicationStatus: {
             /** @enum {string} */
-            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";
+            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
             /** Format: int64 */
             resumeVersionId?: number | null;
             note?: string | null;
@@ -1188,8 +1395,13 @@ export interface components {
             /** Format: int32 */
             headcount?: number | null;
         };
+        LoginProviders: {
+            password: boolean;
+            google: boolean;
+        };
         CurrentUser: {
             username: string;
+            displayName: string;
         };
         AppliedListItem: {
             /** Format: int64 */
@@ -1199,7 +1411,7 @@ export interface components {
             title: string;
             company: string;
             /** @enum {string} */
-            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";
+            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
             /** Format: date-time */
             appliedAt?: string | null;
             /** @enum {string|null} */
@@ -1218,7 +1430,7 @@ export interface components {
             /** Format: int64 */
             jobId: number;
             /** @enum {string} */
-            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";
+            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
             /** Format: date-time */
             appliedAt?: string | null;
             /** @enum {string|null} */
@@ -1259,7 +1471,7 @@ export interface components {
             title: string;
             company: string;
             /** @enum {string} */
-            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";
+            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
             /** Format: int64 */
             daysInStatus: number;
             /** Format: int64 */
@@ -1272,7 +1484,7 @@ export interface components {
         };
         BoardColumn: {
             /** @enum {string} */
-            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";
+            status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
             cards: components["schemas"]["BoardCard"][];
         };
         MailboxStatus: {
@@ -2223,6 +2435,26 @@ export interface operations {
             };
         };
     };
+    providers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LoginProviders"];
+                };
+            };
+        };
+    };
     me: {
         parameters: {
             query?: never;
@@ -2243,10 +2475,50 @@ export interface operations {
             };
         };
     };
+    start_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    callback: {
+        parameters: {
+            query?: {
+                code?: string;
+                state?: string;
+                error?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     list_5: {
         parameters: {
             query?: {
-                status?: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI";
+                status?: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
                 q?: string;
             };
             header?: never;
@@ -2324,7 +2596,7 @@ export interface operations {
             };
         };
     };
-    callback: {
+    callback_1: {
         parameters: {
             query?: {
                 code?: string;
@@ -2381,6 +2653,167 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    tailoredResumes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TailoredResumeView"][];
+                };
+            };
+        };
+    };
+    requestTailoredResume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TailorRequest"];
+            };
+        };
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TailoredResumeView"];
+                };
+            };
+        };
+    };
+    tailoredResume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TailoredResumeView"];
+                };
+            };
+        };
+    };
+    editTailoredResume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TailoredContent"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TailoredResumeView"];
+                };
+            };
+        };
+    };
+    saveTailoredResume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ResumeRef"];
+                };
+            };
+        };
+    };
+    tailoredResumeDocx: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /** Format: byte */
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": string;
+                };
+            };
+        };
+    };
+    tailoringAvailability: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Availability"];
+                };
             };
         };
     };
