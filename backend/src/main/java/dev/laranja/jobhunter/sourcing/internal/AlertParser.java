@@ -20,7 +20,8 @@ public interface AlertParser {
 	/** Linhas que aparecem nos cards dos alertas mas não são empresa nem localidade. */
 	Pattern NOISE = Pattern.compile(
 			"(?i)^(candidatura simplificada|easy apply|promovida|promoted|novo|new|ver vaga|view job|ver todas.*|see all.*|"
-					+ "candidate-se|apply( now)?|recrutando ativamente|actively recruiting|.*ex-alunos.*|.*alumni.*|"
+					+ "candidate-se|apply( now)?|recrutando (ativamente|agora)|actively recruiting|crescimento rápido|"
+					+ ".*ex-alunos?.*|.*ex-funcionári(o|a)s?.*|.*alumni.*|"
 					+ ".*conex(ão|ões).*|.*connections?.*|há \\d+.*|\\d+ (dias?|horas?|semanas?) atrás|"
 					+ "\\d+ (days?|hours?|weeks?) ago|.*candidaturas?|.*applicants?)$");
 

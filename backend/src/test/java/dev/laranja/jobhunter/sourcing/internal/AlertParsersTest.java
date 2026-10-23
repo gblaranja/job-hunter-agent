@@ -38,6 +38,23 @@ class AlertParsersTest {
 	}
 
 	@Test
+	void linkedInCardWrappedInALinkStillSeparatesTitleCompanyAndLocation() throws IOException {
+		List<RawJob> jobs = new LinkedInAlertParser().parse(fixture("linkedin-alerta-card-link.html"));
+
+		assertThat(jobs).extracting(RawJob::externalId).containsExactly("4099990001", "4099990002");
+		assertThat(jobs.getFirst()).satisfies(job -> {
+			assertThat(job.title()).isEqualTo("Backend Developer - Java / Spring Boot / Kafka");
+			assertThat(job.company()).isEqualTo("Empresa Remota");
+			assertThat(job.location()).isEqualTo("Brasil (Remoto)");
+		});
+		assertThat(jobs.get(1)).satisfies(job -> {
+			assertThat(job.title()).isEqualTo("Pessoa Engenheira de Software Sênior");
+			assertThat(job.company()).isEqualTo("Fintech Exemplo");
+			assertThat(job.location()).isEqualTo("São Paulo, SP (Híbrido)");
+		});
+	}
+
+	@Test
 	void gupyAlertUsesTheCareerPageSubdomainWhenTheCompanyIsMissing() throws IOException {
 		List<RawJob> jobs = new GupyAlertParser().parse(fixture("gupy-alerta.html"));
 
