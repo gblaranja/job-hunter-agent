@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/companies/{id}/headcount": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["headcount"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{id}/snapshot": {
         parameters: {
             query?: never;
@@ -78,6 +94,22 @@ export interface paths {
         get: operations["list_1"];
         put?: never;
         post: operations["upload"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/notifications/read-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["readAll"];
         delete?: never;
         options?: never;
         head?: never;
@@ -132,6 +164,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/insights/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["generate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}/merge": {
         parameters: {
             query?: never;
@@ -142,6 +190,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["merge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies/refresh-metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["refresh"];
         delete?: never;
         options?: never;
         head?: never;
@@ -226,6 +290,22 @@ export interface paths {
         options?: never;
         head?: never;
         patch: operations["update_1"];
+        trace?: never;
+    };
+    "/api/notifications/{id}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["read"];
         trace?: never;
     };
     "/api/emails/{id}/classification": {
@@ -324,6 +404,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["recent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jobs/{id}": {
         parameters: {
             query?: never;
@@ -332,6 +428,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/insights/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["usage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/insights/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["latest"];
         put?: never;
         post?: never;
         delete?: never;
@@ -380,6 +508,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["list_4"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies/{id}/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies/{id}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["metrics"];
         put?: never;
         post?: never;
         delete?: never;
@@ -544,6 +704,10 @@ export interface components {
             reasons?: ("SALARIO" | "STACK" | "SENIORIDADE" | "MODELO_TRABALHO" | "EMPRESA" | "LOCALIZACAO")[] | null;
             comment?: string | null;
         };
+        Headcount: {
+            /** Format: int32 */
+            headcount: number;
+        };
         SaveJobSnapshot: {
             url?: string | null;
             title: string;
@@ -586,7 +750,7 @@ export interface components {
             /** Format: int64 */
             id: number;
             /** @enum {string} */
-            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA";
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA";
             title: string;
             company: string;
             location?: string | null;
@@ -612,6 +776,96 @@ export interface components {
         CreatedApplication: {
             /** Format: int64 */
             id: number;
+        };
+        BulletRewrite: {
+            original: string;
+            rewritten: string;
+            reason: string;
+        };
+        Conversion: {
+            group: string;
+            /** Format: int32 */
+            applied: number;
+            /** Format: int32 */
+            interview: number;
+        };
+        Funnel: {
+            /** Format: int32 */
+            applied: number;
+            /** Format: int32 */
+            screening: number;
+            /** Format: int32 */
+            interview: number;
+            /** Format: int32 */
+            offer: number;
+            /** Format: int32 */
+            avgScoreApplied?: number | null;
+            bySeniority: components["schemas"]["Conversion"][];
+            scoreByRating: {
+                [key: string]: number;
+            };
+        };
+        Gap: {
+            skill: string;
+            /** Format: int32 */
+            jobs: number;
+            /** Format: int32 */
+            avgScore?: number | null;
+        };
+        GapAdvice: {
+            skill: string;
+            evidence: string;
+            suggestion: string;
+        };
+        InsightReport: {
+            /** Format: int64 */
+            id: number;
+            /** Format: date */
+            periodStart: string;
+            /** Format: date */
+            periodEnd: string;
+            topSkills: components["schemas"]["SkillDemand"][];
+            gaps: components["schemas"]["Gap"][];
+            funnel: components["schemas"]["Funnel"];
+            resumePerformance: components["schemas"]["ResumePerformance"][];
+            suggestedFilters: components["schemas"]["SuggestedFilter"][];
+            aiAccuracy?: number | null;
+            llmCostUsd?: number | null;
+            recommendations: components["schemas"]["Recommendations"];
+            modelVersion: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        Recommendations: {
+            gaps: components["schemas"]["GapAdvice"][];
+            bullets: components["schemas"]["BulletRewrite"][];
+            linkedinKeywords: string[];
+            diagnosis: string;
+            diagnosisExplanation: string;
+            source: string;
+        };
+        ResumePerformance: {
+            /** Format: int64 */
+            resumeVersionId: number;
+            label: string;
+            /** Format: int32 */
+            applied: number;
+            /** Format: int32 */
+            interview: number;
+        };
+        SkillDemand: {
+            skill: string;
+            /** Format: int32 */
+            jobs: number;
+            covered?: boolean | null;
+        };
+        SuggestedFilter: {
+            reason: string;
+            /** Format: int32 */
+            count: number;
+            title: string;
+            detail: string;
+            keyword?: string | null;
         };
         MergeCompany: {
             /** Format: int64 */
@@ -693,12 +947,20 @@ export interface components {
             notes?: string | null;
             /** Format: date-time */
             firstSeenAt: string;
+            clientSectors: string[];
+            contractTypes: string[];
             /** Format: int64 */
             jobsTotal: number;
             /** Format: int64 */
+            jobsActive: number;
+            /** Format: int64 */
             jobsLast90Days: number;
+            /** Format: int64 */
+            reposts: number;
             /** Format: date-time */
             lastJobAt?: string | null;
+            /** Format: double */
+            avgDaysOpen?: number | null;
             /** Format: int64 */
             applications: number;
         };
@@ -724,6 +986,18 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
         };
+        NotificationView: {
+            /** Format: int64 */
+            id: number;
+            type: string;
+            title: string;
+            body?: string | null;
+            link?: string | null;
+            /** Format: date-time */
+            readAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
         JobListItem: {
             /** Format: int64 */
             id: number;
@@ -736,7 +1010,7 @@ export interface components {
             workModel: "REMOTO" | "HIBRIDO" | "PRESENCIAL" | "NAO_INFORMADO";
             url?: string | null;
             /** @enum {string} */
-            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA";
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA";
             /** Format: date-time */
             collectedAt: string;
             preview?: string | null;
@@ -822,6 +1096,19 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        LlmUsage: {
+            task: string;
+            model: string;
+            /** Format: int32 */
+            calls: number;
+            /** Format: int64 */
+            inputTokens: number;
+            /** Format: int64 */
+            outputTokens: number;
+            /** Format: int64 */
+            cacheReadTokens: number;
+            costUsd: number;
+        };
         EmailItem: {
             /** Format: int64 */
             id: number;
@@ -855,6 +1142,51 @@ export interface components {
             pending: number;
             /** Format: double */
             rate?: number | null;
+        };
+        CompanyJob: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+            /** Format: date-time */
+            firstSeenAt: string;
+            /** Format: date-time */
+            closedAt?: string | null;
+            /** Format: int64 */
+            repostOfJobId?: number | null;
+            applicationStatus?: string | null;
+            /** Format: int32 */
+            matchScore?: number | null;
+        };
+        CompanyOverview: {
+            bySeniority: {
+                [key: string]: number;
+            };
+            byWorkModel: {
+                [key: string]: number;
+            };
+            topSkills: components["schemas"]["SkillCount"][];
+            jobs: components["schemas"]["CompanyJob"][];
+        };
+        SkillCount: {
+            skill: string;
+            /** Format: int32 */
+            count: number;
+        };
+        WeeklyMetrics: {
+            /** Format: date */
+            weekStart: string;
+            /** Format: int32 */
+            jobsOpened: number;
+            /** Format: int32 */
+            jobsClosed: number;
+            /** Format: int32 */
+            jobsActive: number;
+            /** Format: int32 */
+            reposts: number;
+            /** Format: double */
+            avgDaysOpen?: number | null;
+            /** Format: int32 */
+            headcount?: number | null;
         };
         CurrentUser: {
             username: string;
@@ -1030,6 +1362,30 @@ export interface operations {
             };
         };
     };
+    headcount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Headcount"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     snapshot: {
         parameters: {
             query?: never;
@@ -1170,6 +1526,24 @@ export interface operations {
             };
         };
     };
+    readAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     list_2: {
         parameters: {
             query?: {
@@ -1267,6 +1641,26 @@ export interface operations {
             };
         };
     };
+    generate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InsightReport"];
+                };
+            };
+        };
+    };
     merge: {
         parameters: {
             query?: never;
@@ -1281,6 +1675,24 @@ export interface operations {
                 "application/json": components["schemas"]["MergeCompany"];
             };
         };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    refresh: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description No Content */
             204: {
@@ -1427,6 +1839,26 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["ResumeItem"];
                 };
+            };
+        };
+    };
+    read: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -1596,6 +2028,26 @@ export interface operations {
             };
         };
     };
+    recent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NotificationView"][];
+                };
+            };
+        };
+    };
     detail: {
         parameters: {
             query?: never;
@@ -1614,6 +2066,46 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["JobDetail"];
+                };
+            };
+        };
+    };
+    usage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["LlmUsage"][];
+                };
+            };
+        };
+    };
+    latest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InsightReport"];
                 };
             };
         };
@@ -1663,7 +2155,10 @@ export interface operations {
     };
     list_4: {
         parameters: {
-            query?: never;
+            query?: {
+                watch?: "DESCOBERTA" | "MONITORADA" | "ALVO" | "IGNORADA";
+                kind?: "CONTRATANTE" | "CONSULTORIA_TI" | "RECRUTAMENTO";
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1677,6 +2172,53 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CompanyItem"][];
+                };
+            };
+        };
+    };
+    overview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyOverview"];
+                };
+            };
+        };
+    };
+    metrics: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["WeeklyMetrics"][];
                 };
             };
         };

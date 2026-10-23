@@ -280,6 +280,51 @@ export function useUpdateCompany() {
   })
 }
 
+export type CompanyOverview = Schemas['CompanyOverview']
+export type WeeklyMetrics = Schemas['WeeklyMetrics']
+
+export function useCompany(id: number) {
+  return useQuery({
+    queryKey: ['companies', id],
+    queryFn: () => unwrap(api.GET('/api/companies/{id}', { params: { path: { id } } })),
+  })
+}
+
+export function useCompanyOverview(id: number) {
+  return useQuery({
+    queryKey: ['companies', id, 'overview'],
+    queryFn: () => unwrap(api.GET('/api/companies/{id}/overview', { params: { path: { id } } })),
+  })
+}
+
+export function useCompanyMetrics(id: number) {
+  return useQuery({
+    queryKey: ['companies', id, 'metrics'],
+    queryFn: () => unwrap(api.GET('/api/companies/{id}/metrics', { params: { path: { id } } })),
+  })
+}
+
+export function useSaveHeadcount() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, headcount }: { id: number; headcount: number }) =>
+      unwrap(api.PUT('/api/companies/{id}/headcount', { params: { path: { id } }, body: { headcount } })),
+    onSuccess: (_data, { id }) => client.invalidateQueries({ queryKey: ['companies', id, 'metrics'] }),
+  })
+}
+
+export function useRefreshMetrics() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: () => unwrap(api.POST('/api/companies/refresh-metrics')),
+    onSuccess: () =>
+      Promise.all([
+        client.invalidateQueries({ queryKey: ['companies'] }),
+        client.invalidateQueries({ queryKey: ['notifications'] }),
+      ]),
+  })
+}
+
 export function useMergeCompany() {
   const client = useQueryClient()
   return useMutation({
@@ -400,5 +445,61 @@ export function useVerifyLinks() {
   return useMutation({
     mutationFn: () => unwrap(api.POST('/api/admin/verify-links')),
     onSuccess: () => invalidateTracking(client),
+  })
+}
+
+// Insights
+
+export type InsightReport = Schemas['InsightReport']
+export type LlmUsage = Schemas['LlmUsage']
+
+/** Último relatório; null enquanto nenhum foi gerado (a API responde 204). */
+export function useLatestInsights() {
+  return useQuery({
+    queryKey: ['insights'],
+    queryFn: async () => (await unwrap(api.GET('/api/insights/latest'))) ?? null,
+  })
+}
+
+export function useGenerateInsights() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: () => unwrap(api.POST('/api/insights/generate')),
+    onSuccess: (report) => {
+      client.setQueryData(['insights'], report)
+      return client.invalidateQueries({ queryKey: ['llm-usage'] })
+    },
+  })
+}
+
+export function useLlmUsage() {
+  return useQuery({ queryKey: ['llm-usage'], queryFn: () => unwrap(api.GET('/api/insights/usage')) })
+}
+
+// Notificações
+
+export type NotificationItem = Schemas['NotificationView']
+
+export function useNotifications() {
+  return useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => unwrap(api.GET('/api/notifications')),
+    refetchInterval: 60_000,
+  })
+}
+
+export function useMarkNotificationRead() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => unwrap(api.PATCH('/api/notifications/{id}/read', { params: { path: { id } } })),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['notifications'] }),
+  })
+}
+
+export function useMarkAllNotificationsRead() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: () => unwrap(api.POST('/api/notifications/read-all')),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['notifications'] }),
   })
 }

@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDateTime } from '@/lib/format'
+import { seniorityLabels } from '@/lib/labels'
 import { RefreshCw, Sparkles } from 'lucide-react'
 
 const statusText: Record<string, string> = {
@@ -13,14 +14,6 @@ const statusText: Record<string, string> = {
   PENDENTE: 'Ajuste da IA pendente',
   COMPLETO: 'Analisada com IA',
   FALHOU: 'A IA falhou; nova tentativa agendada',
-}
-
-const seniorityText: Record<string, string> = {
-  ESTAGIO: 'Estágio',
-  JUNIOR: 'Júnior',
-  PLENO: 'Pleno',
-  SENIOR: 'Sênior',
-  ESPECIALISTA: 'Especialista',
 }
 
 /** Requisitos extraídos, score de aderência com o detalhamento e a justificativa da IA. */
@@ -68,7 +61,7 @@ export function AnalysisCard({ jobId, analysis }: { jobId: number; analysis?: Jo
               )}
               {analysis.justification && <p className="text-muted-foreground">{analysis.justification}</p>}
               {analysis.seniority && (
-                <p className="text-muted-foreground">Senioridade: {seniorityText[analysis.seniority] ?? analysis.seniority}</p>
+                <p className="text-muted-foreground">Senioridade: {seniorityLabels[analysis.seniority] ?? analysis.seniority}</p>
               )}
             </div>
           </div>

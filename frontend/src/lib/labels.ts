@@ -86,6 +86,12 @@ export const originLabels: Record<JobListItem['origin'], string> = {
   MANUAL: 'Manual',
   LINKEDIN_ALERTA: 'LinkedIn',
   GUPY_ALERTA: 'Gupy',
+  GREENHOUSE: 'Greenhouse',
+  LEVER: 'Lever',
+  ASHBY: 'Ashby',
+  REMOTIVE: 'Remotive',
+  GITHUB: 'GitHub (backend-br)',
+  ADZUNA: 'Adzuna',
 }
 
 export const watchStatusLabels: Record<WatchStatus, string> = {
@@ -127,4 +133,45 @@ export const responseChannelLabels: Record<ResponseChannel, string> = {
   LINKEDIN: 'LinkedIn',
   TELEFONE: 'Ligação',
   OUTRO: 'Outro',
+}
+
+/** Senioridade das vagas, como a análise devolve. */
+export const seniorityLabels: Record<string, string> = {
+  ESTAGIO: 'Estágio',
+  JUNIOR: 'Júnior',
+  PLENO: 'Pleno',
+  SENIOR: 'Sênior',
+  ESPECIALISTA: 'Especialista',
+  NAO_INFORMADO: 'Não informada',
+}
+
+export const companyKindLabels: Record<string, string> = {
+  CONTRATANTE: 'Contratante',
+  CONSULTORIA_TI: 'Consultoria de TI',
+  RECRUTAMENTO: 'Recrutamento',
+}
+
+/** ATS com job board público consultado todo dia; os outros ficam só como anotação. */
+export const atsLabels: Record<string, string> = {
+  GREENHOUSE: 'Greenhouse',
+  LEVER: 'Lever',
+  ASHBY: 'Ashby',
+  GUPY: 'Gupy',
+  OUTRO: 'Outro',
+}
+
+export const diagnosisLabels: Record<string, string> = {
+  CURRICULO: 'O currículo é o gargalo',
+  FILTRO: 'O filtro de vagas é o gargalo',
+  AMBOS: 'Currículo e filtro precisam de ajuste',
+  EQUILIBRADO: 'Funil saudável',
+  POUCOS_DADOS: 'Poucos dados ainda',
+}
+
+export const notificationTypeLabels: Record<string, string> = {
+  VAGA_ADERENTE: 'Vaga aderente',
+  EMPRESA_ALVO_VAGA: 'Empresa alvo',
+  EMPRESA_VOLTOU: 'Voltou a contratar',
+  VOLUME_CAIU: 'Volume caiu',
+  RELATORIO_SEMANAL: 'Relatório semanal',
 }

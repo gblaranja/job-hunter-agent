@@ -25,6 +25,15 @@ const router = createBrowserRouter([
           import('@/features/companies/CompaniesPage').then((module) => ({ Component: module.CompaniesPage })),
       },
       {
+        path: 'companies/:companyId',
+        lazy: () =>
+          import('@/features/companies/CompanyDetailPage').then((module) => ({ Component: module.CompanyDetailPage })),
+      },
+      {
+        path: 'insights',
+        lazy: () => import('@/features/insights/InsightsPage').then((module) => ({ Component: module.InsightsPage })),
+      },
+      {
         path: 'settings',
         lazy: () => import('@/features/settings/SettingsPage').then((module) => ({ Component: module.SettingsPage })),
       },

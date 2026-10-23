@@ -1,5 +1,6 @@
 import { Navigate, NavLink, Outlet, useLocation } from 'react-router'
 import { useCurrentUser, useLogout } from '@/api/queries'
+import { NotificationBell } from '@/components/NotificationBell'
 import { LoadingBlock } from '@/components/QueryState'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -9,6 +10,7 @@ import {
   FileText,
   Inbox,
   KanbanSquare,
+  Lightbulb,
   ListChecks,
   LogOut,
   MailCheck,
@@ -24,6 +26,7 @@ const navigation = [
   { to: '/jobs/new', label: 'Nova vaga', Icon: PlusCircle },
   { to: '/resumes', label: 'Currículos', Icon: FileText },
   { to: '/companies', label: 'Empresas', Icon: Building2 },
+  { to: '/insights', label: 'Insights', Icon: Lightbulb },
   { to: '/settings', label: 'Configurações', Icon: Settings },
 ]
 
@@ -48,10 +51,11 @@ export function AppLayout() {
         <div className="mb-2 flex items-center gap-2 px-2 py-1 md:mb-6">
           <BriefcaseBusiness className="size-5" aria-hidden />
           <span className="font-semibold tracking-tight">Job Hunter</span>
+          <NotificationBell className="ml-auto text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" />
           <Button
             variant="ghost"
             size="icon-sm"
-            className="ml-auto text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground md:hidden"
+            className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground md:hidden"
             onClick={() => logout.mutate()}
             aria-label="Sair"
           >
