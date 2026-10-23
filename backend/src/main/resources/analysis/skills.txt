@@ -1,0 +1,79 @@
+# Nome canônico: apelidos (um por vírgula). A busca ignora caixa, acentos e pontuação.
+# Usado para detectar skills nas descrições sem LLM e para normalizar a saída do LLM ("springboot" -> "Spring Boot").
+Java: java 8, java 11, java 17, java 21, java 25, jdk, java ee, jakarta ee, j2ee
+Spring Boot: springboot, spring-boot
+Spring: spring framework, spring core, spring mvc
+Spring Cloud: spring cloud
+Spring Security: spring security
+Spring Batch: spring batch
+Spring Data: spring data, spring data jpa
+Kotlin: kotlin
+Quarkus: quarkus
+Micronaut: micronaut
+Hibernate: hibernate, jpa
+Maven: maven
+Gradle: gradle
+JUnit: junit, junit 5
+Mockito: mockito
+Testcontainers: testcontainers
+TDD: tdd, test driven development
+Microsserviços: microsserviços, microsservicos, microservices, microserviços, micro serviços, microservice
+REST: rest, restful, api rest, apis rest
+GraphQL: graphql
+gRPC: grpc
+Kafka: kafka, apache kafka
+RabbitMQ: rabbitmq, rabbit mq
+SQS: sqs, amazon sqs
+Mensageria: mensageria, messaging, filas, event driven, event-driven, orientada a eventos
+AWS: aws, amazon web services
+GCP: gcp, google cloud
+Azure: azure, microsoft azure
+Docker: docker, containers
+Kubernetes: kubernetes, k8s, eks, aks, gke, openshift
+Terraform: terraform
+CI/CD: ci/cd, ci cd, continuous integration, integração contínua, pipelines
+Jenkins: jenkins
+GitHub Actions: github actions
+GitLab CI: gitlab ci
+Git: git
+Linux: linux
+SQL: sql
+PostgreSQL: postgresql, postgres
+MySQL: mysql
+Oracle: oracle, pl/sql, plsql
+SQL Server: sql server, sqlserver
+MongoDB: mongodb, mongo
+Redis: redis
+Elasticsearch: elasticsearch, elastic, opensearch
+DynamoDB: dynamodb
+NoSQL: nosql
+Observabilidade: observabilidade, observability, monitoramento
+Prometheus: prometheus
+Grafana: grafana
+Datadog: datadog
+Dynatrace: dynatrace
+New Relic: new relic
+Splunk: splunk
+OpenTelemetry: opentelemetry, otel
+DDD: ddd, domain driven design
+Clean Architecture: clean architecture, arquitetura limpa, arquitetura hexagonal, hexagonal, ports and adapters
+SOLID: solid
+Design Patterns: design patterns, padrões de projeto
+OAuth2: oauth2, oauth 2, oauth, openid connect, oidc
+Keycloak: keycloak
+Camunda: camunda
+Python: python
+Go: golang
+Node.js: node.js, nodejs, node js
+TypeScript: typescript
+JavaScript: javascript
+React: react, reactjs, react.js
+Angular: angular
+Scrum: scrum
+Inglês: inglês, ingles, english
+Spark: apache spark, pyspark
+Airflow: apache airflow
+Databricks: databricks
+dbt: dbt
+Pandas: pandas
+Power BI: power bi, powerbi

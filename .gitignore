@@ -15,3 +15,8 @@ frontend/coverage/
 
 # Logs
 *.log
+.agents
+.claude 
+.cursor
+.windsurf
+

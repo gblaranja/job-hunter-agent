@@ -1,6 +1,8 @@
 spring:
   application:
     name: job-hunter-agent
+  profiles:
+    default: dev
   docker:
     compose:
       file: ../docker-compose.yml
@@ -9,3 +11,66 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+  modulith:
+    events:
+      republish-outstanding-events-on-restart: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,modulith
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+jobhunter:
+  security:
+    username: ${JOBHUNTER_USER}
+    password-hash: ${JOBHUNTER_PASSWORD_HASH}
+    # "Entrar com Google": a mesma credencial OAuth do Gmail, com um segundo redirect URI cadastrado
+    google:
+      client-id: ${JOBHUNTER_GOOGLE_CLIENT_ID:${JOBHUNTER_GMAIL_CLIENT_ID:}}
+      client-secret: ${JOBHUNTER_GOOGLE_CLIENT_SECRET:${JOBHUNTER_GMAIL_CLIENT_SECRET:}}
+      redirect-uri: ${JOBHUNTER_GOOGLE_REDIRECT_URI:http://localhost:8080/api/auth/google/callback}
+      allowed-email: ${JOBHUNTER_ALLOWED_EMAIL:}
+      after-login-url: ${JOBHUNTER_AFTER_LOGIN_URL:/board}
+      login-url: ${JOBHUNTER_LOGIN_URL:/login}
+  storage:
+    endpoint: ${JOBHUNTER_STORAGE_ENDPOINT}
+    public-endpoint: ${JOBHUNTER_STORAGE_PUBLIC_ENDPOINT:${JOBHUNTER_STORAGE_ENDPOINT}}
+    region: ${JOBHUNTER_STORAGE_REGION:us-east-1}
+    access-key: ${JOBHUNTER_STORAGE_ACCESS_KEY}
+    secret-key: ${JOBHUNTER_STORAGE_SECRET_KEY}
+    bucket: ${JOBHUNTER_STORAGE_BUCKET:jobhunter-resumes}
+    path-style: ${JOBHUNTER_STORAGE_PATH_STYLE:true}
+    create-bucket-if-missing: ${JOBHUNTER_STORAGE_CREATE_BUCKET:false}
+  encryption:
+    key: ${JOBHUNTER_ENCRYPTION_KEY}
+    salt: ${JOBHUNTER_ENCRYPTION_SALT}
+  gmail:
+    client-id: ${JOBHUNTER_GMAIL_CLIENT_ID:}
+    client-secret: ${JOBHUNTER_GMAIL_CLIENT_SECRET:}
+    redirect-uri: ${JOBHUNTER_GMAIL_REDIRECT_URI:http://localhost:8080/api/admin/gmail/callback}
+    after-connect-url: ${JOBHUNTER_GMAIL_AFTER_CONNECT_URL:/settings}
+    label: ${JOBHUNTER_GMAIL_LABEL:jobs}
+  sourcing:
+    cron: ${JOBHUNTER_SOURCING_CRON:0 0 7 * * *}
+    remotive:
+      enabled: ${JOBHUNTER_REMOTIVE_ENABLED:false}
+    github:
+      enabled: ${JOBHUNTER_GITHUB_VAGAS_ENABLED:false}
+      token: ${JOBHUNTER_GITHUB_TOKEN:}
+    adzuna:
+      app-id: ${JOBHUNTER_ADZUNA_APP_ID:}
+      app-key: ${JOBHUNTER_ADZUNA_APP_KEY:}
+  ai:
+    api-key: ${JOBHUNTER_AI_API_KEY:}
+  tailoring:
+    # gera o currículo adaptado ao marcar "Tenho interesse" numa vaga (precisa da Claude API)
+    auto-generate: ${JOBHUNTER_TAILORING_AUTO:true}
