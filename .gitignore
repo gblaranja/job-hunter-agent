@@ -1,0 +1,17 @@
+# Segredos e ambiente local
+.env
+*.env.local
+
+# Frontend
+node_modules/
+frontend/dist/
+frontend/coverage/
+
+# Editores e SO
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Logs
+*.log

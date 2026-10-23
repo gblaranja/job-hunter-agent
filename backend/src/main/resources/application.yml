@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: job-hunter-agent
+  docker:
+    compose:
+      file: ../docker-compose.yml
+      lifecycle-management: start-only
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
