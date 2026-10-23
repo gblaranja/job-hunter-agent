@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
@@ -35,8 +36,15 @@ public abstract class IntegrationTest {
 	@Autowired
 	protected JdbcClient jdbc;
 
+	@Autowired
+	private ThreadPoolTaskExecutor applicationTaskExecutor;
+
 	@BeforeEach
-	void cleanDatabase() {
+	void cleanDatabase() throws InterruptedException {
+		// Os listeners assíncronos do teste anterior ainda podem estar rodando: o truncate disputaria lock com eles
+		// (deadlock) e eles gravariam dados no teste seguinte.
+		await(() -> this.applicationTaskExecutor.getActiveCount() == 0
+				&& this.applicationTaskExecutor.getThreadPoolExecutor().getQueue().isEmpty());
 		this.jdbc.sql("""
 				truncate application_event, job_snapshot, application, job_feedback, job, resume_version, email_message,
 				         gmail_sync_state, oauth_credential, collection_run, company_alias, company, job_analysis, llm_usage,
