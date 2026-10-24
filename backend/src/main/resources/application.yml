@@ -76,6 +76,14 @@ jobhunter:
       interval: ${JOBHUNTER_LINKEDIN_DESCRIPTIONS_INTERVAL:PT1M}
   ai:
     api-key: ${JOBHUNTER_AI_API_KEY:}
+  notifications:
+    # endereço do backoffice visto do celular: os links das mensagens do Telegram apontam para ele
+    public-url: ${JOBHUNTER_PUBLIC_URL:http://localhost:5173}
+    # alertas no celular (D-02); sem o token e o chat id, as notificações ficam só no sino
+    telegram:
+      bot-token: ${JOBHUNTER_TELEGRAM_BOT_TOKEN:}
+      chat-id: ${JOBHUNTER_TELEGRAM_CHAT_ID:}
+      types: ${JOBHUNTER_TELEGRAM_TYPES:VAGA_ALVO,FOLLOW_UP,PREPARACAO_PRONTA,RESUMO_DIARIO}
   tailoring:
     # gera o currículo adaptado ao marcar "Tenho interesse" numa vaga (precisa da Claude API)
     auto-generate: ${JOBHUNTER_TAILORING_AUTO:true}

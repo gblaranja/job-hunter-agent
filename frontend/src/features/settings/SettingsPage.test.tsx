@@ -30,6 +30,9 @@ const emptyHealth: SourceHealth = { sources: [], unrecognizedAlerts: [] }
 function serveSettings(runs: unknown[] = [], health: SourceHealth = emptyHealth) {
   server.use(
     http.get('/api/admin/sources/health', () => HttpResponse.json(health)),
+    http.get('/api/notifications/telegram', () =>
+      HttpResponse.json({ configured: true, types: ['VAGA_ALVO', 'FOLLOW_UP'] }),
+    ),
     http.get('/api/admin/gmail/status', () =>
       HttpResponse.json({ configured: true, connected: true, accountEmail: 'eu@example.com', label: 'jobs', lastSyncAt: null }),
     ),
@@ -110,6 +113,22 @@ describe('SettingsPage', () => {
       'href',
       'https://mail.google.com/mail/u/0/#all/18a2b3c',
     )
+  })
+
+  it('mostra o Telegram configurado e envia a mensagem de teste', async () => {
+    serveSettings()
+    let tested = false
+    server.use(
+      http.post('/api/notifications/telegram/test', () => {
+        tested = true
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+    renderSettingsPage()
+
+    expect(await screen.findByText(/Vaga de empresa-alvo, Follow-up/)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /enviar teste/i }))
+    await vi.waitFor(() => expect(tested).toBe(true))
   })
 
   it('permite escolher e salva o tema escuro', async () => {

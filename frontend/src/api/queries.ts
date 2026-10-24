@@ -881,3 +881,16 @@ export function useMarkAllNotificationsRead() {
     onSuccess: () => client.invalidateQueries({ queryKey: ['notifications'] }),
   })
 }
+
+// Telegram (alertas no celular)
+
+export type TelegramStatus = Schemas['TelegramStatus']
+
+/** Se o bot do Telegram está configurado no backend e quais tipos de notificação vão ao celular. */
+export function useTelegramStatus() {
+  return useQuery({ queryKey: ['telegram'], queryFn: () => unwrap(api.GET('/api/notifications/telegram')) })
+}
+
+export function useSendTelegramTest() {
+  return useMutation({ mutationFn: () => unwrap(api.POST('/api/notifications/telegram/test')) })
+}
