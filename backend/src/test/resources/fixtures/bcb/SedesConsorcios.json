@@ -1,0 +1,3 @@
+{"@odata.context":"https://olinda.bcb.gov.br/olinda/servico/Instituicoes_em_funcionamento/versao/v1/odata$metadata#SedesConsorcios","value":[
+{"CNPJ":"88888888","NOME_INSTITUICAO":"TETA ADMINISTRADORA DE CONSÓRCIOS LTDA","ENDERECO":"RUA F 6","COMPLEMENTO":null,"BAIRRO":"CENTRO","CEP":"90010000","MUNICIPIO":"PORTO ALEGRE","UF":"RS","DDD":null,"TELEFONE":null,"E_MAIL":null,"SITIO_NA_INTERNET":null,"MUNICIPIO_IBGE":"4314902"}
+]}

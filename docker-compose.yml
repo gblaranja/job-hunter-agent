@@ -64,6 +64,11 @@ services:
       JOBHUNTER_GITHUB_TOKEN: ${JOBHUNTER_GITHUB_TOKEN:-}
       JOBHUNTER_ADZUNA_APP_ID: ${JOBHUNTER_ADZUNA_APP_ID:-}
       JOBHUNTER_ADZUNA_APP_KEY: ${JOBHUNTER_ADZUNA_APP_KEY:-}
+      JOBHUNTER_SEARCH_API_KEY: ${JOBHUNTER_SEARCH_API_KEY:-}
+      JOBHUNTER_SEARCH_MONTHLY_LIMIT: ${JOBHUNTER_SEARCH_MONTHLY_LIMIT:-200}
+      # caminho dentro do container; monte a pasta com os zips da Receita num volume para usar
+      JOBHUNTER_CNPJ_DIRECTORY: ${JOBHUNTER_CNPJ_DIRECTORY:-}
+      JOBHUNTER_CNPJ_MIN_CAPITAL: ${JOBHUNTER_CNPJ_MIN_CAPITAL:-100000}
     depends_on:
       postgres:
         condition: service_healthy

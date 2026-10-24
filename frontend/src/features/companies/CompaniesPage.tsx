@@ -1,14 +1,16 @@
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 import {
   useCompanies,
   useMergeCompany,
+  useRecognitionStatus,
   useRefreshMetrics,
   useUpdateCompany,
   type CompanyItem,
   type WatchStatus,
 } from '@/api/queries'
+import { CompanyBadge } from '@/components/CompanyBadge'
 import { PageHeader } from '@/components/PageHeader'
 import { EmptyBlock, ErrorBlock, LoadingBlock } from '@/components/QueryState'
 import { Button } from '@/components/ui/button'
@@ -25,15 +27,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatDate } from '@/lib/format'
 import { companyKindLabels, watchStatusLabels } from '@/lib/labels'
-import { GitMerge, RefreshCw, Search } from 'lucide-react'
+import { Award, GitMerge, ListChecks, RefreshCw, Search, Upload } from 'lucide-react'
+import { GptwImportDialog } from './GptwImportDialog'
+import { GptwReviewDialog } from './GptwReviewDialog'
 
 const watchStatuses = Object.keys(watchStatusLabels) as WatchStatus[]
 
 /** Empresas que apareceram nas vagas: acompanhe, marque como alvo e junte duplicatas. */
 export function CompaniesPage() {
-  const companies = useCompanies()
+  const [params, setParams] = useSearchParams()
+  const [gptwOnly, setGptwOnly] = useState(false)
+  const companies = useCompanies({ gptw: gptwOnly })
+  const recognition = useRecognitionStatus()
   const update = useUpdateCompany()
   const refresh = useRefreshMetrics()
+  const [importing, setImporting] = useState(false)
+  // a notificação "Confirme o selo" abre a fila direto: /companies?review=gptw
+  const reviewing = params.get('review') === 'gptw'
   const [search, setSearch] = useState('')
   const [watch, setWatch] = useState<WatchStatus | 'TODAS'>('TODAS')
   const [merging, setMerging] = useState<CompanyItem | null>(null)
@@ -77,9 +87,22 @@ export function CompaniesPage() {
         title="Empresas"
         description="Cadastradas a partir das vagas. Marque como alvo e informe o ATS para acompanhar todas as vagas abertas."
         actions={
-          <Button variant="outline" onClick={recompute} disabled={refresh.isPending}>
-            <RefreshCw className={refresh.isPending ? 'animate-spin' : undefined} /> Recalcular métricas
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setParams({ review: 'gptw' })}>
+              <ListChecks /> Revisar selos
+              {!!recognition.data?.pendingReview && (
+                <span className="rounded-full bg-primary px-1.5 text-xs tabular-nums text-primary-foreground">
+                  {recognition.data.pendingReview}
+                </span>
+              )}
+            </Button>
+            <Button variant="outline" onClick={() => setImporting(true)}>
+              <Upload /> Importar lista GPTW
+            </Button>
+            <Button variant="outline" onClick={recompute} disabled={refresh.isPending}>
+              <RefreshCw className={refresh.isPending ? 'animate-spin' : undefined} /> Recalcular métricas
+            </Button>
+          </div>
         }
       />
       <div className="mb-4 flex flex-wrap gap-3">
@@ -106,6 +129,13 @@ export function CompaniesPage() {
             ))}
           </SelectContent>
         </Select>
+        <Button
+          variant={gptwOnly ? 'secondary' : 'outline'}
+          aria-pressed={gptwOnly}
+          onClick={() => setGptwOnly((value) => !value)}
+        >
+          <Award /> Apenas GPTW
+        </Button>
       </div>
       {companies.isLoading && <LoadingBlock />}
       {companies.error && <ErrorBlock error={companies.error} />}
@@ -133,6 +163,7 @@ export function CompaniesPage() {
                     <Link to={`/companies/${company.id}`} className="hover:underline">
                       {company.name}
                     </Link>
+                    <CompanyBadge level={company.gptwLevel} year={company.gptwYear} className="ml-2 align-middle" />
                     {company.kind !== 'CONTRATANTE' && (
                       <span className="ml-2 text-xs text-muted-foreground">{companyKindLabels[company.kind]}</span>
                     )}
@@ -173,6 +204,8 @@ export function CompaniesPage() {
           </Table>
         </div>
       )}
+      {reviewing && <GptwReviewDialog onClose={() => setParams({})} />}
+      {importing && <GptwImportDialog onClose={() => setImporting(false)} />}
       {merging && (
         <MergeDialog
           source={merging}

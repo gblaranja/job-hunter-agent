@@ -49,7 +49,8 @@ class CompanyController {
 
 	private static final String SELECT = """
 			select c.id, c.name, c.website, c.ats_type, c.ats_slug, c.kind, c.watch_status, c.notes, c.first_seen_at,
-			       c.client_sectors, c.contract_types,
+			       c.client_sectors, c.contract_types, c.cnpj, c.authorization_type,
+			       g.level as gptw_level, g.year as gptw_year,
 			       count(j.id) as jobs_total,
 			       count(j.id) filter (where j.closed_at is null) as jobs_active,
 			       count(j.id) filter (where j.first_seen_at > now() - interval '90 days') as jobs_last_90_days,
@@ -61,6 +62,8 @@ class CompanyController {
 			from company c
 			left join job j on j.company_id = c.id
 			left join application a on a.job_id = j.id
+			-- selo GPTW vigente (módulo recognition)
+			left join company_gptw g on g.company_id = c.id
 			""";
 
 	private final CompanyDirectory directory;
@@ -84,22 +87,25 @@ class CompanyController {
 	 */
 	@GetMapping
 	List<CompanyItem> list(@RequestParam(required = false) @Nullable WatchStatus watch,
-			@RequestParam(required = false) @Nullable CompanyKind kind) {
+			@RequestParam(required = false) @Nullable CompanyKind kind,
+			@RequestParam(defaultValue = "false") boolean gptw) {
 		return this.jdbc.sql(SELECT + """
 				where (cast(:watch as text) is null or c.watch_status = :watch)
 				  and (cast(:kind as text) is null or c.kind = :kind)
-				group by c.id
+				  and (not :gptw or g.level is not null)
+				group by c.id, g.level, g.year
 				order by last_job_at desc nulls last, c.name
 				""")
 			.param("watch", (watch != null) ? watch.name() : null, Types.VARCHAR)
 			.param("kind", (kind != null) ? kind.name() : null, Types.VARCHAR)
+			.param("gptw", gptw)
 			.query((rs, row) -> toItem(rs))
 			.list();
 	}
 
 	@GetMapping("/{id}")
 	CompanyItem get(@PathVariable long id) {
-		return this.jdbc.sql(SELECT + " where c.id = :id group by c.id")
+		return this.jdbc.sql(SELECT + " where c.id = :id group by c.id, g.level, g.year")
 			.param("id", id)
 			.query((rs, row) -> toItem(rs))
 			.optional()
@@ -187,6 +193,13 @@ class CompanyController {
 		return get(id);
 	}
 
+	/** Muda só o acompanhamento (por exemplo, "Marcar como alvo" na tela Nichos). */
+	@PutMapping("/{id}/watch-status")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	void watchStatus(@PathVariable long id, @Valid @RequestBody WatchChange change) {
+		this.directory.changeWatchStatus(id, change.watchStatus());
+	}
+
 	@PostMapping("/{id}/merge")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	void merge(@PathVariable long id, @Valid @RequestBody MergeCommand command) {
@@ -213,7 +226,8 @@ class CompanyController {
 				rs.getString("ats_type"), rs.getString("ats_slug"), CompanyKind.valueOf(rs.getString("kind")),
 				WatchStatus.valueOf(rs.getString("watch_status")), rs.getString("notes"),
 				JdbcRows.instant(rs, "first_seen_at"), strings(rs.getArray("client_sectors")),
-				strings(rs.getArray("contract_types")), rs.getLong("jobs_total"), rs.getLong("jobs_active"),
+				strings(rs.getArray("contract_types")), rs.getString("cnpj"), rs.getString("authorization_type"),
+				rs.getString("gptw_level"), (Integer) rs.getObject("gptw_year"), rs.getLong("jobs_total"), rs.getLong("jobs_active"),
 				rs.getLong("jobs_last_90_days"), rs.getLong("reposts"), JdbcRows.instant(rs, "last_job_at"),
 				(rs.getBigDecimal("avg_days_open") != null) ? rs.getBigDecimal("avg_days_open").doubleValue() : null,
 				rs.getLong("applications"));
@@ -225,11 +239,16 @@ class CompanyController {
 
 	/**
 	 * Empresa com as métricas de vagas.
+	 * @param cnpj raiz do CNPJ, para as empresas importadas do Banco Central ou da Receita
+	 * @param authorizationType tipo de autorização no Banco Central ou CNAE principal
+	 * @param gptwLevel selo GPTW vigente (RANKING_TI, RANKING ou CERTIFICADA), verificado ou confirmado por você
 	 * @param avgDaysOpen tempo médio no ar das vagas já fechadas, em dias
 	 */
 	record CompanyItem(long id, String name, @Nullable String website, @Nullable String atsType,
 			@Nullable String atsSlug, CompanyKind kind, WatchStatus watchStatus, @Nullable String notes,
-			Instant firstSeenAt, List<String> clientSectors, List<String> contractTypes, long jobsTotal, long jobsActive,
+			Instant firstSeenAt, List<String> clientSectors, List<String> contractTypes, @Nullable String cnpj,
+			@Nullable String authorizationType, @Nullable String gptwLevel, @Nullable Integer gptwYear,
+			long jobsTotal, long jobsActive,
 			long jobsLast90Days, long reposts, @Nullable Instant lastJobAt, @Nullable Double avgDaysOpen,
 			long applications) {
 	}
@@ -251,6 +270,9 @@ class CompanyController {
 	}
 
 	record Headcount(@NotNull @Min(1) Integer headcount) {
+	}
+
+	record WatchChange(@NotNull WatchStatus watchStatus) {
 	}
 
 	/** Mescla esta empresa (origem) na empresa de destino. */

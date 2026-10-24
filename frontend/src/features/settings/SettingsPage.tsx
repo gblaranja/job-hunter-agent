@@ -7,8 +7,11 @@ import {
   useDeleteSearchProfile,
   useDisconnectGmail,
   useGmailStatus,
+  useRecognitionStatus,
+  useRunSeed,
   useSaveSearchProfile,
   useSearchProfiles,
+  useSeedSources,
   useVerifyLinks,
   type CollectionRun,
   type SearchProfile,
@@ -31,7 +34,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatDateTime } from '@/lib/format'
 import { useTheme } from '@/lib/useTheme'
-import { Link2, Mail, Monitor, Moon, Pencil, Play, Plus, Sun, Trash2 } from 'lucide-react'
+import { Database, Link2, Mail, Monitor, Moon, Pencil, Play, Plus, Sun, Trash2 } from 'lucide-react'
 
 export function SettingsPage() {
   const [params, setParams] = useSearchParams()
@@ -48,11 +51,15 @@ export function SettingsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <PageHeader title="Configurações" description="Conexão com o Gmail, coleta de vagas e perfis de busca." />
+      <PageHeader
+        title="Configurações"
+        description="Conexão com o Gmail, coleta de vagas, perfis de busca e as bases públicas de empresas."
+      />
       <AppearanceCard />
       <GmailCard />
       <CollectionCard />
       <ProfilesCard />
+      <SeedsCard />
     </div>
   )
 }
@@ -373,5 +380,64 @@ function ProfileDialog({ profile, onClose }: { profile?: SearchProfile; onClose:
         </form>
       </DialogContent>
     </Dialog>
+  )
+}
+
+/**
+ * Bases públicas que populam os nichos (Banco Central todo mês; Receita sob demanda) e o uso da busca na web que
+ * verifica os selos GPTW.
+ */
+function SeedsCard() {
+  const sources = useSeedSources()
+  const run = useRunSeed()
+  const recognition = useRecognitionStatus()
+
+  function start(key: string, label: string) {
+    run.mutate(key, {
+      onSuccess: () => toast.success(`Importação de ${label} iniciada; o resultado chega no sino.`),
+      onError: (error) => toast.error(error.message),
+    })
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Bases de empresas e selos</CardTitle>
+        <CardDescription>
+          As empresas importadas entram como descobertas, já no subsegmento do nicho, e não disparam buscas pagas. Os
+          dados de sócios da Receita nunca são lidos.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {sources.isLoading && <LoadingBlock />}
+        {sources.error && <ErrorBlock error={sources.error} />}
+        <ul className="divide-y rounded-md border">
+          {sources.data?.map((source) => (
+            <li key={source.key} className="flex flex-wrap items-center justify-between gap-3 p-3">
+              <div className="min-w-0">
+                <p className="font-medium">{source.label}</p>
+                <p className="text-sm text-muted-foreground">
+                  {source.available ? (source.key === 'bcb' ? 'Roda sozinha no dia 1 de cada mês.' : 'Pronta para rodar.') : source.unavailableReason}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => start(source.key, source.label)}
+                disabled={!source.available || source.running || run.isPending}
+              >
+                <Database /> {source.running ? 'Importando…' : 'Importar agora'}
+              </Button>
+            </li>
+          ))}
+        </ul>
+        {recognition.data && (
+          <p className="text-sm text-muted-foreground">
+            {recognition.data.enabled
+              ? `Busca do selo GPTW (${recognition.data.provider}): ${recognition.data.searchesThisMonth} de ${recognition.data.monthlyLimit} consultas usadas neste mês.`
+              : 'Busca automática do selo GPTW desligada: configure JOBHUNTER_SEARCH_API_KEY e a Claude API.'}
+          </p>
+        )}
+      </CardContent>
+    </Card>
   )
 }

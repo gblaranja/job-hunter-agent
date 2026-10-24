@@ -19,12 +19,14 @@ public record AiProperties(@Nullable String apiKey, @Nullable String baseUrl, @D
 	}
 
 	/**
-	 * Modelo menor para as tarefas frequentes e o maior só onde a qualidade do texto pesa: o relatório semanal e a
-	 * reescrita do currículo para uma vaga (pedida vaga a vaga, não em lote).
+	 * Modelo menor para as tarefas frequentes (inclusive a verificação dos selos e a sugestão de nicho) e o maior só
+	 * onde a qualidade do texto pesa: o relatório semanal e a reescrita do currículo para uma vaga (pedida vaga a
+	 * vaga, não em lote).
 	 */
 	public record Models(@DefaultValue("claude-haiku-5-5") String extraction,
 			@DefaultValue("claude-haiku-5-5") String scoring, @DefaultValue("claude-haiku-5-5") String classification,
-			@DefaultValue("claude-opus-5-5") String insights, @DefaultValue("claude-opus-5-5") String tailoring) {
+			@DefaultValue("claude-opus-5-5") String insights, @DefaultValue("claude-opus-5-5") String tailoring,
+			@DefaultValue("claude-haiku-5-5") String recognition) {
 	}
 
 }

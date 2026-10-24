@@ -34,7 +34,7 @@ export const features = [
   },
   {
     title: 'Radar de empresas',
-    text: 'Volume e frequência de vagas por semana, tempo médio no ar, reposts e alertas quando uma empresa-alvo abre vaga ou volta a contratar.',
+    text: 'Volume e frequência de vagas por semana, tempo médio no ar, reposts, selo GPTW verificado e nichos (bancos, fintechs, consultorias) ordenados pelo fit com o seu perfil.',
     span: 6,
   },
 ] as const
@@ -82,4 +82,4 @@ export const stack = [
 ] as const
 
 export const roadmap =
-  'Em construção: nichos (Financeiro e Consultorias) com fit por empresa, dados abertos do Banco Central e da Receita, e o selo GPTW verificado.'
+  'Próximos passos: captura de vagas por extensão do navegador, resumo diário no Telegram e preparação para entrevistas.'

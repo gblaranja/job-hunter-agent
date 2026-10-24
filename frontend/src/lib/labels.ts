@@ -3,10 +3,13 @@ import type {
   ApplicationStatus,
   DismissReason,
   EmailClassification,
+  FitBand,
   FeedbackReason,
   JobListItem,
   JobScope,
   LinkStatus,
+  NicheSource,
+  RecognitionLevel,
   ResponseChannel,
   ResponseType,
   WatchStatus,
@@ -192,4 +195,26 @@ export const notificationTypeLabels: Record<string, string> = {
   VOLUME_CAIU: 'Volume caiu',
   RELATORIO_SEMANAL: 'Relatório semanal',
   CURRICULO_ADAPTADO: 'Currículo adaptado',
+}
+
+export const recognitionLevelLabels: Record<RecognitionLevel, string> = {
+  RANKING_TI: 'Ranking GPTW TI',
+  RANKING: 'Ranking GPTW',
+  CERTIFICADA: 'Certificada GPTW',
+  EXPIRADA: 'GPTW expirado',
+  NAO_ENCONTRADA: 'Sem selo encontrado',
+}
+
+export const fitBandLabels: Record<FitBand, string> = {
+  ALTO: 'Fit alto',
+  MEDIO: 'Fit médio',
+  BAIXO: 'Fit baixo',
+}
+
+export const nicheSourceLabels: Record<NicheSource, string> = {
+  BCB: 'Banco Central',
+  CNPJ: 'Receita (CNAE)',
+  IA: 'Sugestão da IA',
+  VAGA: 'Palavras-chave das vagas',
+  MANUAL: 'Sua escolha',
 }

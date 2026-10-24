@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import { useInboxCount, useInboxJobs, useStartApplication, type JobListItem, type JobScope } from '@/api/queries'
+import { CompanyBadge } from '@/components/CompanyBadge'
 import { FeedbackButtons } from '@/components/FeedbackButtons'
 import { PageHeader } from '@/components/PageHeader'
 import { Pagination } from '@/components/Pagination'
@@ -205,7 +206,10 @@ function InboxCard({ job }: { job: JobListItem }) {
             <Link to={`/jobs/${job.id}`} className="font-medium hover:underline">
               {job.title}
             </Link>
-            <p className="text-sm text-muted-foreground">{job.company}</p>
+            <p className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
+              {job.company}
+              <CompanyBadge level={job.gptwLevel} />
+            </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             <Badge variant="outline">{originLabels[job.origin]}</Badge>
