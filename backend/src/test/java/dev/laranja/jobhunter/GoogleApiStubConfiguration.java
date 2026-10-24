@@ -49,6 +49,8 @@ public class GoogleApiStubConfiguration {
 			// Banco Central (OData) e a API de busca dos selos; a chave da busca só é ligada nos testes do GPTW.
 			registry.add("jobhunter.niches.bcb.base-url", googleApi::baseUrl);
 			registry.add("jobhunter.recognition.search.base-url", googleApi::baseUrl);
+			// PTAX do Banco Central (API Olinda), para o câmbio dos salários em moeda estrangeira.
+			registry.add("jobhunter.salary.ptax.base-url", googleApi::baseUrl);
 			registry.add("jobhunter.sourcing.linkedin-descriptions.base-url", googleApi::baseUrl);
 			// Desligada por padrão (termos do LinkedIn); ligada aqui para os testes da própria busca.
 			registry.add("jobhunter.sourcing.linkedin-descriptions.enabled", () -> "true");

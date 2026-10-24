@@ -11,10 +11,11 @@ import org.jspecify.annotations.Nullable;
  *
  * @param applied candidaturas que chegaram a Aplicada ou além
  * @param medianDaysToFirstResponse mediana de dias entre aplicar e o primeiro retorno registrado
+ * @param accepted candidaturas com uma proposta aceita (efetivação)
  */
 public record FunnelBreakdown(int applied, int interview, int offer, List<FunnelGroup> bySource,
 		List<FunnelGroup> byChannel, List<FunnelGroup> byTimeToApply, List<FunnelGroup> byTailoring,
-		@Nullable Double medianDaysToFirstResponse, RankingQuality rankingQuality) {
+		@Nullable Double medianDaysToFirstResponse, RankingQuality rankingQuality, int accepted) {
 
 	/** Candidaturas de um grupo e quantas chegaram à entrevista (ou teste técnico) e à oferta. */
 	public record FunnelGroup(String group, int applied, int interview, int offer) {
