@@ -80,6 +80,13 @@ class ApplicationController {
 		this.service.recordManualResponse(id, command);
 	}
 
+	/** Você mandou um follow-up: conta o envio e agenda o próximo (até o máximo configurado). */
+	@PostMapping("/api/applications/{id}/follow-ups")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	void registerFollowUp(@PathVariable long id) {
+		this.service.registerFollowUp(id);
+	}
+
 	@PatchMapping("/api/applications/{id}/resume")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	void changeResume(@PathVariable long id, @Valid @RequestBody ApplicationCommands.ChangeResume command) {

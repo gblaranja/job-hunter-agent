@@ -7,6 +7,7 @@ import dev.laranja.jobhunter.tracking.ApplicationChannel;
 import dev.laranja.jobhunter.tracking.ApplicationStatus;
 import dev.laranja.jobhunter.tracking.CaptureSource;
 import dev.laranja.jobhunter.tracking.LinkStatus;
+import dev.laranja.jobhunter.tracking.NextActionKind;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.jspecify.annotations.Nullable;
 
@@ -26,10 +27,14 @@ final class ApplicationViews {
 		record Column(ApplicationStatus status, List<Card> cards) {
 		}
 
+		/**
+		 * @param nextActionKind o que a próxima ação pede (follow-up, responder…)
+		 */
 		@Schema(name = "BoardCard")
 		record Card(long applicationId, long jobId, String title, String company, ApplicationStatus status,
 				long daysInStatus, @Nullable Long resumeVersionId, @Nullable String resumeLabel,
-				@Nullable Instant nextActionAt, @Nullable LinkStatus linkStatus) {
+				@Nullable Instant nextActionAt, @Nullable NextActionKind nextActionKind,
+				@Nullable LinkStatus linkStatus) {
 		}
 
 	}

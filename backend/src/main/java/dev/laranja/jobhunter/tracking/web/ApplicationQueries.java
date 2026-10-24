@@ -17,6 +17,7 @@ import dev.laranja.jobhunter.tracking.ApplicationChannel;
 import dev.laranja.jobhunter.tracking.ApplicationStatus;
 import dev.laranja.jobhunter.tracking.CaptureSource;
 import dev.laranja.jobhunter.tracking.LinkStatus;
+import dev.laranja.jobhunter.tracking.NextActionKind;
 import dev.laranja.jobhunter.tracking.web.ApplicationViews.AppliedJob;
 import dev.laranja.jobhunter.tracking.web.ApplicationViews.AppliedListItem;
 import dev.laranja.jobhunter.tracking.web.ApplicationViews.Board;
@@ -43,7 +44,8 @@ class ApplicationQueries {
 		Instant now = this.clock.instant();
 		List<Board.Card> cards = this.jdbc.sql("""
 				select a.id, a.job_id, coalesce(s.title, j.title) as title, coalesce(s.company, j.company) as company,
-				       a.status, a.resume_version_id, r.label as resume_label, a.next_action_at, s.link_status,
+				       a.status, a.resume_version_id, r.label as resume_label, a.next_action_at, a.next_action_kind,
+				       s.link_status,
 				       coalesce((select max(e.created_at) from application_event e
 				                 where e.application_id = a.id and e.to_status = a.status), a.created_at) as status_since
 				from application a
@@ -56,7 +58,9 @@ class ApplicationQueries {
 					rs.getString("company"), ApplicationStatus.valueOf(rs.getString("status")),
 					Duration.between(JdbcRows.instant(rs, "status_since"), now).toDays(),
 					JdbcRows.nullableLong(rs, "resume_version_id"), rs.getString("resume_label"),
-					JdbcRows.instant(rs, "next_action_at"), JdbcRows.nullableEnum(rs, "link_status", LinkStatus.class)))
+					JdbcRows.instant(rs, "next_action_at"),
+					JdbcRows.nullableEnum(rs, "next_action_kind", NextActionKind.class),
+					JdbcRows.nullableEnum(rs, "link_status", LinkStatus.class)))
 			.list();
 
 		Map<ApplicationStatus, List<Board.Card>> byStatus = new EnumMap<>(ApplicationStatus.class);

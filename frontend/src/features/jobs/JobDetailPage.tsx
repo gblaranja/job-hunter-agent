@@ -27,6 +27,7 @@ import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/componen
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ApplicationDetailsForm } from '@/features/applications/ApplicationDetailsForm'
+import { FollowUpStatus } from '@/features/applications/FollowUpStatus'
 import { ResponseDialog } from '@/features/applications/ResponseDialog'
 import { Timeline } from '@/features/applications/Timeline'
 import { useStatusMove } from '@/features/applications/useStatusMove'
@@ -99,12 +100,14 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
               <CardHeader>
                 <CardTitle className="text-base">Anotações</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                <FollowUpStatus application={application} />
                 <ApplicationDetailsForm
-                  key={application.id}
+                  key={`${application.id}-${application.nextActionAt ?? ''}`}
                   applicationId={application.id}
                   notes={application.notes}
                   nextActionAt={application.nextActionAt}
+                  nextActionKind={application.nextActionKind}
                 />
               </CardContent>
             </Card>
