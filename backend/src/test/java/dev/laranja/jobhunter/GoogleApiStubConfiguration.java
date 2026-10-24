@@ -49,6 +49,7 @@ public class GoogleApiStubConfiguration {
 			// Banco Central (OData) e a API de busca dos selos; a chave da busca só é ligada nos testes do GPTW.
 			registry.add("jobhunter.niches.bcb.base-url", googleApi::baseUrl);
 			registry.add("jobhunter.recognition.search.base-url", googleApi::baseUrl);
+			registry.add("jobhunter.sourcing.linkedin-descriptions.base-url", googleApi::baseUrl);
 		};
 	}
 

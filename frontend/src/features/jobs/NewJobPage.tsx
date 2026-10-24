@@ -45,7 +45,7 @@ export function NewJobPage() {
   const [location, setLocation] = useState('')
   const [workModel, setWorkModel] = useState<WorkModel>('NAO_INFORMADO')
   const [salaryRange, setSalaryRange] = useState('')
-  // AUTO: o backend decide pelo idioma da descrição (em inglês, internacional)
+  // AUTO: o backend decide pela localidade e pelo idioma da descrição ou do título (exterior ou inglês, internacional)
   const [scope, setScope] = useState<JobScope | 'AUTO'>('AUTO')
   const [description, setDescription] = useState('')
   const [status, setStatus] = useState<ApplicationStatus>('APLICADA')
@@ -147,7 +147,7 @@ export function NewJobPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="AUTO">Detectar pelo idioma da descrição</SelectItem>
+                    <SelectItem value="AUTO">Detectar pela localidade e pelo idioma</SelectItem>
                     <SelectItem value="NACIONAL">{scopeLabels.NACIONAL}</SelectItem>
                     <SelectItem value="INTERNACIONAL">No exterior ({scopeLabels.INTERNACIONAL.toLowerCase()})</SelectItem>
                   </SelectContent>

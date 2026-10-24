@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { scopeLabels } from '@/lib/labels'
 import { ArrowLeftRight } from 'lucide-react'
 
-/** Mostra se a vaga é nacional ou internacional e corrige a classificação feita pelo idioma da descrição. */
+/** Mostra se a vaga é nacional ou internacional e corrige a classificação automática. */
 export function ScopeSwitch({ jobId, scope }: { jobId: number; scope: JobScope }) {
   const change = useChangeJobScope()
   const next: JobScope = scope === 'NACIONAL' ? 'INTERNACIONAL' : 'NACIONAL'

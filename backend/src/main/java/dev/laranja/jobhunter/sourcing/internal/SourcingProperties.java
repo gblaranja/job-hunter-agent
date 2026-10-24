@@ -1,5 +1,7 @@
 package dev.laranja.jobhunter.sourcing.internal;
 
+import java.time.Duration;
+
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -11,7 +13,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  */
 @ConfigurationProperties("jobhunter.sourcing")
 record SourcingProperties(@DefaultValue Ats ats, @DefaultValue Remotive remotive, @DefaultValue GitHub github,
-		@DefaultValue Adzuna adzuna) {
+		@DefaultValue Adzuna adzuna, @DefaultValue LinkedInDescriptions linkedinDescriptions) {
 
 	record Ats(@DefaultValue("https://boards-api.greenhouse.io") String greenhouseBaseUrl,
 			@DefaultValue("https://api.lever.co") String leverBaseUrl,
@@ -24,6 +26,16 @@ record SourcingProperties(@DefaultValue Ats ats, @DefaultValue Remotive remotive
 
 	record GitHub(@DefaultValue("false") boolean enabled, @DefaultValue("https://api.github.com") String baseUrl,
 			@DefaultValue("backend-br/vagas") String repository, @Nullable String token) {
+	}
+
+	/**
+	 * Busca da descrição das vagas dos alertas do LinkedIn na página pública da vaga (sem login).
+	 * @param interval espera entre uma vaga e a próxima
+	 * @param backoff primeira pausa depois de um bloqueio (HTTP 429); dobra a cada bloqueio seguido, até 12 horas
+	 */
+	record LinkedInDescriptions(@DefaultValue("true") boolean enabled,
+			@DefaultValue("https://www.linkedin.com") String baseUrl, @DefaultValue("PT1M") Duration interval,
+			@DefaultValue("PT30M") Duration backoff) {
 	}
 
 	record Adzuna(@Nullable String appId, @Nullable String appKey, @DefaultValue("br") String country,

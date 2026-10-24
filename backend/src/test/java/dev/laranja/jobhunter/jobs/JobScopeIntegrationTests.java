@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.http.MediaType;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -44,6 +45,10 @@ class JobScopeIntegrationTests extends IntegrationTest {
 					""")).andExpect(status().isNoContent());
 		this.mvc.perform(get("/api/jobs/{id}", international).with(owner()))
 			.andExpect(jsonPath("$.job.scope").value("NACIONAL"));
+		// a correção fica travada contra reclassificações automáticas
+		assertThat(this.jdbc.sql("select scope_locked from job where id = :id").param("id", international)
+			.query(Boolean.class)
+			.single()).isTrue();
 		this.mvc.perform(get("/api/jobs").param("inbox", "true").param("scope", "INTERNACIONAL").with(owner()))
 			.andExpect(jsonPath("$.total").value(0));
 

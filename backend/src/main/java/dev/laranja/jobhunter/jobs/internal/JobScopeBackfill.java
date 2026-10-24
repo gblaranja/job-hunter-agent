@@ -10,7 +10,10 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Classifica como nacionais ou internacionais as vagas cadastradas antes da coluna {@code scope}. Idempotente. */
+/**
+ * Classifica como nacionais ou internacionais as vagas sem classificação: as anteriores à coluna {@code scope} e as
+ * que uma migração devolveu para reclassificação quando a regra mudou. Idempotente.
+ */
 @Component
 class JobScopeBackfill implements ApplicationRunner {
 
@@ -23,14 +26,14 @@ class JobScopeBackfill implements ApplicationRunner {
 	@Override
 	@Transactional
 	public void run(ApplicationArguments args) {
-		record Pending(long id, @Nullable String rawDescription) {
+		record Pending(long id, String title, @Nullable String location, @Nullable String rawDescription) {
 		}
-		List<Pending> pending = this.jdbc.sql("select id, raw_description from job where scope is null")
+		List<Pending> pending = this.jdbc.sql("select id, title, location, raw_description from job where scope is null")
 			.query(Pending.class)
 			.list();
 		for (Pending job : pending) {
 			this.jdbc.sql("update job set scope = :scope where id = :id")
-				.param("scope", JobScopeDetector.detect(job.rawDescription()).name())
+				.param("scope", JobScopeDetector.detect(job.title(), job.location(), job.rawDescription()).name())
 				.param("id", job.id())
 				.update();
 		}
