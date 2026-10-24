@@ -139,7 +139,7 @@ class JobQueries {
 				select status, seniority, required_skills::text as required, nice_to_have::text as nice, summary,
 				       employer_kind, contract_type, deterministic_score, llm_adjustment, match_score,
 				       matched_skills::text as matched, gaps::text as gaps, justification, model_version, last_error,
-				       analyzed_at
+				       analyzed_at, partial_skills::text as partial
 				from job_analysis where job_id = :jobId
 				""")
 			.param("jobId", job.id())
@@ -148,7 +148,8 @@ class JobQueries {
 					rs.getString("employer_kind"), rs.getString("contract_type"), integer(rs, "deterministic_score"),
 					integer(rs, "llm_adjustment"), integer(rs, "match_score"), list(rs.getString("matched")),
 					list(rs.getString("gaps")), rs.getString("justification"), rs.getString("model_version"),
-					rs.getString("last_error"), JdbcRows.instant(rs, "analyzed_at")))
+					rs.getString("last_error"), JdbcRows.instant(rs, "analyzed_at"),
+					listOf(rs.getString("partial"), JobDetail.PartialSkill.class)))
 			.optional()
 			.orElse(null);
 		return new JobDetail(job, application, timeline, feedback, dismissal, analysis);
@@ -157,6 +158,12 @@ class JobQueries {
 	@SuppressWarnings("unchecked")
 	private List<String> list(String json) {
 		return (json == null) ? List.of() : (List<String>) this.json.readValue(json, List.class);
+	}
+
+	/** Lista jsonb de objetos (as colunas da análise). */
+	private <T> List<T> listOf(String json, Class<T> type) {
+		return (json == null) ? List.of()
+				: this.json.readValue(json, this.json.getTypeFactory().constructCollectionType(List.class, type));
 	}
 
 	private static Integer integer(ResultSet rs, String column) throws SQLException {

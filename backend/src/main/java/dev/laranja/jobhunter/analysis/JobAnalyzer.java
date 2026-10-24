@@ -125,11 +125,13 @@ public class JobAnalyzer {
 				insert into job_analysis (job_id, status, seniority, required_skills, nice_to_have, work_model, summary,
 				                          employer_kind, client_sectors, contract_type, resume_version_id,
 				                          deterministic_score, llm_adjustment, match_score, matched_skills, gaps,
-				                          justification, model_version, attempts, next_attempt_at, last_error, analyzed_at)
+				                          justification, model_version, attempts, next_attempt_at, last_error, analyzed_at,
+				                          partial_skills)
 				values (:jobId, :status, :seniority, cast(:required as jsonb), cast(:nice as jsonb), :workModel, :summary,
 				        :employerKind, cast(:clientSectors as jsonb), :contractType, :resumeId,
 				        :deterministic, :adjustment, :score, cast(:matched as jsonb), cast(:gaps as jsonb),
-				        :justification, :modelVersion, :attempts, :nextAttempt, :error, :now)
+				        :justification, :modelVersion, :attempts, :nextAttempt, :error, :now,
+				        cast(:partial as jsonb))
 				on conflict (job_id) do update set
 				    status = excluded.status, seniority = excluded.seniority, required_skills = excluded.required_skills,
 				    nice_to_have = excluded.nice_to_have, work_model = excluded.work_model, summary = excluded.summary,
@@ -139,7 +141,8 @@ public class JobAnalyzer {
 				    match_score = excluded.match_score, matched_skills = excluded.matched_skills, gaps = excluded.gaps,
 				    justification = excluded.justification, model_version = excluded.model_version,
 				    attempts = excluded.attempts, next_attempt_at = excluded.next_attempt_at,
-				    last_error = excluded.last_error, analyzed_at = excluded.analyzed_at
+				    last_error = excluded.last_error, analyzed_at = excluded.analyzed_at,
+				    partial_skills = excluded.partial_skills
 				""")
 			.param("jobId", jobId)
 			.param("status", outcome.status())
@@ -163,6 +166,7 @@ public class JobAnalyzer {
 			.param("nextAttempt", (nextAttempt != null) ? Timestamp.from(nextAttempt) : null)
 			.param("error", outcome.error())
 			.param("now", Timestamp.from(now))
+			.param("partial", this.json.writeValueAsString(outcome.partialMatches()))
 			.update();
 	}
 

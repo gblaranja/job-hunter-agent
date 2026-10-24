@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import dev.laranja.jobhunter.analysis.PartialSkillMatch;
 import dev.laranja.jobhunter.analysis.Seniority;
 import dev.laranja.jobhunter.analysis.internal.LlmOutputs.ScoreAdjustment;
 import dev.laranja.jobhunter.jobs.JobView;
@@ -82,7 +83,8 @@ public class AnalysisEngine {
 		}
 
 		if (resume.isEmpty()) {
-			return new Outcome(status, requirements, null, null, null, List.of(), List.of(), null, version, error);
+			return new Outcome(status, requirements, null, null, null, List.of(), List.of(), null, version, error,
+					List.of());
 		}
 		DeterministicScorer.Result base = this.scorer.score(requirements, resumeSkills(resume.get()),
 				targetSeniority(resume.get()));
@@ -102,7 +104,7 @@ public class AnalysisEngine {
 		}
 		int score = clamp(base.score() + ((adjustment != null) ? adjustment : 0));
 		return new Outcome(status, requirements, base.score(), adjustment, score, base.matchedSkills(), base.gaps(),
-				justification, version, error);
+				justification, version, error, base.partialMatches());
 	}
 
 	/** Só a parte determinística, sobre os requisitos já salvos; o ajuste do LLM fica pendente para depois. */
@@ -114,19 +116,20 @@ public class AnalysisEngine {
 		boolean llmPending = this.llm.enabled() && version.contains(this.extractor.extractionVersion());
 		String status = llmPending ? "PENDENTE" : "DETERMINISTICO";
 		if (resume.isEmpty()) {
-			return new Outcome(status, requirements, null, null, null, List.of(), List.of(), null, version, null);
+			return new Outcome(status, requirements, null, null, null, List.of(), List.of(), null, version, null,
+					List.of());
 		}
 		DeterministicScorer.Result base = this.scorer.score(requirements, resumeSkills(resume.get()),
 				targetSeniority(resume.get()));
 		return new Outcome(status, requirements, base.score(), null, base.score(), base.matchedSkills(), base.gaps(),
-				null, version, null);
+				null, version, null, base.partialMatches());
 	}
 
 	/** Só o score determinístico, para um conjunto de skills qualquer (a prévia de um currículo adaptado). */
 	public Fit fit(StoredRequirements requirements, List<String> resumeSkills, @Nullable String targetRole) {
 		DeterministicScorer.Result result = this.scorer.score(requirements.toRequirements(), resumeSkills,
 				Seniority.detect(targetRole));
-		return new Fit(result.score(), result.matchedSkills(), result.gaps());
+		return new Fit(result.score(), result.matchedSkills(), result.gaps(), result.partialMatches());
 	}
 
 	private ScoreAdjustment adjust(JobView job, JobRequirements requirements, DeterministicScorer.Result base,
@@ -144,6 +147,7 @@ public class AnalysisEngine {
 
 				Score determinístico: %d (%s)
 				Skills atendidas: %s
+				Atendidas em parte (equivalente): %s
 				Lacunas: %s
 
 				Exemplos recentes do feedback da pessoa:
@@ -151,7 +155,8 @@ public class AnalysisEngine {
 				""".formatted(job.title(), job.company(), orDash(requirements.seniority()), requirements.workModel(),
 				String.join(", ", requirements.requiredSkills()), String.join(", ", requirements.niceToHave()),
 				orDash(requirements.summary()), base.score(), describe(base.breakdown()),
-				String.join(", ", base.matchedSkills()), String.join(", ", base.gaps()), describeFeedback(feedback));
+				String.join(", ", base.matchedSkills()), describePartial(base.partialMatches()),
+				String.join(", ", base.gaps()), describeFeedback(feedback));
 		return this.llm.structured(new LlmRequest("match-score", this.ai.models().scoring(), system, user, 1500,
 				Effort.LOW), ScoreAdjustment.class);
 	}
@@ -166,6 +171,11 @@ public class AnalysisEngine {
 
 	private static String describe(Map<String, Integer> breakdown) {
 		return breakdown.entrySet().stream().map(e -> e.getKey() + " " + e.getValue()).collect(Collectors.joining(", "));
+	}
+
+	private static String describePartial(List<PartialSkillMatch> partial) {
+		return partial.isEmpty() ? "—"
+				: partial.stream().map(match -> match.skill() + " (tem " + match.via() + ")").collect(Collectors.joining(", "));
 	}
 
 	private static String describeFeedback(List<FeedbackExample> feedback) {
@@ -189,7 +199,8 @@ public class AnalysisEngine {
 	/** Resultado de uma análise, pronto para ser salvo em {@code job_analysis}. */
 	public record Outcome(String status, JobRequirements requirements, @Nullable Integer deterministicScore,
 			@Nullable Integer llmAdjustment, @Nullable Integer matchScore, List<String> matchedSkills, List<String> gaps,
-			@Nullable String justification, String modelVersion, @Nullable String error) {
+			@Nullable String justification, String modelVersion, @Nullable String error,
+			List<PartialSkillMatch> partialMatches) {
 	}
 
 	/** Requisitos lidos de uma análise anterior. */
@@ -207,7 +218,7 @@ public class AnalysisEngine {
 	public record FeedbackExample(String title, String company, String rating, List<String> reasons) {
 	}
 
-	public record Fit(int score, List<String> matchedSkills, List<String> gaps) {
+	public record Fit(int score, List<String> matchedSkills, List<String> gaps, List<PartialSkillMatch> partialMatches) {
 	}
 
 }

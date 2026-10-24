@@ -64,18 +64,19 @@ class LlmAnalysisIntegrationTests extends IntegrationTest {
 		long jobId = createJob("Desenvolvedor Java Sênior", "Fintech de Crédito", DESCRIPTION);
 		await(() -> count("select count(*) from job_analysis where status = 'COMPLETO' and job_id = " + jobId) == 1);
 
-		// Determinístico: obrigatórias 3/4 (53), desejáveis 0/1 (0), senioridade 10, remoto 5 = 68; LLM +5
+		// Determinístico: obrigatórias 3/4 (53), desejáveis: Kubernetes em parte por Docker (8),
+		// senioridade 10, remoto 5 = 76; LLM +5
 		this.mvc.perform(get("/api/jobs/{id}", jobId).with(owner()))
 			.andExpect(jsonPath("$.analysis.status").value("COMPLETO"))
 			.andExpect(jsonPath("$.analysis.niceToHave[0]").value("Kubernetes"))
-			.andExpect(jsonPath("$.analysis.deterministicScore").value(68))
+			.andExpect(jsonPath("$.analysis.deterministicScore").value(76))
 			.andExpect(jsonPath("$.analysis.llmAdjustment").value(5))
-			.andExpect(jsonPath("$.analysis.matchScore").value(73))
+			.andExpect(jsonPath("$.analysis.matchScore").value(81))
 			.andExpect(jsonPath("$.analysis.gaps[0]").value("AWS"))
 			.andExpect(jsonPath("$.analysis.justification").value(containsString("motores de decisão")))
 			.andExpect(jsonPath("$.analysis.modelVersion").value(containsString("extract-requirements@v1")));
 		this.mvc.perform(get("/api/jobs").param("inbox", "true").with(owner()))
-			.andExpect(jsonPath("$.items[0].matchScore").value(73))
+			.andExpect(jsonPath("$.items[0].matchScore").value(81))
 			.andExpect(jsonPath("$.items[0].summary").value(containsString("motor de crédito")));
 
 		// O currículo vai no bloco de sistema com cache_control; o uso de tokens fica registrado.
