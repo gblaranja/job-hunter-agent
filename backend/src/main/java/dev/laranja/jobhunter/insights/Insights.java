@@ -98,6 +98,11 @@ public class Insights {
 			.optional();
 	}
 
+	/** Funil aberto por fonte, canal, tempo até aplicar e adaptação, calculado na hora (sem LLM). */
+	public FunnelBreakdown breakdown() {
+		return this.engine.breakdown();
+	}
+
 	/** Uso da Claude API no mês corrente, por tarefa. */
 	public List<LlmUsage> monthUsage() {
 		return this.engine.usage(LocalDate.now(this.clock.withZone(ZONE)).withDayOfMonth(1));

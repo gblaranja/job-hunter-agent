@@ -2,6 +2,7 @@ package dev.laranja.jobhunter.insights.web;
 
 import java.util.List;
 
+import dev.laranja.jobhunter.insights.FunnelBreakdown;
 import dev.laranja.jobhunter.insights.InsightReport;
 import dev.laranja.jobhunter.insights.Insights;
 import dev.laranja.jobhunter.insights.LlmUsage;
@@ -32,6 +33,12 @@ class InsightController {
 	@PostMapping("/generate")
 	InsightReport generate() {
 		return this.insights.generate();
+	}
+
+	/** Funil por fonte, canal, tempo até aplicar e adaptação; calculado na hora, sem a Claude API. */
+	@GetMapping("/funnel")
+	FunnelBreakdown funnel() {
+		return this.insights.breakdown();
 	}
 
 	@GetMapping("/usage")

@@ -8,6 +8,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import dev.laranja.jobhunter.insights.FunnelBreakdown;
 import dev.laranja.jobhunter.insights.InsightReport.Funnel;
 import dev.laranja.jobhunter.insights.InsightReport.Gap;
 import dev.laranja.jobhunter.insights.InsightReport.Recommendations;
@@ -61,6 +62,10 @@ public class InsightEngine {
 			.reduce(BigDecimal.ZERO, BigDecimal::add);
 		return new Draft(topSkills, gaps, funnel, performance, filters, accuracy, cost, advice.recommendations(),
 				advice.modelVersion());
+	}
+
+	public FunnelBreakdown breakdown() {
+		return this.aggregator.breakdown();
 	}
 
 	public List<LlmUsage> usage(LocalDate monthStart) {

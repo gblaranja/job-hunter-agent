@@ -1,0 +1,15 @@
+{
+  "id": "exemplo-1",
+  "title": "Pessoa Desenvolvedora Back-end Java Sênior",
+  "company": "Fintech Exemplo",
+  "location": "Remoto",
+  "workModel": "REMOTO",
+  "description": "Exemplo sintético. Você vai construir APIs para o motor de crédito. Requisitos: experiência com Java, Spring Boot e Kafka. Diferenciais: AWS. Contratação CLT, 100% remoto.",
+  "expected": {
+    "seniority": "SENIOR",
+    "requiredSkills": ["Java", "Spring Boot", "Kafka"],
+    "niceToHave": ["AWS"],
+    "workModel": "REMOTO",
+    "contractType": "CLT"
+  }
+}

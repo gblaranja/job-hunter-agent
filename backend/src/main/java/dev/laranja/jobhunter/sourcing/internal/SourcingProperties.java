@@ -29,11 +29,12 @@ record SourcingProperties(@DefaultValue Ats ats, @DefaultValue Remotive remotive
 	}
 
 	/**
-	 * Busca da descrição das vagas dos alertas do LinkedIn na página pública da vaga (sem login).
+	 * Busca da descrição das vagas dos alertas do LinkedIn na página pública da vaga (sem login). Desligada por padrão:
+	 * a cláusula 8.2 dos termos do LinkedIn proíbe robôs e scripts que copiam dados do site.
 	 * @param interval espera entre uma vaga e a próxima
 	 * @param backoff primeira pausa depois de um bloqueio (HTTP 429); dobra a cada bloqueio seguido, até 12 horas
 	 */
-	record LinkedInDescriptions(@DefaultValue("true") boolean enabled,
+	record LinkedInDescriptions(@DefaultValue("false") boolean enabled,
 			@DefaultValue("https://www.linkedin.com") String baseUrl, @DefaultValue("PT1M") Duration interval,
 			@DefaultValue("PT30M") Duration backoff) {
 	}

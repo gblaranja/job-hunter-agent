@@ -9,15 +9,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { formatDate, formatDateTime, formatPercent } from '@/lib/format'
+import { ConversionSection, ConversionTable } from './ConversionSection'
+import { formatDate, formatDateTime, formatPercent, rate } from '@/lib/format'
 import { diagnosisLabels, feedbackReasonLabels, seniorityLabels } from '@/lib/labels'
 import { ArrowRight, Loader2, Sparkles } from 'lucide-react'
 
 const usd = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 4 })
-
-function rate(part: number, total: number) {
-  return total === 0 ? null : part / total
-}
 
 /** Relatório semanal: o que o mercado pede, onde o funil trava e o que mudar no currículo. */
 export function InsightsPage() {
@@ -43,6 +40,9 @@ export function InsightsPage() {
           </Button>
         }
       />
+      <div className="mb-8">
+        <ConversionSection />
+      </div>
       {latest.isLoading && <LoadingBlock lines={6} />}
       {latest.error && <ErrorBlock error={latest.error} />}
       {latest.isSuccess && latest.data === null && (
@@ -255,32 +255,6 @@ function Report({ report }: { report: InsightReport }) {
 
       <UsageCard />
     </div>
-  )
-}
-
-function ConversionTable({ rows, groupLabel }: { rows: { key: string; group: string; applied: number; interview: number }[]; groupLabel: string }) {
-  if (rows.length === 0) return <p className="text-sm text-muted-foreground">Sem candidaturas ainda.</p>
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>{groupLabel}</TableHead>
-          <TableHead className="text-right">Aplicadas</TableHead>
-          <TableHead className="text-right">Entrevistas</TableHead>
-          <TableHead className="text-right">Conversão</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {rows.map((row) => (
-          <TableRow key={row.key}>
-            <TableCell>{row.group}</TableCell>
-            <TableCell className="text-right tabular-nums">{row.applied}</TableCell>
-            <TableCell className="text-right tabular-nums">{row.interview}</TableCell>
-            <TableCell className="text-right tabular-nums">{formatPercent(rate(row.interview, row.applied))}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
   )
 }
 

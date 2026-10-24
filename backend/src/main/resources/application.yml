@@ -69,9 +69,10 @@ jobhunter:
     adzuna:
       app-id: ${JOBHUNTER_ADZUNA_APP_ID:}
       app-key: ${JOBHUNTER_ADZUNA_APP_KEY:}
-    # Descrição das vagas dos alertas do LinkedIn, buscada na página pública da vaga, uma por intervalo.
+    # Descrição das vagas dos alertas do LinkedIn, buscada na página pública da vaga, uma por intervalo. Desligada por
+    # padrão: os termos do LinkedIn (cláusula 8.2) proíbem robôs e scripts que copiam dados do site.
     linkedin-descriptions:
-      enabled: ${JOBHUNTER_LINKEDIN_DESCRIPTIONS_ENABLED:true}
+      enabled: ${JOBHUNTER_LINKEDIN_DESCRIPTIONS_ENABLED:false}
       interval: ${JOBHUNTER_LINKEDIN_DESCRIPTIONS_INTERVAL:PT1M}
   ai:
     api-key: ${JOBHUNTER_AI_API_KEY:}

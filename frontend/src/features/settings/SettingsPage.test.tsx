@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
+import type { SourceHealth } from '@/api/queries'
 import { ThemeProvider } from '@/lib/theme'
 import { renderWithProviders } from '@/test/render'
 import { server } from '@/test/server'
@@ -24,8 +25,11 @@ function renderSettingsPage() {
   )
 }
 
-function serveSettings(runs: unknown[] = []) {
+const emptyHealth: SourceHealth = { sources: [], unrecognizedAlerts: [] }
+
+function serveSettings(runs: unknown[] = [], health: SourceHealth = emptyHealth) {
   server.use(
+    http.get('/api/admin/sources/health', () => HttpResponse.json(health)),
     http.get('/api/admin/gmail/status', () =>
       HttpResponse.json({ configured: true, connected: true, accountEmail: 'eu@example.com', label: 'jobs', lastSyncAt: null }),
     ),
@@ -78,6 +82,34 @@ describe('SettingsPage', () => {
     await vi.waitFor(() => expect(collected).toBe(true))
     expect(await screen.findByText('Concluída')).toBeInTheDocument()
     expect(screen.getByText('4')).toBeInTheDocument()
+  })
+
+  it('mostra a saúde das fontes e os alertas que não viraram vaga', async () => {
+    serveSettings([], {
+      sources: [
+        {
+          source: 'GREENHOUSE',
+          available: true,
+          lastRunAt: '2026-10-23T10:00:00Z',
+          lastNewJobAt: null,
+          newJobsLast7Days: 0,
+          errorsLast7Days: 3,
+          failingRunsInRow: 3,
+        },
+      ],
+      unrecognizedAlerts: [
+        { emailId: 7, gmailId: '18a2b3c', sender: 'alertas@gupy.io', subject: 'Novas vagas', receivedAt: '2026-10-23T09:00:00Z' },
+      ],
+    })
+    renderSettingsPage()
+
+    expect(await screen.findByText('falhou nas últimas 3 coletas')).toBeInTheDocument()
+    expect(screen.getByText('nenhuma em 30 dias')).toBeInTheDocument()
+    expect(screen.getByText('alertas@gupy.io')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /abrir no gmail/i })).toHaveAttribute(
+      'href',
+      'https://mail.google.com/mail/u/0/#all/18a2b3c',
+    )
   })
 
   it('permite escolher e salva o tema escuro', async () => {

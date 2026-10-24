@@ -20,6 +20,11 @@ export function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1).replace('.', ',')} MB`
 }
 
+/** Fração de um total; nula quando o total é zero. */
+export function rate(part: number, total: number): number | null {
+  return total === 0 ? null : part / total
+}
+
 export function formatPercent(rate: number | null | undefined): string {
   return rate == null ? '—' : `${Math.round(rate * 100)}%`
 }

@@ -1,0 +1,15 @@
+{
+  "id": "exemplo-2",
+  "title": "Engenheira de Dados",
+  "company": "Varejo Exemplo",
+  "location": "São Paulo, SP",
+  "workModel": "HIBRIDO",
+  "description": "Exemplo sintético. Pipelines de dados para o time de pricing. Requisitos: Python e SQL. Modelo híbrido, três dias no escritório. Contratação PJ.",
+  "expected": {
+    "seniority": null,
+    "requiredSkills": ["Python", "SQL"],
+    "niceToHave": [],
+    "workModel": "HIBRIDO",
+    "contractType": "PJ"
+  }
+}

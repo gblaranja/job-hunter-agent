@@ -84,6 +84,14 @@ cd frontend && npm run lint && npx vitest run && npm run build
 
 Depois de mudar a API, com o backend rodando: `cd frontend && npm run gen:api`.
 
+**Avaliar a extração de requisitos.** Antes e depois de mudar o prompt de extração, meça o acerto num conjunto de vagas anotadas à mão (um JSON por vaga, no formato descrito em `GoldenSet.java`; há três exemplos sintéticos em `backend/src/test/resources/fixtures/golden/`). As vagas reais ficam fora do git, porque a descrição é texto de terceiros:
+
+```bash
+cd backend && JOBHUNTER_GOLDEN_DIR=~/job-hunter-golden JOBHUNTER_AI_API_KEY=... ./mvnw test -Dtest=GoldenSetEvaluationTests
+```
+
+O teste imprime a precisão e o recall das skills obrigatórias e desejáveis e o acerto da senioridade, do modelo de trabalho e do regime, para as regras e para o prompt atual. Sem a chave, mede só as regras.
+
 ### Ligar a análise por IA
 
 Sem chave, a análise usa só o dicionário de skills e as regras, e o score funciona do mesmo jeito. Com `JOBHUNTER_AI_API_KEY` (Claude API), o Claude Haiku refina a extração dos requisitos e ajusta o score em até ±10 pontos, com justificativa. Configure um limite de gasto mensal no Console da Anthropic; o uso de tokens de cada chamada fica na tabela `llm_usage`.
@@ -113,6 +121,22 @@ A tela **Nichos** lista as empresas do Financeiro e das Consultorias pelo fit (s
 - **Banco Central:** a Relação de Instituições em Funcionamento (API OData de dados abertos) é importada todo dia 1º, ou em **Configurações → Bases de empresas**. O tipo de autorização define o subsegmento.
 - **Receita Federal (consultorias):** baixe os arquivos `Empresas*.zip` e `Estabelecimentos*.zip` da base de CNPJ em arquivos.receitafederal.gov.br, aponte `JOBHUNTER_CNPJ_DIRECTORY` para a pasta e rode a importação. Entram as matrizes ativas com CNAE de TI, porte diferente de ME e capital social a partir de `JOBHUNTER_CNPJ_MIN_CAPITAL`. Os arquivos de sócios não são lidos.
 - **Selo GPTW:** com `JOBHUNTER_SEARCH_API_KEY` (Tavily) e a Claude API, cada empresa nova com vaga ativa é buscada na web e verificada pelo Claude Haiku; sem menção explícita à empresa e ao ano, o resultado é "não encontrado". As respostas ficam 6 meses em cache e `JOBHUNTER_SEARCH_MONTHLY_LIMIT` limita as consultas pagas do mês (configure também um limite de gasto no Tavily). Confiança abaixo de 80% ou homônimos vão para a fila **Revisar selos** na tela de Empresas. Sem a chave, use **Importar lista GPTW** com o texto ou o link da lista anual. O selo soma +10 (ranking GPTW TI), +7 (outro ranking) ou +4 (certificação) na ordenação da caixa de vagas, sem mudar o score de aderência.
+
+### Fontes de vagas e termos de uso
+
+Cada fonte tem regras próprias. As que dependem de uma permissão sua ou têm risco nos termos vêm desligadas.
+
+| Fonte | Como coleta | O que observar | Padrão |
+| --- | --- | --- | --- |
+| Alertas do LinkedIn e da Gupy (`LINKEDIN_ALERTA`, `GUPY_ALERTA`) | Lê os e-mails de alerta na label `jobs` do seu Gmail | Só o seu e-mail; nenhum acesso aos sites | Ligada ao conectar o Gmail |
+| Greenhouse, Lever e Ashby (`GREENHOUSE`, `LEVER`, `ASHBY`) | APIs públicas de job board, por empresa monitorada ou alvo com ATS e slug cadastrados | APIs feitas para publicar as vagas; uma consulta por empresa por dia | Ligada |
+| Remotive (`REMOTIVE`) | API pública de vagas remotas | Pede crédito à fonte e poucas consultas por dia | Desligada (`JOBHUNTER_REMOTIVE_ENABLED`) |
+| GitHub backend-br/vagas (`GITHUB`) | Issues abertas do repositório, pela API do GitHub | Limite de requisições da API; um token aumenta o limite | Desligada (`JOBHUNTER_GITHUB_VAGAS_ENABLED`) |
+| Adzuna (`ADZUNA`) | API com `app_id` e `app_key` | Exige cadastro e segue os termos da Adzuna | Desligada até haver chave |
+| Vaga manual (`MANUAL`) | Você cola o link e a descrição | — | — |
+| Descrição das vagas do LinkedIn | Busca a página pública da vaga (`jobs-guest`), uma por minuto | A cláusula 8.2 dos [termos do LinkedIn](https://www.linkedin.com/legal/user-agreement) proíbe robôs e scripts que copiam dados do site; ligar é um risco para a sua conta | Desligada (`JOBHUNTER_LINKEDIN_DESCRIPTIONS_ENABLED`) |
+
+Sem a busca do LinkedIn, as vagas dos alertas chegam só com título, empresa e local; cole a descrição na vaga ou acompanhe a empresa pelo ATS dela. A saúde de cada fonte (última vaga nova, erros e alertas que não viraram vaga) fica em **Configurações → Saúde das fontes**.
 
 ## Roadmap
 

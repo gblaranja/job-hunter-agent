@@ -12,6 +12,7 @@ import {
   useSaveSearchProfile,
   useSearchProfiles,
   useSeedSources,
+  useSourceHealth,
   useVerifyLinks,
   type CollectionRun,
   type SearchProfile,
@@ -33,8 +34,9 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatDateTime } from '@/lib/format'
+import { sourceLabel } from '@/lib/labels'
 import { useTheme } from '@/lib/useTheme'
-import { Database, Link2, Mail, Monitor, Moon, Pencil, Play, Plus, Sun, Trash2 } from 'lucide-react'
+import { Activity, Database, ExternalLink, Link2, Mail, Monitor, Moon, Pencil, Play, Plus, Sun, Trash2 } from 'lucide-react'
 
 export function SettingsPage() {
   const [params, setParams] = useSearchParams()
@@ -58,6 +60,7 @@ export function SettingsPage() {
       <AppearanceCard />
       <GmailCard />
       <CollectionCard />
+      <SourceHealthCard />
       <ProfilesCard />
       <SeedsCard />
     </div>
@@ -226,6 +229,87 @@ function CollectionCard() {
               })}
             </TableBody>
           </Table>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+/** Coletas seguidas com erro que viram aviso (o mesmo limite do backend). */
+const FAILING_RUNS = 3
+
+/** Quando cada fonte trouxe vaga nova pela última vez, os erros recentes e os alertas que não viraram vaga. */
+function SourceHealthCard() {
+  const health = useSourceHealth()
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Activity className="size-4" aria-hidden /> Saúde das fontes
+        </CardTitle>
+        <CardDescription>
+          Últimos 30 dias de coleta. Um alerta de vaga que não virou vaga em geral quer dizer que o e-mail mudou de formato;
+          você recebe um aviso por dia quando isso acontece.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {health.isLoading && <LoadingBlock lines={2} />}
+        {health.error && <ErrorBlock error={health.error} />}
+        {health.data && health.data.sources.length === 0 && (
+          <p className="text-sm text-muted-foreground">Nenhuma fonte em uso ainda: conecte o Gmail ou cadastre o ATS de uma empresa.</p>
+        )}
+        {health.data && health.data.sources.length > 0 && (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Fonte</TableHead>
+                <TableHead>Última vaga nova</TableHead>
+                <TableHead className="text-right">Novas em 7 dias</TableHead>
+                <TableHead className="text-right">Erros em 7 dias</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {health.data.sources.map((source) => (
+                <TableRow key={source.source}>
+                  <TableCell>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {sourceLabel(source.source)}
+                      {!source.available && <Badge variant="outline">fora de uso</Badge>}
+                      {source.failingRunsInRow >= FAILING_RUNS && (
+                        <Badge variant="destructive">falhou nas últimas {source.failingRunsInRow} coletas</Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>{source.lastNewJobAt ? formatDateTime(source.lastNewJobAt) : 'nenhuma em 30 dias'}</TableCell>
+                  <TableCell className="text-right">{source.newJobsLast7Days}</TableCell>
+                  <TableCell className="text-right">{source.errorsLast7Days}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+        {health.data && health.data.unrecognizedAlerts.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">Alertas que não viraram vaga (14 dias)</h3>
+            <ul className="space-y-1 text-sm">
+              {health.data.unrecognizedAlerts.map((alert) => (
+                <li key={alert.emailId} className="flex flex-wrap items-center gap-x-2">
+                  <span className="text-muted-foreground">{formatDateTime(alert.receivedAt)}</span>
+                  <span>{alert.sender}</span>
+                  <span className="text-muted-foreground">{alert.subject ?? '(sem assunto)'}</span>
+                  <a
+                    className="inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline"
+                    href={`https://mail.google.com/mail/u/0/#all/${alert.gmailId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    abrir no Gmail <ExternalLink className="size-3" aria-hidden />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </CardContent>
     </Card>

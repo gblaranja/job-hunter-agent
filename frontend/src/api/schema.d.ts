@@ -871,6 +871,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/insights/funnel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["funnel"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/emails": {
         parameters: {
             query?: never;
@@ -1071,6 +1087,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["board"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/sources/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sourceHealth"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1956,6 +1988,44 @@ export interface components {
             cacheReadTokens: number;
             costUsd: number;
         };
+        FunnelBreakdown: {
+            /** Format: int32 */
+            applied: number;
+            /** Format: int32 */
+            interview: number;
+            /** Format: int32 */
+            offer: number;
+            bySource: components["schemas"]["FunnelGroup"][];
+            byChannel: components["schemas"]["FunnelGroup"][];
+            byTimeToApply: components["schemas"]["FunnelGroup"][];
+            byTailoring: components["schemas"]["FunnelGroup"][];
+            /** Format: double */
+            medianDaysToFirstResponse?: number | null;
+            rankingQuality: components["schemas"]["RankingQuality"];
+        };
+        FunnelGroup: {
+            group: string;
+            /** Format: int32 */
+            applied: number;
+            /** Format: int32 */
+            interview: number;
+            /** Format: int32 */
+            offer: number;
+        };
+        RankingQuality: {
+            /** Format: int32 */
+            evaluated: number;
+            /** Format: int32 */
+            positives: number;
+            /** Format: int32 */
+            topCount: number;
+            /** Format: int32 */
+            topPositives: number;
+            /** Format: int32 */
+            avgScorePositive?: number | null;
+            /** Format: int32 */
+            avgScoreNegative?: number | null;
+        };
         EmailItem: {
             /** Format: int64 */
             id: number;
@@ -2126,6 +2196,33 @@ export interface components {
             /** @enum {string} */
             status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
             cards: components["schemas"]["BoardCard"][];
+        };
+        HealthReport: {
+            sources: components["schemas"]["SourceStatus"][];
+            unrecognizedAlerts: components["schemas"]["UnrecognizedAlert"][];
+        };
+        SourceStatus: {
+            source: string;
+            available: boolean;
+            /** Format: date-time */
+            lastRunAt?: string | null;
+            /** Format: date-time */
+            lastNewJobAt?: string | null;
+            /** Format: int32 */
+            newJobsLast7Days: number;
+            /** Format: int32 */
+            errorsLast7Days: number;
+            /** Format: int32 */
+            failingRunsInRow: number;
+        };
+        UnrecognizedAlert: {
+            /** Format: int64 */
+            emailId: number;
+            gmailId: string;
+            sender: string;
+            subject?: string | null;
+            /** Format: date-time */
+            receivedAt: string;
         };
         SeedSourceView: {
             key: string;
@@ -3615,6 +3712,26 @@ export interface operations {
             };
         };
     };
+    funnel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["FunnelBreakdown"];
+                };
+            };
+        };
+    };
     list_4: {
         parameters: {
             query?: {
@@ -3892,6 +4009,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["Board"];
+                };
+            };
+        };
+    };
+    sourceHealth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["HealthReport"];
                 };
             };
         };

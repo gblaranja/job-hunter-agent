@@ -29,7 +29,7 @@ export const queryKeys = {
 function invalidateTracking(client: QueryClient) {
   return Promise.all(
     // 'jobs': a vaga que vira candidatura sai da caixa de vagas
-    ['board', 'applications', 'applied', 'job', 'jobs', 'resumes'].map((key) =>
+    ['board', 'applications', 'applied', 'job', 'jobs', 'resumes', 'funnel'].map((key) =>
       client.invalidateQueries({ queryKey: [key] }),
     ),
   )
@@ -639,9 +639,19 @@ export function useCollectNow() {
     mutationFn: () => unwrap(api.POST('/api/admin/collect')),
     onSettled: () =>
       Promise.all(
-        ['collection-runs', 'jobs', 'companies', 'gmail'].map((key) => client.invalidateQueries({ queryKey: [key] })),
+        ['collection-runs', 'source-health', 'jobs', 'companies', 'gmail'].map((key) =>
+          client.invalidateQueries({ queryKey: [key] }),
+        ),
       ),
   })
+}
+
+export type SourceHealth = Schemas['HealthReport']
+export type SourceStatus = Schemas['SourceStatus']
+
+/** Última vaga nova e erros de cada fonte, e os alertas de vaga que não viraram vaga. */
+export function useSourceHealth() {
+  return useQuery({ queryKey: ['source-health'], queryFn: () => unwrap(api.GET('/api/admin/sources/health')) })
 }
 
 export function useSearchProfiles() {
@@ -819,6 +829,14 @@ export function useGenerateInsights() {
       return client.invalidateQueries({ queryKey: ['llm-usage'] })
     },
   })
+}
+
+export type FunnelBreakdown = Schemas['FunnelBreakdown']
+export type FunnelGroup = Schemas['FunnelGroup']
+
+/** Funil por fonte, canal, tempo até aplicar e adaptação, calculado na hora pelo backend (sem a Claude API). */
+export function useFunnelBreakdown() {
+  return useQuery({ queryKey: ['funnel'], queryFn: () => unwrap(api.GET('/api/insights/funnel')) })
 }
 
 export function useLlmUsage() {

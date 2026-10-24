@@ -114,6 +114,26 @@ export const originLabels: Record<JobListItem['origin'], string> = {
   ADZUNA: 'Adzuna',
 }
 
+/** Fonte da coleta: as origens das vagas, mais os alertas do Gmail (que juntam LinkedIn e Gupy). */
+export function sourceLabel(source: string): string {
+  if (source === 'GMAIL_ALERTAS') return 'Alertas no Gmail'
+  return originLabels[source as JobListItem['origin']] ?? source
+}
+
+/** Faixas do tempo entre a vaga aparecer no agente e você aplicar. */
+export const timeToApplyLabels: Record<string, string> = {
+  ATE_1_DIA: 'Até 1 dia',
+  '1_A_3_DIAS': '1 a 3 dias',
+  '4_A_7_DIAS': '4 a 7 dias',
+  MAIS_DE_7_DIAS: 'Mais de 7 dias',
+  SEM_DADO: 'Sem dado (vaga manual)',
+}
+
+export const tailoringLabels: Record<string, string> = {
+  ADAPTADO: 'Currículo adaptado à vaga',
+  PADRAO: 'Currículo sem adaptação',
+}
+
 export const watchStatusLabels: Record<WatchStatus, string> = {
   DESCOBERTA: 'Descoberta',
   MONITORADA: 'Monitorada',
