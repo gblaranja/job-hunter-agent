@@ -8,16 +8,34 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
- * Fontes complementares aos alertas. Os ATS (Greenhouse, Lever, Ashby) consultam as empresas monitoradas e alvo
- * com o ATS configurado; as fontes amplas ficam desligadas até você habilitar (confira os termos de cada uma).
+ * Fontes complementares aos alertas. Os ATS (Greenhouse, Lever, Ashby, SmartRecruiters, Workable, Teamtailor e
+ * Recruitee) consultam as empresas monitoradas e alvo com o ATS configurado; as fontes amplas ficam desligadas até
+ * você habilitar (confira os termos de cada uma).
  */
 @ConfigurationProperties("jobhunter.sourcing")
 record SourcingProperties(@DefaultValue Ats ats, @DefaultValue Remotive remotive, @DefaultValue GitHub github,
 		@DefaultValue Adzuna adzuna, @DefaultValue LinkedInDescriptions linkedinDescriptions) {
 
+	/**
+	 * Endereços das APIs dos ATS (trocados pelo WireMock nos testes).
+	 * @param leverJobsBaseUrl página pública dos job boards da Lever, usada para conferir um slug com lista vazia
+	 * @param smartrecruitersDetailsPerCompany quantas vagas novas da SmartRecruiters têm a descrição buscada por
+	 * empresa a cada coleta (a listagem não traz a descrição, e cada vaga é uma requisição); as demais ficam para a
+	 * próxima coleta
+	 * @param workableBaseUrl o endereço documentado, {@code www.workable.com/api/accounts/{conta}}, redireciona para
+	 * este
+	 * @param teamtailorBaseUrl modelo com {@code {slug}}: cada empresa tem o próprio subdomínio
+	 * @param recruiteeBaseUrl modelo com {@code {slug}}: cada empresa tem o próprio subdomínio
+	 */
 	record Ats(@DefaultValue("https://boards-api.greenhouse.io") String greenhouseBaseUrl,
 			@DefaultValue("https://api.lever.co") String leverBaseUrl,
-			@DefaultValue("https://api.ashbyhq.com") String ashbyBaseUrl) {
+			@DefaultValue("https://jobs.lever.co") String leverJobsBaseUrl,
+			@DefaultValue("https://api.ashbyhq.com") String ashbyBaseUrl,
+			@DefaultValue("https://api.smartrecruiters.com") String smartrecruitersBaseUrl,
+			@DefaultValue("50") int smartrecruitersDetailsPerCompany,
+			@DefaultValue("https://apply.workable.com") String workableBaseUrl,
+			@DefaultValue("https://{slug}.teamtailor.com") String teamtailorBaseUrl,
+			@DefaultValue("https://{slug}.recruitee.com") String recruiteeBaseUrl) {
 	}
 
 	record Remotive(@DefaultValue("false") boolean enabled, @DefaultValue("https://remotive.com") String baseUrl,

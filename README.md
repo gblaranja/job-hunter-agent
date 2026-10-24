@@ -142,11 +142,17 @@ Cada fonte tem regras próprias. As que dependem de uma permissão sua ou têm r
 | --- | --- | --- | --- |
 | Alertas do LinkedIn e da Gupy (`LINKEDIN_ALERTA`, `GUPY_ALERTA`) | Lê os e-mails de alerta na label `jobs` do seu Gmail | Só o seu e-mail; nenhum acesso aos sites | Ligada ao conectar o Gmail |
 | Greenhouse, Lever e Ashby (`GREENHOUSE`, `LEVER`, `ASHBY`) | APIs públicas de job board, por empresa monitorada ou alvo com ATS e slug cadastrados | APIs feitas para publicar as vagas; uma consulta por empresa por dia | Ligada |
+| SmartRecruiters (`SMARTRECRUITERS`) | [Posting API](https://developers.smartrecruiters.com/docs/posting-api) pública (`/v1/companies/{id}/postings`), paginada; a descrição vem do detalhe de cada vaga, só para as vagas novas (até 50 por empresa por coleta) | API documentada para publicar as vagas da empresa; empresa inexistente e empresa sem vagas devolvem a mesma lista vazia, então o slug só é confirmado com uma vaga | Ligada |
+| Workable (`WORKABLE`) | `apply.workable.com/api/v1/widget/accounts/{conta}?details=true`, para onde redireciona o endpoint público citado na [central de ajuda](https://help.workable.com/hc/en-us/articles/115012771647) (`www.workable.com/api/accounts/{conta}`) | Endpoint sem autenticação e sem termos próprios publicados; não é a API oficial (`/spi/v3`, que exige token da empresa) e pode mudar | Ligada |
+| Teamtailor (`TEAMTAILOR`) | JSON Feed do site de carreira (`{empresa}.teamtailor.com/jobs.json`), com a descrição e o JSON-LD de cada vaga | Feed público do site de carreira, sem documentação oficial nem termos próprios; sites em domínio próprio não são detectados pelo link | Ligada |
+| Recruitee (`RECRUITEE`) | [Careers Site API](https://docs.recruitee.com/reference/intro-to-careers-site-api) (`{empresa}.recruitee.com/api/offers/`) | API pública feita para mostrar as vagas no site da empresa; documentação ainda incompleta | Ligada |
 | Remotive (`REMOTIVE`) | API pública de vagas remotas | Pede crédito à fonte e poucas consultas por dia | Desligada (`JOBHUNTER_REMOTIVE_ENABLED`) |
 | GitHub backend-br/vagas (`GITHUB`) | Issues abertas do repositório, pela API do GitHub | Limite de requisições da API; um token aumenta o limite | Desligada (`JOBHUNTER_GITHUB_VAGAS_ENABLED`) |
 | Adzuna (`ADZUNA`) | API com `app_id` e `app_key` | Exige cadastro e segue os termos da Adzuna | Desligada até haver chave |
 | Vaga manual (`MANUAL`) | Você cola o link e a descrição | — | — |
 | Descrição das vagas do LinkedIn | Busca a página pública da vaga (`jobs-guest`), uma por minuto | A cláusula 8.2 dos [termos do LinkedIn](https://www.linkedin.com/legal/user-agreement) proíbe robôs e scripts que copiam dados do site; ligar é um risco para a sua conta | Desligada (`JOBHUNTER_LINKEDIN_DESCRIPTIONS_ENABLED`) |
+
+Para acompanhar uma empresa por ATS, cole o link da página de carreira na tela da empresa (por exemplo `jobs.lever.co/empresa` ou `empresa.teamtailor.com`): o ATS e o slug são detectados pelo link e conferidos no próprio ATS antes de salvar.
 
 Sem a busca do LinkedIn, as vagas dos alertas chegam só com título, empresa e local; cole a descrição na vaga ou acompanhe a empresa pelo ATS dela. A saúde de cada fonte (última vaga nova, erros e alertas que não viraram vaga) fica em **Configurações → Saúde das fontes**.
 

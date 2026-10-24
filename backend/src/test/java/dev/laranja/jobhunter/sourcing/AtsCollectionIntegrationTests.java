@@ -29,9 +29,6 @@ class AtsCollectionIntegrationTests extends IntegrationTest {
 
 	@Test
 	void collectsEveryAtsListingAndClosesJobsThatDisappear() throws Exception {
-		track("Acme", "GREENHOUSE", "acme");
-		track("Beta", "LEVER", "beta");
-		track("Gama", "ASHBY", "gama");
 		stubGreenhouse("""
 				{"id": 101, "title": "Senior Java Engineer", "absolute_url": "https://boards.greenhouse.io/acme/jobs/101",
 				 "location": {"name": "Remote - Brazil"},
@@ -49,6 +46,11 @@ class AtsCollectionIntegrationTests extends IntegrationTest {
 				{"jobs": [{"id": "ash-1", "title": "Staff Engineer", "location": "Brasil", "isRemote": true,
 				           "jobUrl": "https://jobs.ashbyhq.com/gama/ash-1", "descriptionPlain": "Go e AWS."}]}
 				""")));
+		// O cadastro confere o slug no ATS: as listagens acima já respondem, e o Greenhouse tem o endpoint do board.
+		this.google.stubFor(WireMock.get(urlPathEqualTo("/v1/boards/acme")).willReturn(okJson("{\"name\": \"Acme\"}")));
+		track("Acme", "GREENHOUSE", "acme");
+		track("Beta", "LEVER", "beta");
+		track("Gama", "ASHBY", "gama");
 
 		collect();
 

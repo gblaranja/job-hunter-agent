@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import dev.laranja.jobhunter.companies.AtsSlugStatus;
 import dev.laranja.jobhunter.companies.CompanyMonitoring;
 import dev.laranja.jobhunter.companies.TrackedCompany;
 import dev.laranja.jobhunter.jobs.JobCatalog;
@@ -12,6 +13,9 @@ import dev.laranja.jobhunter.jobs.RawJob;
 import dev.laranja.jobhunter.sourcing.JobSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 
 /**
  * Base dos ATS com job board público: consulta cada empresa acompanhada e fecha as vagas que sumiram da listagem.
@@ -33,6 +37,27 @@ abstract class AtsSource implements JobSource {
 	abstract JobOrigin origin();
 
 	abstract List<RawJob> list(TrackedCompany company);
+
+	/**
+	 * Confere no ATS se o job board do slug existe. A Lever e a SmartRecruiters podem devolver lista vazia tanto para
+	 * empresa sem vagas quanto para slug errado: nesses casos, cada ATS completa a conferência como dá.
+	 */
+	abstract AtsSlugStatus verify(String slug);
+
+	/** Executa a consulta: resposta 2xx é job board encontrado; 404, não encontrado; outro erro, não confirmado. */
+	static AtsSlugStatus probe(Runnable request) {
+		try {
+			request.run();
+			return AtsSlugStatus.ENCONTRADO;
+		}
+		catch (HttpClientErrorException.NotFound ex) {
+			return AtsSlugStatus.NAO_ENCONTRADO;
+		}
+		catch (RestClientException ex) {
+			log.info("Conferência do slug sem resposta: {}", ex.getMessage());
+			return AtsSlugStatus.NAO_CONFIRMADO;
+		}
+	}
 
 	@Override
 	public String id() {
