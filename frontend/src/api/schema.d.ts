@@ -455,6 +455,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/companies/ats-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Detecta o ATS e o slug pelo link da página de carreira (ou usa os informados) e confere no ATS se o job board existe, sem gravar nada. */
+        post: operations["checkAts"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/refresh-metrics": {
         parameters: {
             query?: never;
@@ -1534,7 +1551,7 @@ export interface components {
             /** Format: int64 */
             id: number;
             /** @enum {string} */
-            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA";
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA" | "SMARTRECRUITERS" | "WORKABLE" | "TEAMTAILOR" | "RECRUITEE";
             title: string;
             company: string;
             location?: string | null;
@@ -1736,6 +1753,8 @@ export interface components {
             atsType?: string | null;
             atsSlug?: string | null;
             notes?: string | null;
+            /** @description página de carreira; sem valor, fica a que já estava, e texto em branco apaga. Com ATS e slug em branco, os dois são detectados por ela (Greenhouse, Lever, Ashby, SmartRecruiters, Workable, Teamtailor, Recruitee) */
+            careersUrl?: string | null;
         };
         CompanyItem: {
             /** Format: int64 */
@@ -1772,6 +1791,23 @@ export interface components {
             avgDaysOpen?: number | null;
             /** Format: int64 */
             applications: number;
+            /** @description página de carreira, de onde o ATS e o slug são detectados */
+            careersUrl?: string | null;
+        };
+        /** @description Link da página de carreira, ou o ATS e o slug, para conferir antes de salvar. */
+        CompanyAtsCheckRequest: {
+            careersUrl?: string | null;
+            atsType?: string | null;
+            atsSlug?: string | null;
+        };
+        /** @description ATS e slug detectados e conferidos. */
+        CompanyAtsCheck: {
+            atsType: string;
+            atsSlug: string;
+            /** @description se o ATS tem coleta automática */
+            supported: boolean;
+            /** @enum {string} */
+            status: "ENCONTRADO" | "NAO_ENCONTRADO" | "NAO_CONFIRMADO";
         };
         UpdateApplicationDetails: {
             notes?: string | null;
@@ -1879,7 +1915,7 @@ export interface components {
             scope: "NACIONAL" | "INTERNACIONAL";
             url?: string | null;
             /** @enum {string} */
-            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA";
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA" | "SMARTRECRUITERS" | "WORKABLE" | "TEAMTAILOR" | "RECRUITEE";
             /** Format: date-time */
             collectedAt: string;
             preview?: string | null;
@@ -3074,6 +3110,30 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RecognitionView"];
+                };
+            };
+        };
+    };
+    checkAts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompanyAtsCheckRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyAtsCheck"];
                 };
             };
         };

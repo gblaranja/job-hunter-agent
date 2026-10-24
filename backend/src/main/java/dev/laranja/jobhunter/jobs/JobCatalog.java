@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 
 import dev.laranja.jobhunter.companies.CompanyDirectory;
 import dev.laranja.jobhunter.jobs.internal.Job;
@@ -78,6 +79,10 @@ public class JobCatalog {
 					.optional();
 		if (sameExternal.isPresent()) {
 			touch(sameExternal.get(), now);
+			// Fontes que buscam a descrição depois (detalhe da SmartRecruiters) completam a vaga que entrou sem ela.
+			if (raw.description() != null && !raw.description().isBlank()) {
+				attachDescription(sameExternal.get(), raw.description());
+			}
 			return new IngestResult(sameExternal.get(), false);
 		}
 
@@ -112,6 +117,19 @@ public class JobCatalog {
 			this.events.publishEvent(new JobCollected(result.jobId(), raw.origin()));
 		}
 		return result;
+	}
+
+	/** Ids na fonte das vagas da empresa que já têm descrição: a coleta não precisa buscar o detalhe delas de novo. */
+	public Set<String> describedExternalIds(JobOrigin origin, long companyId) {
+		return Set.copyOf(this.jdbc.sql("""
+				select external_id from job
+				where source = :source and company_id = :companyId and external_id is not null
+				  and raw_description is not null
+				""")
+			.param("source", origin.name())
+			.param("companyId", companyId)
+			.query(String.class)
+			.list());
 	}
 
 	/**

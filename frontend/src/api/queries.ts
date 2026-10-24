@@ -355,6 +355,15 @@ export function useUpdateCompany() {
   })
 }
 
+export type CompanyAtsCheck = Schemas['CompanyAtsCheck']
+
+/** Detecta o ATS pelo link da página de carreira e confere o slug, sem gravar. */
+export function useCheckCompanyAts() {
+  return useMutation({
+    mutationFn: (body: Schemas['CompanyAtsCheckRequest']) => unwrap(api.POST('/api/companies/ats-check', { body })),
+  })
+}
+
 export type CompanyOverview = Schemas['CompanyOverview']
 export type WeeklyMetrics = Schemas['WeeklyMetrics']
 

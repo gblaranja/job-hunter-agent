@@ -43,6 +43,11 @@ public class GoogleApiStubConfiguration {
 			registry.add("jobhunter.sourcing.ats.greenhouse-base-url", googleApi::baseUrl);
 			registry.add("jobhunter.sourcing.ats.lever-base-url", googleApi::baseUrl);
 			registry.add("jobhunter.sourcing.ats.ashby-base-url", googleApi::baseUrl);
+			registry.add("jobhunter.sourcing.ats.lever-jobs-base-url", () -> googleApi.baseUrl() + "/lever-jobs");
+			registry.add("jobhunter.sourcing.ats.smartrecruiters-base-url", googleApi::baseUrl);
+			registry.add("jobhunter.sourcing.ats.workable-base-url", googleApi::baseUrl);
+			registry.add("jobhunter.sourcing.ats.teamtailor-base-url", () -> googleApi.baseUrl() + "/teamtailor/{slug}");
+			registry.add("jobhunter.sourcing.ats.recruitee-base-url", () -> googleApi.baseUrl() + "/recruitee/{slug}");
 			registry.add("jobhunter.sourcing.remotive.base-url", googleApi::baseUrl);
 			registry.add("jobhunter.sourcing.github.base-url", googleApi::baseUrl);
 			registry.add("jobhunter.sourcing.adzuna.base-url", googleApi::baseUrl);

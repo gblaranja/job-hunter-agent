@@ -112,6 +112,10 @@ export const originLabels: Record<JobListItem['origin'], string> = {
   REMOTIVE: 'Remotive',
   GITHUB: 'GitHub (backend-br)',
   ADZUNA: 'Adzuna',
+  SMARTRECRUITERS: 'SmartRecruiters',
+  WORKABLE: 'Workable',
+  TEAMTAILOR: 'Teamtailor',
+  RECRUITEE: 'Recruitee',
 }
 
 /** Fonte da coleta: as origens das vagas, mais os alertas do Gmail (que juntam LinkedIn e Gupy). */
@@ -196,8 +200,18 @@ export const atsLabels: Record<string, string> = {
   GREENHOUSE: 'Greenhouse',
   LEVER: 'Lever',
   ASHBY: 'Ashby',
+  SMARTRECRUITERS: 'SmartRecruiters',
+  WORKABLE: 'Workable',
+  TEAMTAILOR: 'Teamtailor',
+  RECRUITEE: 'Recruitee',
   GUPY: 'Gupy',
   OUTRO: 'Outro',
+}
+
+export const atsSlugStatusLabels: Record<string, string> = {
+  ENCONTRADO: 'job board encontrado',
+  NAO_ENCONTRADO: 'o ATS diz que esse slug não existe',
+  NAO_CONFIRMADO: 'não deu para confirmar (lista vazia ou ATS sem resposta)',
 }
 
 export const diagnosisLabels: Record<string, string> = {
