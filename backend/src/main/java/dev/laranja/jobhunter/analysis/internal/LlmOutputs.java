@@ -3,6 +3,7 @@ package dev.laranja.jobhunter.analysis.internal;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import org.jspecify.annotations.Nullable;
 
 /** Schemas das saídas estruturadas do LLM usadas pela análise. */
 final class LlmOutputs {
@@ -20,7 +21,9 @@ final class LlmOutputs {
 	}
 
 	record ResumeSkills(@JsonPropertyDescription("Skills técnicas demonstradas no currículo") List<String> skills,
-			@JsonPropertyDescription("ESTAGIO, JUNIOR, PLENO, SENIOR ou ESPECIALISTA") String seniority) {
+			@JsonPropertyDescription("ESTAGIO, JUNIOR, PLENO, SENIOR ou ESPECIALISTA") String seniority,
+			@JsonPropertyDescription("Anos de experiência profissional na área; nulo se o currículo não permite saber") @Nullable Integer yearsOfExperience,
+			@JsonPropertyDescription("NENHUM, BASICO, INTERMEDIARIO, AVANCADO ou FLUENTE; nulo se o currículo não fala de inglês") @Nullable String englishLevel) {
 	}
 
 }

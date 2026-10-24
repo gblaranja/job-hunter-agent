@@ -135,6 +135,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/candidate-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["candidateProfile"];
+        put: operations["updateCandidateProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{id}/snapshot": {
         parameters: {
             query?: never;
@@ -1385,6 +1401,53 @@ export interface components {
             fitBand?: "ALTO" | "MEDIO" | "BAIXO" | null;
             reasons: string[];
         };
+        CandidateProfileCommand: {
+            /** Format: int32 */
+            yearsOfExperience?: number | null;
+            /** @enum {string|null} */
+            englishLevel?: "NENHUM" | "BASICO" | "INTERMEDIARIO" | "AVANCADO" | "FLUENTE" | null;
+            city?: string | null;
+            state?: string | null;
+            /** Format: int32 */
+            maxOnsiteDays?: number | null;
+            acceptedContracts?: string[] | null;
+            workAuthorizations?: string[] | null;
+            /** @enum {string|null} */
+            educationLevel?: "MEDIO" | "TECNICO" | "SUPERIOR_INCOMPLETO" | "SUPERIOR" | "POS" | "MESTRADO" | "DOUTORADO" | null;
+            education?: string | null;
+            certifications?: string[] | null;
+            desiredSalaryClt?: number | null;
+            desiredSalaryPj?: number | null;
+            /** Format: int32 */
+            weeklyGoal?: number | null;
+        };
+        CandidateProfileView: {
+            /** Format: int32 */
+            yearsOfExperience?: number | null;
+            /** @enum {string|null} */
+            englishLevel?: "NENHUM" | "BASICO" | "INTERMEDIARIO" | "AVANCADO" | "FLUENTE" | null;
+            city?: string | null;
+            state?: string | null;
+            /** Format: int32 */
+            maxOnsiteDays?: number | null;
+            acceptedContracts: string[];
+            workAuthorizations: string[];
+            /** @enum {string|null} */
+            educationLevel?: "MEDIO" | "TECNICO" | "SUPERIOR_INCOMPLETO" | "SUPERIOR" | "POS" | "MESTRADO" | "DOUTORADO" | null;
+            education?: string | null;
+            certifications: string[];
+            desiredSalaryClt?: number | null;
+            desiredSalaryPj?: number | null;
+            /** Format: int32 */
+            weeklyGoal: number;
+            /** Format: int32 */
+            suggestedYearsOfExperience?: number | null;
+            /** @enum {string|null} */
+            suggestedEnglishLevel?: "NENHUM" | "BASICO" | "INTERMEDIARIO" | "AVANCADO" | "FLUENTE" | null;
+            suggestedFrom?: string | null;
+            /** Format: date-time */
+            updatedAt?: string | null;
+        };
         SaveJobSnapshot: {
             url?: string | null;
             title: string;
@@ -2542,6 +2605,50 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CompanyNiche"][];
+                };
+            };
+        };
+    };
+    candidateProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CandidateProfileView"];
+                };
+            };
+        };
+    };
+    updateCandidateProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CandidateProfileCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CandidateProfileView"];
                 };
             };
         };

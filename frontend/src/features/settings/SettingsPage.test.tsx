@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import type { SourceHealth } from '@/api/queries'
+import type { CandidateProfile, SourceHealth } from '@/api/queries'
 import { ThemeProvider } from '@/lib/theme'
 import { renderWithProviders } from '@/test/render'
 import { server } from '@/test/server'
@@ -25,6 +25,13 @@ function renderSettingsPage() {
   )
 }
 
+const emptyCandidateProfile: CandidateProfile = {
+  acceptedContracts: ['CLT', 'PJ'],
+  workAuthorizations: ['BR'],
+  certifications: [],
+  weeklyGoal: 12,
+}
+
 const emptyHealth: SourceHealth = { sources: [], unrecognizedAlerts: [] }
 
 function serveSettings(runs: unknown[] = [], health: SourceHealth = emptyHealth) {
@@ -37,6 +44,7 @@ function serveSettings(runs: unknown[] = [], health: SourceHealth = emptyHealth)
       HttpResponse.json({ configured: true, connected: true, accountEmail: 'eu@example.com', label: 'jobs', lastSyncAt: null }),
     ),
     http.get('/api/admin/collection-runs', () => HttpResponse.json(runs)),
+    http.get('/api/candidate-profile', () => HttpResponse.json(emptyCandidateProfile)),
     http.get('/api/search-profiles', () =>
       HttpResponse.json([
         {

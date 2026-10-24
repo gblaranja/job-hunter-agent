@@ -54,6 +54,7 @@ import {
   Sun,
   Trash2,
 } from 'lucide-react'
+import { CandidateProfileCard } from './CandidateProfileCard'
 
 export function SettingsPage() {
   const [params, setParams] = useSearchParams()
@@ -72,9 +73,10 @@ export function SettingsPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader
         title="Configurações"
-        description="Conexão com o Gmail, coleta de vagas, perfis de busca e as bases públicas de empresas."
+        description="Seus dados para a triagem, conexão com o Gmail, coleta de vagas, perfis de busca e as bases públicas de empresas."
       />
       <AppearanceCard />
+      <CandidateProfileCard />
       <GmailCard />
       <TelegramCard />
       <CollectionCard />
