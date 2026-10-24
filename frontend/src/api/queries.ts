@@ -677,6 +677,27 @@ export function useDeleteSearchProfile() {
   })
 }
 
+// Dados da triagem (eliminatórios, pretensão e meta semanal)
+
+export type CandidateProfile = Schemas['CandidateProfileView']
+export type CandidateProfileCommand = Schemas['CandidateProfileCommand']
+
+export function useCandidateProfile() {
+  return useQuery({ queryKey: ['candidate-profile'], queryFn: () => unwrap(api.GET('/api/candidate-profile')) })
+}
+
+/** Salva e recarrega as vagas: os eliminatórios e o score são recalculados no backend. */
+export function useSaveCandidateProfile() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (body: CandidateProfileCommand) => unwrap(api.PUT('/api/candidate-profile', { body })),
+    onSuccess: (profile) => {
+      client.setQueryData(['candidate-profile'], profile)
+      return Promise.all(['jobs', 'job'].map((key) => client.invalidateQueries({ queryKey: [key] })))
+    },
+  })
+}
+
 // Análise
 
 export type JobAnalysis = Schemas['JobAnalysis']

@@ -238,3 +238,47 @@ export const nicheSourceLabels: Record<NicheSource, string> = {
   VAGA: 'Palavras-chave das vagas',
   MANUAL: 'Sua escolha',
 }
+
+// Triagem: dados da pessoa e eliminatórios das vagas
+
+export const englishLevelLabels: Record<string, string> = {
+  NENHUM: 'Nenhum',
+  BASICO: 'Básico',
+  INTERMEDIARIO: 'Intermediário',
+  AVANCADO: 'Avançado',
+  FLUENTE: 'Fluente',
+}
+
+export const educationLevelLabels: Record<string, string> = {
+  MEDIO: 'Ensino médio',
+  TECNICO: 'Técnico',
+  SUPERIOR_INCOMPLETO: 'Superior incompleto',
+  SUPERIOR: 'Superior completo',
+  POS: 'Pós-graduação',
+  MESTRADO: 'Mestrado',
+  DOUTORADO: 'Doutorado',
+}
+
+export const contractRegimeLabels: Record<string, string> = {
+  CLT: 'CLT',
+  PJ: 'PJ',
+  CONTRACTOR: 'Contractor (exterior)',
+}
+
+export const knockoutTypeLabels: Record<string, string> = {
+  ANOS_EXPERIENCIA: 'Anos de experiência',
+  IDIOMA: 'Idioma',
+  LOCALIDADE: 'Localidade',
+  PRESENCIAL: 'Dias presenciais',
+  AUTORIZACAO_TRABALHO: 'Autorização de trabalho',
+  FUSO: 'Fuso horário',
+  FORMACAO: 'Formação',
+  CERTIFICACAO: 'Certificação',
+  CONTRATO: 'Regime de contratação',
+}
+
+export const knockoutStatusLabels: Record<string, string> = {
+  ATENDE: 'Atende',
+  NAO_ATENDE: 'Não atende',
+  SEM_INFORMACAO: 'Sem informação',
+}

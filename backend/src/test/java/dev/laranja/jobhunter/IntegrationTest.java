@@ -49,7 +49,7 @@ public abstract class IntegrationTest {
 				truncate application_event, job_snapshot, application, job_feedback, job_dismissal, job, resume_version,
 				         email_message, gmail_sync_state, oauth_credential, collection_run, company_alias, company,
 				         job_analysis, llm_usage, insight_report, company_metrics_weekly, notification, tailored_resume,
-				         company_recognition, web_search_cache, company_niche, company_fit
+				         company_recognition, web_search_cache, company_niche, company_fit, candidate_profile
 				restart identity cascade
 				""").update();
 	}
