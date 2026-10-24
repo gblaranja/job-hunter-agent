@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { ApplicationDetailsForm } from '@/features/applications/ApplicationDetailsForm'
+import { FollowUpStatus } from '@/features/applications/FollowUpStatus'
 import { ResponseDialog } from '@/features/applications/ResponseDialog'
 import { Timeline } from '@/features/applications/Timeline'
 import { ArrowUpRight } from 'lucide-react'
@@ -38,11 +39,13 @@ export function ApplicationSheet({ card, onClose }: { card: BoardCard; onClose: 
           {job.error && <ErrorBlock error={job.error} />}
           {application && (
             <>
+              <FollowUpStatus application={application} />
               <ApplicationDetailsForm
-                key={application.id}
+                key={`${application.id}-${application.nextActionAt ?? ''}`}
                 applicationId={application.id}
                 notes={application.notes}
                 nextActionAt={application.nextActionAt}
+                nextActionKind={application.nextActionKind}
               />
               <ResponseDialog applicationId={application.id} />
               <section>

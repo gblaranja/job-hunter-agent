@@ -8,6 +8,7 @@ import type {
   JobListItem,
   JobScope,
   LinkStatus,
+  NextActionKind,
   NicheSource,
   RecognitionLevel,
   ResponseChannel,
@@ -60,6 +61,13 @@ export const statusAccent: Record<ApplicationStatus, string> = {
   RECUSADA: 'bg-rose-500',
   DESISTI: 'bg-zinc-400',
   ENCERRADA: 'bg-stone-500',
+}
+
+export const nextActionKindLabels: Record<NextActionKind, string> = {
+  FOLLOW_UP: 'Follow-up',
+  RESPONDER: 'Responder',
+  ENTREVISTA: 'Entrevista',
+  OUTRO: 'Próxima ação',
 }
 
 export const channelLabels: Record<ApplicationChannel, string> = {
@@ -215,6 +223,7 @@ export const notificationTypeLabels: Record<string, string> = {
   VOLUME_CAIU: 'Volume caiu',
   RELATORIO_SEMANAL: 'Relatório semanal',
   CURRICULO_ADAPTADO: 'Currículo adaptado',
+  FOLLOW_UP: 'Follow-up',
 }
 
 export const recognitionLevelLabels: Record<RecognitionLevel, string> = {

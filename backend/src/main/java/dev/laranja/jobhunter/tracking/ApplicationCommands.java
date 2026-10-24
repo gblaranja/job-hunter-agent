@@ -43,9 +43,13 @@ public final class ApplicationCommands {
 	public record ChangeResume(@NotNull Long resumeVersionId) {
 	}
 
-	/** Substitui as notas e a próxima ação (nulo limpa o campo). */
+	/**
+	 * Substitui as notas e a próxima ação (nulo limpa o campo).
+	 * @param nextActionKind tipo da próxima ação; sem valor, mantém o atual
+	 */
 	@Schema(name = "UpdateApplicationDetails")
-	public record UpdateDetails(@Nullable String notes, @Nullable Instant nextActionAt) {
+	public record UpdateDetails(@Nullable String notes, @Nullable Instant nextActionAt,
+			@Nullable NextActionKind nextActionKind) {
 	}
 
 	/** Cola ou corrige o link e a descrição salvos da vaga aplicada. */

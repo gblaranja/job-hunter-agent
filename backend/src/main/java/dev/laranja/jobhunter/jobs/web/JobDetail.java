@@ -14,10 +14,16 @@ import org.jspecify.annotations.Nullable;
 record JobDetail(JobView job, @Nullable ApplicationSummary application, List<TimelineEvent> timeline,
 		@Nullable Feedback feedback, @Nullable Dismissal dismissal, @Nullable Analysis analysis) {
 
+	/**
+	 * @param nextActionKind FOLLOW_UP, RESPONDER, ENTREVISTA ou OUTRO
+	 * @param nextActionAuto a próxima ação foi agendada pelo sistema (um retorno da empresa a cancela)
+	 * @param followUpsSent follow-ups que você já registrou
+	 */
 	@Schema(name = "JobApplicationSummary")
 	record ApplicationSummary(long id, String status, @Nullable Instant appliedAt, @Nullable String channel,
 			@Nullable Long resumeVersionId, @Nullable String resumeLabel, @Nullable String notes,
-			@Nullable Instant nextActionAt) {
+			@Nullable Instant nextActionAt, @Nullable String nextActionKind, boolean nextActionAuto,
+			int followUpsSent) {
 	}
 
 	@Schema(name = "JobFeedback")

@@ -14,6 +14,7 @@ export type AppliedListItem = Schemas['AppliedListItem']
 export type JobDetail = Schemas['JobDetail']
 export type ResumeItem = Schemas['ResumeItem']
 export type DownloadLink = Schemas['DownloadLink']
+export type NextActionKind = NonNullable<Schemas['BoardCard']['nextActionKind']>
 
 export const queryKeys = {
   me: ['me'] as const,
@@ -186,6 +187,16 @@ export function useUpdateApplicationDetails() {
   return useMutation({
     mutationFn: ({ applicationId, ...body }: { applicationId: number } & Schemas['UpdateApplicationDetails']) =>
       unwrap(api.PATCH('/api/applications/{id}', { params: { path: { id: applicationId } }, body })),
+    onSuccess: () => invalidateTracking(client),
+  })
+}
+
+/** Você mandou um follow-up: conta o envio e o backend agenda o próximo (até o máximo). */
+export function useRegisterFollowUp() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (applicationId: number) =>
+      unwrap(api.POST('/api/applications/{id}/follow-ups', { params: { path: { id: applicationId } } })),
     onSuccess: () => invalidateTracking(client),
   })
 }
