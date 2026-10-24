@@ -36,6 +36,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{id}/scope": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description Corrige a classificação automática de nacional ou internacional: a vaga muda de seção na caixa. */
+        put: operations["scope"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{id}/dismissal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** @description "Não tenho interesse" ou "não tenho o perfil técnico": a vaga sai da caixa. */
+        put: operations["dismiss"];
+        post?: never;
+        /** @description Desfaz o descarte e a vaga volta para a caixa. */
+        delete: operations["restore"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}/headcount": {
         parameters: {
             query?: never;
@@ -848,6 +883,14 @@ export interface components {
             reasons?: ("SALARIO" | "STACK" | "SENIORIDADE" | "MODELO_TRABALHO" | "EMPRESA" | "LOCALIZACAO")[] | null;
             comment?: string | null;
         };
+        ScopeChange: {
+            /** @enum {string} */
+            scope: "NACIONAL" | "INTERNACIONAL";
+        };
+        Dismissal: {
+            /** @enum {string} */
+            reason: "SEM_INTERESSE" | "SEM_PERFIL_TECNICO";
+        };
         Headcount: {
             /** Format: int32 */
             headcount: number;
@@ -949,6 +992,8 @@ export interface components {
             location?: string | null;
             /** @enum {string|null} */
             workModel?: "REMOTO" | "HIBRIDO" | "PRESENCIAL" | "NAO_INFORMADO" | null;
+            /** @enum {string|null} */
+            scope?: "NACIONAL" | "INTERNACIONAL" | null;
             salaryRange?: string | null;
             url?: string | null;
             description?: string | null;
@@ -963,6 +1008,8 @@ export interface components {
             location?: string | null;
             /** @enum {string} */
             workModel: "REMOTO" | "HIBRIDO" | "PRESENCIAL" | "NAO_INFORMADO";
+            /** @enum {string} */
+            scope: "NACIONAL" | "INTERNACIONAL";
             salaryRange?: string | null;
             url?: string | null;
             description?: string | null;
@@ -1215,6 +1262,8 @@ export interface components {
             location?: string | null;
             /** @enum {string} */
             workModel: "REMOTO" | "HIBRIDO" | "PRESENCIAL" | "NAO_INFORMADO";
+            /** @enum {string} */
+            scope: "NACIONAL" | "INTERNACIONAL";
             url?: string | null;
             /** @enum {string} */
             origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA";
@@ -1283,6 +1332,7 @@ export interface components {
             application?: components["schemas"]["JobApplicationSummary"] | null;
             timeline: components["schemas"]["TimelineEvent"][];
             feedback?: components["schemas"]["JobFeedback"] | null;
+            dismissal?: components["schemas"]["JobDismissal"] | null;
             analysis?: components["schemas"]["JobAnalysis"] | null;
         };
         JobFeedback: {
@@ -1290,6 +1340,12 @@ export interface components {
             rating: "GOSTEI" | "NEUTRO" | "NAO_GOSTEI";
             reasons: ("SALARIO" | "STACK" | "SENIORIDADE" | "MODELO_TRABALHO" | "EMPRESA" | "LOCALIZACAO")[];
             comment?: string | null;
+        };
+        JobDismissal: {
+            /** @enum {string} */
+            reason: "SEM_INTERESSE" | "SEM_PERFIL_TECNICO";
+            /** Format: date-time */
+            dismissedAt: string;
         };
         TimelineEvent: {
             /** Format: int64 */
@@ -1574,6 +1630,74 @@ export interface operations {
             };
         };
     };
+    scope: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScopeChange"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    dismiss: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Dismissal"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     headcount: {
         parameters: {
             query?: never;
@@ -1762,6 +1886,7 @@ export interface operations {
                 status?: string;
                 rating?: "GOSTEI" | "NEUTRO" | "NAO_GOSTEI";
                 q?: string;
+                scope?: "NACIONAL" | "INTERNACIONAL";
                 inbox?: boolean;
                 page?: number;
                 size?: number;

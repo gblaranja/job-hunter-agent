@@ -7,6 +7,7 @@ import org.springframework.http.MediaType;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -83,6 +84,43 @@ class CompaniesAndFeedbackIntegrationTests extends IntegrationTest {
 			.andExpect(jsonPath("$.feedback.reasons", hasSize(2)))
 			.andExpect(jsonPath("$.feedback.comment").value("Stack fora do meu perfil"));
 		assertThat(this.jdbc.sql("select count(*) from job_feedback").query(Long.class).single()).isEqualTo(2);
+	}
+
+	@Test
+	void dismissedJobsLeaveTheInboxUntilRestored() throws Exception {
+		long kept = createJob("Dev Java Sênior", "Banco A", "Java");
+		long notInterested = createJob("Dev Java Pleno", "Varejo B", "Java");
+		long offProfile = createJob("Cientista de Dados", "Fintech C", "Python");
+
+		this.mvc.perform(put("/api/jobs/{id}/dismissal", notInterested).with(owner())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("""
+					{"reason": "SEM_INTERESSE"}
+					""")).andExpect(status().isNoContent());
+		this.mvc.perform(put("/api/jobs/{id}/dismissal", offProfile).with(owner())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("""
+					{"reason": "SEM_PERFIL_TECNICO"}
+					""")).andExpect(status().isNoContent());
+
+		this.mvc.perform(get("/api/jobs").param("inbox", "true").with(owner()))
+			.andExpect(jsonPath("$.total").value(1))
+			.andExpect(jsonPath("$.items[0].id").value(kept));
+		this.mvc.perform(get("/api/jobs/{id}", offProfile).with(owner()))
+			.andExpect(jsonPath("$.dismissal.reason").value("SEM_PERFIL_TECNICO"));
+
+		this.mvc.perform(delete("/api/jobs/{id}/dismissal", notInterested).with(owner()))
+			.andExpect(status().isNoContent());
+		this.mvc.perform(get("/api/jobs").param("inbox", "true").with(owner()))
+			.andExpect(jsonPath("$.total").value(2));
+		this.mvc.perform(get("/api/jobs/{id}", notInterested).with(owner()))
+			.andExpect(jsonPath("$.dismissal").doesNotExist());
+
+		this.mvc.perform(put("/api/jobs/{id}/dismissal", 999_999).with(owner())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("""
+					{"reason": "SEM_INTERESSE"}
+					""")).andExpect(status().isNotFound());
 	}
 
 	@Test

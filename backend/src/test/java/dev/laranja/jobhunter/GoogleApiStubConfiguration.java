@@ -46,6 +46,7 @@ public class GoogleApiStubConfiguration {
 			registry.add("jobhunter.sourcing.remotive.base-url", googleApi::baseUrl);
 			registry.add("jobhunter.sourcing.github.base-url", googleApi::baseUrl);
 			registry.add("jobhunter.sourcing.adzuna.base-url", googleApi::baseUrl);
+			registry.add("jobhunter.sourcing.linkedin-descriptions.base-url", googleApi::baseUrl);
 		};
 	}
 

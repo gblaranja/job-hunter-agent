@@ -255,11 +255,35 @@ export type JobListItem = Schemas['JobListItem']
 export type FeedbackRating = NonNullable<Schemas['JobListItem']['rating']>
 export type FeedbackReason = Schemas['JobListItem']['reasons'][number]
 
-export function useInboxJobs(q?: string) {
+export type JobScope = Schemas['JobListItem']['scope']
+
+export function useInboxJobs({ q, scope, page, size }: { q?: string; scope: JobScope; page: number; size: number }) {
   return useQuery({
-    queryKey: ['jobs', 'inbox', { q }],
-    queryFn: () => unwrap(api.GET('/api/jobs', { params: { query: { inbox: true, q: q || undefined, size: 50 } } })),
+    queryKey: ['jobs', 'inbox', { q, scope, page, size }],
+    queryFn: () =>
+      unwrap(api.GET('/api/jobs', { params: { query: { inbox: true, q: q || undefined, scope, page, size } } })),
     placeholderData: (previous) => previous,
+  })
+}
+
+/** Só o total de cada seção da caixa, para o contador da aba que não está aberta. */
+export function useInboxCount({ q, scope }: { q?: string; scope: JobScope }) {
+  return useQuery({
+    queryKey: ['jobs', 'inbox', 'count', { q, scope }],
+    queryFn: () =>
+      unwrap(api.GET('/api/jobs', { params: { query: { inbox: true, q: q || undefined, scope, size: 1 } } })),
+    select: (data) => data.total,
+    placeholderData: (previous) => previous,
+  })
+}
+
+export function useChangeJobScope() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ jobId, scope }: { jobId: number; scope: JobScope }) =>
+      unwrap(api.PUT('/api/jobs/{id}/scope', { params: { path: { id: jobId } }, body: { scope } })),
+    onSuccess: () =>
+      Promise.all([client.invalidateQueries({ queryKey: ['jobs'] }), client.invalidateQueries({ queryKey: ['job'] })]),
   })
 }
 
@@ -268,6 +292,29 @@ export function useSaveFeedback() {
   return useMutation({
     mutationFn: ({ jobId, ...body }: { jobId: number } & Schemas['Feedback']) =>
       unwrap(api.PUT('/api/jobs/{id}/feedback', { params: { path: { id: jobId } }, body })),
+    onSuccess: () =>
+      Promise.all([client.invalidateQueries({ queryKey: ['jobs'] }), client.invalidateQueries({ queryKey: ['job'] })]),
+  })
+}
+
+export type DismissReason = Schemas['Dismissal']['reason']
+
+/** "Não tenho interesse" ou "não tenho o perfil técnico": a vaga sai da caixa. */
+export function useDismissJob() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ jobId, ...body }: { jobId: number } & Schemas['Dismissal']) =>
+      unwrap(api.PUT('/api/jobs/{id}/dismissal', { params: { path: { id: jobId } }, body })),
+    onSuccess: () =>
+      Promise.all([client.invalidateQueries({ queryKey: ['jobs'] }), client.invalidateQueries({ queryKey: ['job'] })]),
+  })
+}
+
+/** Desfaz o descarte: a vaga volta para a caixa. */
+export function useRestoreJob() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (jobId: number) => unwrap(api.DELETE('/api/jobs/{id}/dismissal', { params: { path: { id: jobId } } })),
     onSuccess: () =>
       Promise.all([client.invalidateQueries({ queryKey: ['jobs'] }), client.invalidateQueries({ queryKey: ['job'] })]),
   })

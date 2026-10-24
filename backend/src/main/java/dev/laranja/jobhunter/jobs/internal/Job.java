@@ -3,6 +3,7 @@ package dev.laranja.jobhunter.jobs.internal;
 import java.time.Instant;
 
 import dev.laranja.jobhunter.jobs.JobOrigin;
+import dev.laranja.jobhunter.jobs.JobScope;
 import dev.laranja.jobhunter.jobs.JobView;
 import dev.laranja.jobhunter.jobs.ManualJobCommand;
 import dev.laranja.jobhunter.jobs.WorkModel;
@@ -40,6 +41,11 @@ public class Job {
 	@Enumerated(EnumType.STRING)
 	private WorkModel workModel;
 
+	@Enumerated(EnumType.STRING)
+	private JobScope scope;
+
+	private boolean scopeLocked;
+
 	private String salaryRange;
 
 	private String url;
@@ -65,6 +71,9 @@ public class Job {
 		job.company = command.company().strip();
 		job.location = blankToNull(command.location());
 		job.workModel = (command.workModel() != null) ? command.workModel() : WorkModel.NAO_INFORMADO;
+		job.scope = (command.scope() != null) ? command.scope()
+				: JobScopeDetector.detect(command.title(), command.location(), command.description());
+		job.scopeLocked = command.scope() != null;
 		job.salaryRange = blankToNull(command.salaryRange());
 		job.url = blankToNull(command.url());
 		job.rawDescription = blankToNull(command.description());
@@ -77,7 +86,8 @@ public class Job {
 
 	public JobView toView() {
 		return new JobView(this.id, this.origin, this.title, this.company, this.location, this.workModel,
-				this.salaryRange, this.url, this.rawDescription, this.collectedAt);
+				// nula só até o backfill da subida classificar as vagas antigas
+				(this.scope != null) ? this.scope : JobScope.NACIONAL, this.salaryRange, this.url, this.rawDescription, this.collectedAt);
 	}
 
 	public Long getId() {

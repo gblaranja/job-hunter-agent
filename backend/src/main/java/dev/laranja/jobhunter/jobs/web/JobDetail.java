@@ -3,6 +3,7 @@ package dev.laranja.jobhunter.jobs.web;
 import java.time.Instant;
 import java.util.List;
 
+import dev.laranja.jobhunter.jobs.DismissReason;
 import dev.laranja.jobhunter.jobs.FeedbackRating;
 import dev.laranja.jobhunter.jobs.FeedbackReason;
 import dev.laranja.jobhunter.jobs.JobView;
@@ -11,7 +12,7 @@ import org.jspecify.annotations.Nullable;
 
 /** Detalhe da vaga com a candidatura (se houver) e a linha do tempo do funil. */
 record JobDetail(JobView job, @Nullable ApplicationSummary application, List<TimelineEvent> timeline,
-		@Nullable Feedback feedback, @Nullable Analysis analysis) {
+		@Nullable Feedback feedback, @Nullable Dismissal dismissal, @Nullable Analysis analysis) {
 
 	@Schema(name = "JobApplicationSummary")
 	record ApplicationSummary(long id, String status, @Nullable Instant appliedAt, @Nullable String channel,
@@ -21,6 +22,11 @@ record JobDetail(JobView job, @Nullable ApplicationSummary application, List<Tim
 
 	@Schema(name = "JobFeedback")
 	record Feedback(FeedbackRating rating, List<FeedbackReason> reasons, @Nullable String comment) {
+	}
+
+	/** A vaga foi descartada da caixa e por quê. */
+	@Schema(name = "JobDismissal")
+	record Dismissal(DismissReason reason, Instant dismissedAt) {
 	}
 
 	/**

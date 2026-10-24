@@ -8,7 +8,7 @@ afterEach(() => {
 })
 afterAll(() => server.close())
 
-// O jsdom não implementa estas APIs, usadas pelos componentes do Radix.
+// O jsdom não implementa estas APIs, usadas pelos componentes do Radix e pelos toasts do sonner.
 class ResizeObserverStub {
   observe() {}
   unobserve() {}
@@ -18,3 +18,4 @@ globalThis.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObse
 Element.prototype.scrollIntoView ??= () => {}
 Element.prototype.hasPointerCapture ??= () => false
 Element.prototype.releasePointerCapture ??= () => {}
+Element.prototype.setPointerCapture ??= () => {}

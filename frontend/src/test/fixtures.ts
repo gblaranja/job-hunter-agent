@@ -112,6 +112,7 @@ export function inboxJob(overrides: Partial<JobListItem> = {}): JobListItem {
     companyId: 5,
     location: 'São Paulo, SP (Remoto)',
     workModel: 'REMOTO',
+    scope: 'NACIONAL',
     url: 'https://www.linkedin.com/jobs/view/4012345678/',
     origin: 'LINKEDIN_ALERTA',
     collectedAt: '2026-10-23T10:00:00Z',

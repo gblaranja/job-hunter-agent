@@ -2,6 +2,7 @@ package dev.laranja.jobhunter.analysis.internal;
 
 import dev.laranja.jobhunter.analysis.JobAnalyzer;
 import dev.laranja.jobhunter.jobs.JobCollected;
+import dev.laranja.jobhunter.jobs.JobDescriptionAdded;
 import dev.laranja.jobhunter.resumes.DefaultResumeChanged;
 import dev.laranja.jobhunter.resumes.ResumeCatalog;
 import dev.laranja.jobhunter.resumes.ResumeUploaded;
@@ -35,6 +36,12 @@ class AnalysisListeners {
 
 	@ApplicationModuleListener
 	void on(JobCollected event) {
+		this.analyzer.analyze(event.jobId());
+	}
+
+	/** A vaga do alerta ganhou a descrição: a extração por LLM, antes sem texto, agora tem o que ler. */
+	@ApplicationModuleListener
+	void on(JobDescriptionAdded event) {
 		this.analyzer.analyze(event.jobId());
 	}
 

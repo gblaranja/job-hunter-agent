@@ -11,8 +11,10 @@ import dev.laranja.jobhunter.companies.CompanyDirectory;
 import dev.laranja.jobhunter.jobs.internal.Job;
 import dev.laranja.jobhunter.jobs.internal.JobFingerprint;
 import dev.laranja.jobhunter.jobs.internal.JobRepository;
+import dev.laranja.jobhunter.jobs.internal.JobScopeDetector;
 import dev.laranja.jobhunter.shared.ConflictException;
 import dev.laranja.jobhunter.shared.NotFoundException;
+import org.jspecify.annotations.Nullable;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -82,10 +84,11 @@ public class JobCatalog {
 		long companyId = this.companies.resolveOrRegister(raw.company());
 		// xmax = 0 só na linha recém-inserida; no conflito, a linha existente é atualizada e devolvida.
 		IngestResult result = this.jdbc.sql("""
-				insert into job (source, external_id, fingerprint, title, company, location, work_model, salary_range,
-				                 url, raw_description, collected_at, company_id, first_seen_at, last_seen_at)
-				values (:source, :externalId, :fingerprint, :title, :company, :location, :workModel, :salaryRange,
-				        :url, :description, :now, :companyId, :now, :now)
+				insert into job (source, external_id, fingerprint, title, company, location, work_model, scope,
+				                 salary_range, url, raw_description, collected_at, company_id, first_seen_at,
+				                 last_seen_at)
+				values (:source, :externalId, :fingerprint, :title, :company, :location, :workModel, :scope,
+				        :salaryRange, :url, :description, :now, :companyId, :now, :now)
 				on conflict (fingerprint) do update set last_seen_at = excluded.last_seen_at, closed_at = null
 				returning id, (xmax = 0) as created
 				""")
@@ -96,6 +99,7 @@ public class JobCatalog {
 			.param("company", truncate(raw.company().strip(), 200))
 			.param("location", truncate(raw.location(), 200))
 			.param("workModel", raw.resolvedWorkModel().name())
+			.param("scope", JobScopeDetector.detect(raw.title(), raw.location(), raw.description()).name())
 			.param("salaryRange", truncate(raw.salaryRange(), 100))
 			.param("url", truncate(raw.url(), 2000))
 			.param("description", raw.description())
@@ -126,6 +130,51 @@ public class JobCatalog {
 			.param("companyId", companyId)
 			.param("listed", String.join(String.valueOf((char) 31), listedExternalIds))
 			.update();
+	}
+
+	/**
+	 * Corrige a classificação automática: a vaga muda de seção na caixa de vagas e a escolha fica travada contra
+	 * reclassificações.
+	 */
+	@Transactional
+	public void changeScope(long jobId, JobScope scope) {
+		int updated = this.jdbc.sql("update job set scope = :scope, scope_locked = true where id = :id")
+			.param("scope", scope.name())
+			.param("id", jobId)
+			.update();
+		if (updated == 0) {
+			throw NotFoundException.of("Vaga", jobId);
+		}
+	}
+
+	/**
+	 * Completa a descrição de uma vaga que entrou sem ela. Com o texto em mãos, a classificação nacional/internacional
+	 * é refeita (se você não a corrigiu à mão) e {@link JobDescriptionAdded} dispara uma nova análise.
+	 * @return se a descrição foi gravada; falso quando a vaga já tinha descrição ou não existe
+	 */
+	@Transactional
+	public boolean attachDescription(long jobId, String description) {
+		record Current(String title, @Nullable String location) {
+		}
+		Optional<Current> current = this.jdbc
+			.sql("select title, location from job where id = :id and raw_description is null for update")
+			.param("id", jobId)
+			.query(Current.class)
+			.optional();
+		if (current.isEmpty() || description.isBlank()) {
+			return false;
+		}
+		this.jdbc.sql("""
+				update job set raw_description = :description,
+				    scope = case when scope_locked then scope else :scope end
+				where id = :id
+				""")
+			.param("description", description.strip())
+			.param("scope", JobScopeDetector.detect(current.get().title(), current.get().location(), description).name())
+			.param("id", jobId)
+			.update();
+		this.events.publishEvent(new JobDescriptionAdded(jobId));
+		return true;
 	}
 
 	/** Você viu que a vaga não aceita mais candidaturas: fecha agora, se ainda estava aberta. */
