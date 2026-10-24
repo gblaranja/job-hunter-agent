@@ -69,7 +69,12 @@ export function AnalysisCard({ jobId, analysis }: { jobId: number; analysis?: Jo
           <section className="space-y-2">
             <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Obrigatórias</h3>
             {analysis.requiredSkills.length ? (
-              <SkillChips skills={analysis.requiredSkills} owned={analysis.matchedSkills} gaps={analysis.gaps} />
+              <SkillChips
+                skills={analysis.requiredSkills}
+                owned={analysis.matchedSkills}
+                gaps={analysis.gaps}
+                partial={analysis.partialSkills}
+              />
             ) : (
               <p className="text-sm text-muted-foreground">Nenhuma skill reconhecida na descrição.</p>
             )}
@@ -77,7 +82,7 @@ export function AnalysisCard({ jobId, analysis }: { jobId: number; analysis?: Jo
           {analysis.niceToHave.length > 0 && (
             <section className="space-y-2">
               <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Diferenciais</h3>
-              <SkillChips skills={analysis.niceToHave} owned={analysis.matchedSkills} />
+              <SkillChips skills={analysis.niceToHave} owned={analysis.matchedSkills} partial={analysis.partialSkills} />
             </section>
           )}
           {analysis.status === 'FALHOU' && analysis.lastError && (

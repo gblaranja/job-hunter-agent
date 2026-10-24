@@ -81,14 +81,15 @@ class TailoringIntegrationTests extends IntegrationTest {
 		long id = ((Number) JsonPath.read(created, "$.id")).longValue();
 		await(() -> "PRONTO".equals(statusOf(id)));
 
-		// Antes: obrigatórias 3/4 (53) + senioridade 10 + remoto 5 = 68; depois, com AWS no texto: 70 + 10 + 5 = 85
+		// Antes: obrigatórias 3/4 (53) + Kubernetes em parte por Docker (8) + senioridade 10 + remoto 5 = 76;
+		// depois, com AWS no texto e sem Docker: 70 + 10 + 5 = 85
 		this.mvc.perform(get("/api/jobs/{jobId}/tailored-resumes", jobId).with(owner()))
 			.andExpect(jsonPath("$[0].headline").value("Desenvolvedor Backend Java Sênior"))
 			.andExpect(jsonPath("$[0].content").value(containsString("# Ana Lima\n## Resumo")))
 			.andExpect(jsonPath("$[0].keywords.length()").value(5))
 			.andExpect(jsonPath("$[0].coveredBefore.length()").value(3))
 			.andExpect(jsonPath("$[0].coveredAfter.length()").value(4))
-			.andExpect(jsonPath("$[0].scoreBefore").value(68))
+			.andExpect(jsonPath("$[0].scoreBefore").value(76))
 			.andExpect(jsonPath("$[0].scoreAfter").value(85))
 			.andExpect(jsonPath("$[0].unsupportedSkills[0]").value("AWS"))
 			.andExpect(jsonPath("$[0].notCovered[0]").value("Kubernetes"))

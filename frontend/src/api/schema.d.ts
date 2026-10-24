@@ -1991,6 +1991,7 @@ export interface components {
             lastError?: string | null;
             /** Format: date-time */
             analyzedAt: string;
+            partialSkills: components["schemas"]["JobPartialSkill"][];
         };
         JobApplicationSummary: {
             /** Format: int64 */
@@ -2025,6 +2026,10 @@ export interface components {
             rating: "GOSTEI" | "NEUTRO" | "NAO_GOSTEI";
             reasons: ("SALARIO" | "STACK" | "SENIORIDADE" | "MODELO_TRABALHO" | "EMPRESA" | "LOCALIZACAO")[];
             comment?: string | null;
+        };
+        JobPartialSkill: {
+            skill: string;
+            via: string;
         };
         TimelineEvent: {
             /** Format: int64 */

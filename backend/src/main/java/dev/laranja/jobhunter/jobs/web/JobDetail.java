@@ -32,13 +32,19 @@ record JobDetail(JobView job, @Nullable ApplicationSummary application, List<Tim
 	/**
 	 * Análise da vaga.
 	 * @param status DETERMINISTICO, PENDENTE, COMPLETO ou FALHOU
+	 * @param partialSkills requisitos cobertos em parte por uma skill equivalente do currículo
 	 */
 	@Schema(name = "JobAnalysis")
 	record Analysis(String status, @Nullable String seniority, List<String> requiredSkills, List<String> niceToHave,
 			@Nullable String summary, @Nullable String employerKind, @Nullable String contractType,
 			@Nullable Integer deterministicScore, @Nullable Integer llmAdjustment, @Nullable Integer matchScore,
 			List<String> matchedSkills, List<String> gaps, @Nullable String justification, String modelVersion,
-			@Nullable String lastError, Instant analyzedAt) {
+			@Nullable String lastError, Instant analyzedAt, List<PartialSkill> partialSkills) {
+	}
+
+	/** Requisito ({@code skill}) coberto em parte pela skill {@code via} do currículo. */
+	@Schema(name = "JobPartialSkill")
+	record PartialSkill(String skill, String via) {
 	}
 
 	record TimelineEvent(long id, @Nullable String fromStatus, @Nullable String toStatus,
