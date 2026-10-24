@@ -3,6 +3,7 @@ import {
   FileText,
   Inbox,
   KanbanSquare,
+  Layers,
   Lightbulb,
   ListChecks,
   MailCheck,
@@ -19,6 +20,7 @@ export const navigation = [
   { to: '/jobs/new', label: 'Nova vaga', Icon: PlusCircle },
   { to: '/resumes', label: 'Currículos', Icon: FileText },
   { to: '/companies', label: 'Empresas', Icon: Building2 },
+  { to: '/niches', label: 'Nichos', Icon: Layers },
   { to: '/insights', label: 'Insights', Icon: Lightbulb },
   { to: '/settings', label: 'Configurações', Icon: Settings },
 ]

@@ -11,6 +11,7 @@ import {
   type CompanyItem,
 } from '@/api/queries'
 import { BarList } from '@/components/charts/BarList'
+import { CompanyBadge } from '@/components/CompanyBadge'
 import { StatTile } from '@/components/charts/StatTile'
 import { PageHeader } from '@/components/PageHeader'
 import { ErrorBlock, LoadingBlock } from '@/components/QueryState'
@@ -27,6 +28,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { formatDate } from '@/lib/format'
 import { atsLabels, companyKindLabels, seniorityLabels, watchStatusLabels, workModelLabels } from '@/lib/labels'
 import { ArrowLeft, Repeat2 } from 'lucide-react'
+import { CompanyNicheCard } from './CompanyNicheCard'
+import { GptwHistoryCard } from './GptwHistoryCard'
 import { WeeklyJobsChart } from './WeeklyJobsChart'
 
 const NO_ATS = 'NENHUM'
@@ -58,9 +61,11 @@ export function CompanyDetailPage() {
           watchStatusLabels[data.watchStatus],
           data.atsType ? `${atsLabels[data.atsType] ?? data.atsType}${data.atsSlug ? ` (${data.atsSlug})` : ''}` : null,
           data.contractTypes.length ? data.contractTypes.join(' / ') : null,
+          data.authorizationType,
         ]
           .filter(Boolean)
           .join(' · ')}
+        actions={<CompanyBadge level={data.gptwLevel} year={data.gptwYear} className="px-2 py-1 text-sm" />}
       />
       <div className="space-y-6">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -172,6 +177,11 @@ export function CompanyDetailPage() {
             </CardContent>
           </Card>
         )}
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <CompanyNicheCard companyId={data.id} />
+          <GptwHistoryCard companyId={data.id} />
+        </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
           <AtsForm company={data} />

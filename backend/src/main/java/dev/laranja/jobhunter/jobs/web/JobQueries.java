@@ -35,6 +35,8 @@ class JobQueries {
 			left join job_feedback f on f.job_id = j.id
 			left join job_analysis an on an.job_id = j.id
 			left join job_dismissal d on d.job_id = j.id
+			-- selo GPTW vigente da empresa (módulo recognition): o bônus só pesa na ordenação
+			left join company_gptw g on g.company_id = j.company_id
 			where (cast(:status as text) is null or coalesce(a.status, 'NOVA') = :status)
 			  and (cast(:rating as text) is null or f.rating = :rating)
 			  and (cast(:pattern as text) is null or j.title ilike :pattern or j.company ilike :pattern)
@@ -59,10 +61,11 @@ class JobQueries {
 				       coalesce(j.scope, 'NACIONAL') as scope, j.url, j.source, j.collected_at,
 				       j.raw_description, a.id as application_id, coalesce(a.status, 'NOVA') as status,
 				       f.rating, f.reasons, an.match_score, an.summary, an.matched_skills::text as matched,
-				       an.gaps::text as gaps
+				       an.gaps::text as gaps, g.level as gptw_level, an.match_score + coalesce(g.bonus, 0) as score_with_bonus
 				""" + LIST_FROM + """
-				-- a caixa de vagas é ordenada por aderência; as demais listas, pela data da coleta
-				order by case when :inbox then an.match_score end desc nulls last, j.collected_at desc, j.id desc
+				-- a caixa de vagas é ordenada por aderência com o bônus GPTW; as demais listas, pela data da coleta
+				order by case when :inbox then an.match_score + coalesce(g.bonus, 0) end desc nulls last,
+				         j.collected_at desc, j.id desc
 				limit :size offset :offset
 				""")
 			.param("status", filter.status(), Types.VARCHAR)
@@ -80,7 +83,7 @@ class JobQueries {
 					preview(rs.getString("raw_description")), JdbcRows.nullableLong(rs, "application_id"),
 					rs.getString("status"), JdbcRows.nullableEnum(rs, "rating", FeedbackRating.class),
 					reasons(rs), integer(rs, "match_score"), rs.getString("summary"), list(rs.getString("matched")),
-					list(rs.getString("gaps"))))
+					list(rs.getString("gaps")), rs.getString("gptw_level"), integer(rs, "score_with_bonus")))
 			.list();
 		long total = this.jdbc.sql("select count(*) " + LIST_FROM)
 			.param("status", filter.status(), Types.VARCHAR)

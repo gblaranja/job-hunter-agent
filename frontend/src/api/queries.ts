@@ -325,8 +325,25 @@ export function useRestoreJob() {
 export type CompanyItem = Schemas['CompanyItem']
 export type WatchStatus = CompanyItem['watchStatus']
 
-export function useCompanies() {
-  return useQuery({ queryKey: ['companies'], queryFn: () => unwrap(api.GET('/api/companies')) })
+export function useCompanies({ gptw = false }: { gptw?: boolean } = {}) {
+  return useQuery({
+    queryKey: ['companies', { gptw }],
+    queryFn: () => unwrap(api.GET('/api/companies', { params: { query: { gptw: gptw || undefined } } })),
+  })
+}
+
+/** Só o acompanhamento ("Marcar como alvo"), sem reenviar os outros dados da empresa. */
+export function useChangeWatchStatus() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, watchStatus }: { id: number; watchStatus: WatchStatus }) =>
+      unwrap(api.PUT('/api/companies/{id}/watch-status', { params: { path: { id } }, body: { watchStatus } })),
+    onSuccess: () =>
+      Promise.all([
+        client.invalidateQueries({ queryKey: ['companies'] }),
+        client.invalidateQueries({ queryKey: ['niches'] }),
+      ]),
+  })
 }
 
 export function useUpdateCompany() {
@@ -389,6 +406,208 @@ export function useMergeCompany() {
     mutationFn: ({ id, targetId }: { id: number; targetId: number }) =>
       unwrap(api.POST('/api/companies/{id}/merge', { params: { path: { id } }, body: { targetId } })),
     onSuccess: () => client.invalidateQueries({ queryKey: ['companies'] }),
+  })
+}
+
+// Selos GPTW
+
+export type RecognitionView = Schemas['RecognitionView']
+export type RecognitionLevel = RecognitionView['level']
+export type ImportPreview = Schemas['ImportPreview']
+export type ImportItem = Schemas['ImportItem']
+export type ImportConfirmation = Schemas['ImportConfirmation']
+
+/** Tudo o que mostra o selo é recarregado depois de uma revisão ou importação. */
+function invalidateRecognitions(client: QueryClient) {
+  return Promise.all(
+    ['recognitions', 'companies', 'niches', 'jobs'].map((key) => client.invalidateQueries({ queryKey: [key] })),
+  )
+}
+
+export function useRecognitionStatus() {
+  return useQuery({
+    queryKey: ['recognitions', 'status'],
+    queryFn: () => unwrap(api.GET('/api/recognitions/status')),
+  })
+}
+
+export function useRecognitionReview(enabled = true) {
+  return useQuery({
+    queryKey: ['recognitions', 'review'],
+    queryFn: () => unwrap(api.GET('/api/recognitions/review')),
+    enabled,
+  })
+}
+
+export function useConfirmRecognition() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => unwrap(api.POST('/api/recognitions/{id}/confirm', { params: { path: { id } } })),
+    onSuccess: () => invalidateRecognitions(client),
+  })
+}
+
+export function useRejectRecognition() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => unwrap(api.POST('/api/recognitions/{id}/reject', { params: { path: { id } } })),
+    onSuccess: () => invalidateRecognitions(client),
+  })
+}
+
+export function useCompanyRecognitions(companyId: number) {
+  return useQuery({
+    queryKey: ['recognitions', 'company', companyId],
+    queryFn: () => unwrap(api.GET('/api/companies/{companyId}/recognitions', { params: { path: { companyId } } })),
+  })
+}
+
+export function useCheckRecognition() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (companyId: number) =>
+      unwrap(api.POST('/api/companies/{companyId}/recognitions/check', { params: { path: { companyId } } })),
+    onSuccess: () => invalidateRecognitions(client),
+  })
+}
+
+export function useImportPreview() {
+  return useMutation({
+    mutationFn: (body: Schemas['ImportSource']) => unwrap(api.POST('/api/recognitions/import', { body })),
+  })
+}
+
+export function useConfirmImport() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (body: ImportConfirmation) => unwrap(api.POST('/api/recognitions/import/confirm', { body })),
+    onSuccess: () => invalidateRecognitions(client),
+  })
+}
+
+// Nichos
+
+export type NicheView = Schemas['NicheView']
+export type SegmentView = Schemas['SegmentView']
+export type NicheCompany = Schemas['NicheCompany']
+export type FitBand = NonNullable<NicheCompany['fitBand']>
+export type NicheSource = NicheCompany['source']
+export type CompanyNiche = Schemas['CompanyNiche']
+export type FitWeights = Schemas['FitWeights']
+
+export type NicheFilters = {
+  segment?: number
+  gptw?: boolean
+  hasOpenJobs?: boolean
+  neverApplied?: boolean
+  financialClients?: boolean
+  q?: string
+  sort?: 'fit' | 'jobs' | 'name'
+  page: number
+  size: number
+}
+
+export function useNiches() {
+  return useQuery({ queryKey: ['niches'], queryFn: () => unwrap(api.GET('/api/niches')) })
+}
+
+export function useNicheCompanies(nicheId: number | undefined, filters: NicheFilters) {
+  return useQuery({
+    queryKey: ['niches', nicheId, 'companies', filters],
+    queryFn: () =>
+      unwrap(
+        api.GET('/api/niches/{id}/companies', {
+          params: {
+            path: { id: nicheId! },
+            query: {
+              segment: filters.segment,
+              gptw: filters.gptw || undefined,
+              hasOpenJobs: filters.hasOpenJobs || undefined,
+              neverApplied: filters.neverApplied || undefined,
+              financialClients: filters.financialClients || undefined,
+              q: filters.q || undefined,
+              sort: filters.sort,
+              page: filters.page,
+              size: filters.size,
+            },
+          },
+        }),
+      ),
+    enabled: nicheId !== undefined,
+    placeholderData: (previous) => previous,
+  })
+}
+
+export function useUpdateNiche() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: number } & Schemas['UpdateNiche']) =>
+      unwrap(api.PATCH('/api/niches/{id}', { params: { path: { id } }, body })),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['niches'] }),
+  })
+}
+
+export function useUpdateSegment() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ nicheId, segmentId, ...body }: { nicheId: number; segmentId: number } & Schemas['UpdateSegment']) =>
+      unwrap(
+        api.PATCH('/api/niches/{id}/segments/{segmentId}', { params: { path: { id: nicheId, segmentId } }, body }),
+      ),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['niches'] }),
+  })
+}
+
+export function useRecomputeNiches() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: () => unwrap(api.POST('/api/niches/recompute')),
+    onSuccess: () =>
+      Promise.all([
+        client.invalidateQueries({ queryKey: ['niches'] }),
+        client.invalidateQueries({ queryKey: ['companies'] }),
+      ]),
+  })
+}
+
+export function useCompanyNiches(companyId: number) {
+  return useQuery({
+    queryKey: ['niches', 'company', companyId],
+    queryFn: () => unwrap(api.GET('/api/companies/{companyId}/niches', { params: { path: { companyId } } })),
+  })
+}
+
+export function useAssignNiche() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ companyId, ...body }: { companyId: number } & Schemas['NicheAssignment']) =>
+      unwrap(api.PUT('/api/companies/{companyId}/niche', { params: { path: { companyId } }, body })),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['niches'] }),
+  })
+}
+
+export function useClearNiche() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ companyId, nicheId }: { companyId: number; nicheId: number }) =>
+      unwrap(api.DELETE('/api/companies/{companyId}/niches/{nicheId}', { params: { path: { companyId, nicheId } } })),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['niches'] }),
+  })
+}
+
+// Bases públicas de empresas
+
+export type SeedSource = Schemas['SeedSourceView']
+
+export function useSeedSources() {
+  return useQuery({ queryKey: ['seeds'], queryFn: () => unwrap(api.GET('/api/admin/seeds')) })
+}
+
+export function useRunSeed() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (source: string) => unwrap(api.POST('/api/admin/seeds/{source}/run', { params: { path: { source } } })),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['seeds'] }),
   })
 }
 

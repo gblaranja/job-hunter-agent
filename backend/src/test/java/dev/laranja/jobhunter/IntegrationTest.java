@@ -39,18 +39,25 @@ public abstract class IntegrationTest {
 	@Autowired
 	private ThreadPoolTaskExecutor applicationTaskExecutor;
 
+	/** Os nichos e subsegmentos vêm da migração e não são apagados: quem os altera desfaz a alteração. */
 	@BeforeEach
 	void cleanDatabase() throws InterruptedException {
 		// Os listeners assíncronos do teste anterior ainda podem estar rodando: o truncate disputaria lock com eles
 		// (deadlock) e eles gravariam dados no teste seguinte.
-		await(() -> this.applicationTaskExecutor.getActiveCount() == 0
-				&& this.applicationTaskExecutor.getThreadPoolExecutor().getQueue().isEmpty());
+		awaitListeners();
 		this.jdbc.sql("""
 				truncate application_event, job_snapshot, application, job_feedback, job_dismissal, job, resume_version,
 				         email_message, gmail_sync_state, oauth_credential, collection_run, company_alias, company,
-				         job_analysis, llm_usage, insight_report, company_metrics_weekly, notification, tailored_resume
+				         job_analysis, llm_usage, insight_report, company_metrics_weekly, notification, tailored_resume,
+				         company_recognition, web_search_cache, company_niche, company_fit
 				restart identity cascade
 				""").update();
+	}
+
+	/** Espera os listeners assíncronos de eventos terminarem. */
+	protected void awaitListeners() throws InterruptedException {
+		await(() -> this.applicationTaskExecutor.getActiveCount() == 0
+				&& this.applicationTaskExecutor.getThreadPoolExecutor().getQueue().isEmpty());
 	}
 
 	/** Usuário logado com o token CSRF, como o frontend faz. */

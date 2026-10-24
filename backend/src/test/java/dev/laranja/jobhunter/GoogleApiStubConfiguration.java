@@ -8,8 +8,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.DynamicPropertyRegistrar;
 
 /**
- * Simula o OAuth do Google, a Gmail API e as APIs de vagas (ATS e agregadores) num WireMock; os testes registram as
- * respostas de que precisam.
+ * Simula o OAuth do Google, a Gmail API, as APIs de vagas (ATS e agregadores), o Banco Central e a busca na web num
+ * WireMock; os testes registram as respostas de que precisam.
  */
 @TestConfiguration(proxyBeanMethods = false)
 public class GoogleApiStubConfiguration {
@@ -46,6 +46,9 @@ public class GoogleApiStubConfiguration {
 			registry.add("jobhunter.sourcing.remotive.base-url", googleApi::baseUrl);
 			registry.add("jobhunter.sourcing.github.base-url", googleApi::baseUrl);
 			registry.add("jobhunter.sourcing.adzuna.base-url", googleApi::baseUrl);
+			// Banco Central (OData) e a API de busca dos selos; a chave da busca só é ligada nos testes do GPTW.
+			registry.add("jobhunter.niches.bcb.base-url", googleApi::baseUrl);
+			registry.add("jobhunter.recognition.search.base-url", googleApi::baseUrl);
 		};
 	}
 

@@ -74,3 +74,13 @@ jobhunter:
   tailoring:
     # gera o currículo adaptado ao marcar "Tenho interesse" numa vaga (precisa da Claude API)
     auto-generate: ${JOBHUNTER_TAILORING_AUTO:true}
+  recognition:
+    # selo GPTW: busca na web (Tavily) verificada pelo Claude; sem a chave, só a importação em lote funciona
+    search:
+      api-key: ${JOBHUNTER_SEARCH_API_KEY:}
+      monthly-limit: ${JOBHUNTER_SEARCH_MONTHLY_LIMIT:200}
+  niches:
+    cnpj:
+      # pasta com os zips Empresas*.zip e Estabelecimentos*.zip da base de CNPJ da Receita
+      directory: ${JOBHUNTER_CNPJ_DIRECTORY:}
+      min-capital: ${JOBHUNTER_CNPJ_MIN_CAPITAL:100000}

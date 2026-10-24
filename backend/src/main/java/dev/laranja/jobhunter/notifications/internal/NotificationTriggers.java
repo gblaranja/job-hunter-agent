@@ -4,7 +4,9 @@ import dev.laranja.jobhunter.analysis.JobAnalyzed;
 import dev.laranja.jobhunter.companies.CompanyAlertRaised;
 import dev.laranja.jobhunter.jobs.JobCatalog;
 import dev.laranja.jobhunter.jobs.JobView;
+import dev.laranja.jobhunter.niches.CompanySeedCompleted;
 import dev.laranja.jobhunter.notifications.Notifications;
+import dev.laranja.jobhunter.recognition.RecognitionReviewNeeded;
 import dev.laranja.jobhunter.tailoring.TailoredResumeReady;
 
 import org.springframework.modulith.events.ApplicationModuleListener;
@@ -49,6 +51,29 @@ class NotificationTriggers {
 	void on(CompanyAlertRaised event) {
 		this.notifications.notify(event.type(), event.title(), event.body(), "/companies/" + event.companyId(),
 				event.dedupKey());
+	}
+
+	@ApplicationModuleListener
+	void on(RecognitionReviewNeeded event) {
+		String level = switch (event.level()) {
+			case RANKING_TI -> "ranking GPTW TI";
+			case RANKING -> "ranking GPTW";
+			default -> "certificação GPTW";
+		};
+		this.notifications.notify("SELO_REVISAR", "Confirme o selo de " + event.companyName(),
+				"Encontrei " + level + " " + event.year() + ", mas com confiança baixa ou nome parecido com outra empresa.",
+				"/companies?review=gptw", "selo-revisar-" + event.recognitionId());
+	}
+
+	@ApplicationModuleListener
+	void on(CompanySeedCompleted event) {
+		if (event.error() != null) {
+			this.notifications.notify("IMPORTACAO_FALHOU", "A importação de " + event.label() + " falhou", event.error(),
+					"/settings", null);
+			return;
+		}
+		this.notifications.notify("IMPORTACAO_CONCLUIDA", "Importação de " + event.label() + " concluída",
+				event.processed() + " empresas lidas, " + event.created() + " novas.", "/niches", null);
 	}
 
 }

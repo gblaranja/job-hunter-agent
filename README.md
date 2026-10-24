@@ -21,7 +21,7 @@ Procurar emprego gera muito trabalho repetitivo e pouca informação: alertas es
 - **Lê os retornos** no Gmail, classifica com IA e move o card sozinho quando a confiança é alta.
 - **Monitora empresas**: volume e frequência de vagas por semana, tempo no ar, reposts e alertas das empresas-alvo.
 - **Gera insights semanais**: skills mais pedidas, lacunas, onde o funil trava e bullets do currículo reescritos.
-- Em construção: nichos (financeiro, consultorias) com fit por empresa e o selo GPTW verificado.
+- **Organiza nichos**: fintechs, bancos e consultorias de tecnologia (dados abertos do Banco Central e da Receita, mais as empresas das vagas) ordenados pelo fit com o seu perfil, com o selo GPTW verificado na web.
 
 Cada pessoa roda a própria instalação (auto-hospedada), com o próprio banco, a própria conta Google e a própria chave da Claude API: os dados de busca de emprego não saem da sua infraestrutura.
 
@@ -106,6 +106,14 @@ O login com Google reaproveita a credencial OAuth do Gmail. Como cada instalaç�
 2. Defina `JOBHUNTER_ALLOWED_EMAIL` com o e-mail da sua conta Google (e, fora do padrão, `JOBHUNTER_GOOGLE_REDIRECT_URI`).
 3. Reinicie o backend: o botão **Entrar com Google** aparece na tela de login.
 
+### Nichos e selo GPTW
+
+A tela **Nichos** lista as empresas do Financeiro e das Consultorias pelo fit (subsegmento 35%, stack das vagas 30%, domínio 20%, sinais 15%; os pesos são editáveis), com a justificativa de cada uma. As empresas importadas entram como descobertas e sobem para monitoradas quando o fit é alto ou quando publicam vaga.
+
+- **Banco Central:** a Relação de Instituições em Funcionamento (API OData de dados abertos) é importada todo dia 1º, ou em **Configurações → Bases de empresas**. O tipo de autorização define o subsegmento.
+- **Receita Federal (consultorias):** baixe os arquivos `Empresas*.zip` e `Estabelecimentos*.zip` da base de CNPJ em arquivos.receitafederal.gov.br, aponte `JOBHUNTER_CNPJ_DIRECTORY` para a pasta e rode a importação. Entram as matrizes ativas com CNAE de TI, porte diferente de ME e capital social a partir de `JOBHUNTER_CNPJ_MIN_CAPITAL`. Os arquivos de sócios não são lidos.
+- **Selo GPTW:** com `JOBHUNTER_SEARCH_API_KEY` (Tavily) e a Claude API, cada empresa nova com vaga ativa é buscada na web e verificada pelo Claude Haiku; sem menção explícita à empresa e ao ano, o resultado é "não encontrado". As respostas ficam 6 meses em cache e `JOBHUNTER_SEARCH_MONTHLY_LIMIT` limita as consultas pagas do mês (configure também um limite de gasto no Tavily). Confiança abaixo de 80% ou homônimos vão para a fila **Revisar selos** na tela de Empresas. Sem a chave, use **Importar lista GPTW** com o texto ou o link da lista anual. O selo soma +10 (ranking GPTW TI), +7 (outro ranking) ou +4 (certificação) na ordenação da caixa de vagas, sem mudar o score de aderência.
+
 ## Roadmap
 
 | Fase | Entrega | Status |
@@ -116,7 +124,7 @@ O login com Google reaproveita a credencial OAuth do Gmail. Como cada instalaç�
 | 4 | Classificação dos retornos e verificação de links | Concluída |
 | 5 | Insights semanais e monitoramento de empresas | Concluída |
 | — | Página inicial, identidade visual e login com Google | Concluída |
-| 6 | Nichos (financeiro, consultorias) e selo GPTW | Em construção |
+| 6 | Nichos (financeiro, consultorias) e selo GPTW | Concluída |
 
 ## Autor, feedback e contribuições
 

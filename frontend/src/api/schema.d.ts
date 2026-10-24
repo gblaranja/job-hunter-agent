@@ -4,6 +4,22 @@
  */
 
 export interface paths {
+    "/api/tailored-resumes/{id}/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["editTailoredResume"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/search-profiles/{id}": {
         parameters: {
             query?: never;
@@ -20,22 +36,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/jobs/{id}/feedback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["feedback"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/jobs/{id}/scope": {
         parameters: {
             query?: never;
@@ -46,6 +46,22 @@ export interface paths {
         get?: never;
         /** @description Corrige a classificação automática de nacional ou internacional: a vaga muda de seção na caixa. */
         put: operations["scope"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{id}/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["feedback"];
         post?: never;
         delete?: never;
         options?: never;
@@ -71,6 +87,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/companies/{id}/watch-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["watchStatus"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}/headcount": {
         parameters: {
             query?: never;
@@ -80,6 +112,22 @@ export interface paths {
         };
         get?: never;
         put: operations["headcount"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies/{companyId}/niche": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["assign"];
         post?: never;
         delete?: never;
         options?: never;
@@ -97,6 +145,22 @@ export interface paths {
         get: operations["snapshot"];
         put: operations["saveSnapshot"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tailored-resumes/{id}/resume-version": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["saveTailoredResume"];
         delete?: never;
         options?: never;
         head?: never;
@@ -135,6 +199,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/recognitions/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/recognitions/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/recognitions/recheck": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["recheck"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/recognitions/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["preview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/recognitions/import/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["confirmImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications/read-all": {
         parameters: {
             query?: never;
@@ -151,7 +295,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/jobs": {
+    "/api/niches": {
         parameters: {
             query?: never;
             header?: never;
@@ -167,7 +311,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/jobs/{jobId}/application": {
+    "/api/niches/{id}/segments": {
         parameters: {
             query?: never;
             header?: never;
@@ -176,7 +320,39 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["start"];
+        post: operations["addSegment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/niches/recompute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["recompute"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["list_3"];
+        put?: never;
+        post: operations["create_2"];
         delete?: never;
         options?: never;
         head?: never;
@@ -199,55 +375,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/tailored-resumes/availability": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["tailoringAvailability"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/tailored-resumes/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["tailoredResume"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/tailored-resumes/{id}/content": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["editTailoredResume"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/tailored-resumes/{id}/resume-version": {
+    "/api/jobs/{jobId}/application": {
         parameters: {
             query?: never;
             header?: never;
@@ -256,23 +384,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post: operations["saveTailoredResume"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/tailored-resumes/{id}/docx": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["tailoredResumeDocx"];
-        put?: never;
-        post?: never;
+        post: operations["start"];
         delete?: never;
         options?: never;
         head?: never;
@@ -321,6 +433,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["merge"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies/{companyId}/recognitions/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["check"];
         delete?: never;
         options?: never;
         head?: never;
@@ -391,6 +519,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/seeds/{source}/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["run"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/collect": {
         parameters: {
             query?: never;
@@ -439,6 +583,38 @@ export interface paths {
         patch: operations["read"];
         trace?: never;
     };
+    "/api/niches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["update_2"];
+        trace?: never;
+    };
+    "/api/niches/{id}/segments/{segmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateSegment"];
+        trace?: never;
+    };
     "/api/emails/{id}/classification": {
         parameters: {
             query?: never;
@@ -468,7 +644,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch: operations["update_2"];
+        patch: operations["update_3"];
         trace?: never;
     };
     "/api/applications/{id}": {
@@ -519,6 +695,54 @@ export interface paths {
         patch: operations["changeResume"];
         trace?: never;
     };
+    "/api/tailored-resumes/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tailoredResume"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tailored-resumes/{id}/docx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tailoredResumeDocx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/tailored-resumes/availability": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["tailoringAvailability"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/resumes/{id}/file": {
         parameters: {
             query?: never;
@@ -535,6 +759,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/recognitions/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/recognitions/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["pending"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications": {
         parameters: {
             query?: never;
@@ -543,6 +799,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["recent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/niches/{id}/companies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["companies"];
         put?: never;
         post?: never;
         delete?: never;
@@ -606,7 +878,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_3"];
+        get: operations["list_4"];
         put?: never;
         post?: never;
         delete?: never;
@@ -638,7 +910,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_4"];
+        get: operations["list_5"];
         put?: never;
         post?: never;
         delete?: never;
@@ -671,6 +943,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["metrics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies/{companyId}/recognitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies/{companyId}/niches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["companyNiches"];
         put?: never;
         post?: never;
         delete?: never;
@@ -750,7 +1054,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["list_5"];
+        get: operations["list_6"];
         put?: never;
         post?: never;
         delete?: never;
@@ -775,6 +1079,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/seeds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["sources"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/gmail/status": {
         parameters: {
             query?: never;
@@ -782,7 +1102,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["status"];
+        get: operations["status_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -839,6 +1159,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/companies/{companyId}/niches/{nicheId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["clear"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/gmail": {
         parameters: {
             query?: never;
@@ -859,51 +1195,8 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        SearchProfileCommand: {
-            name: string;
-            keywords: string[];
-            excludedKeywords: string[];
-            locations: string[];
-            remoteOnly: boolean;
-            active: boolean;
-        };
-        SearchProfileView: {
-            /** Format: int64 */
-            id: number;
-            name: string;
-            keywords: string[];
-            excludedKeywords: string[];
-            locations: string[];
-            remoteOnly: boolean;
-            active: boolean;
-        };
-        Feedback: {
-            /** @enum {string} */
-            rating: "GOSTEI" | "NEUTRO" | "NAO_GOSTEI";
-            reasons?: ("SALARIO" | "STACK" | "SENIORIDADE" | "MODELO_TRABALHO" | "EMPRESA" | "LOCALIZACAO")[] | null;
-            comment?: string | null;
-        };
-        ScopeChange: {
-            /** @enum {string} */
-            scope: "NACIONAL" | "INTERNACIONAL";
-        };
-        Dismissal: {
-            /** @enum {string} */
-            reason: "SEM_INTERESSE" | "SEM_PERFIL_TECNICO";
-        };
-        Headcount: {
-            /** Format: int32 */
-            headcount: number;
-        };
-        SaveJobSnapshot: {
-            url?: string | null;
-            title: string;
-            company: string;
-            descriptionMd?: string | null;
-        };
-        TailorRequest: {
-            /** Format: int64 */
-            baseResumeId?: number | null;
+        TailoredContent: {
+            content: string;
         };
         ResumeChange: {
             /** @description Seção do currículo (Resumo, Competências, uma experiência...) */
@@ -948,12 +1241,75 @@ export interface components {
             /** Format: date-time */
             updatedAt: string;
         };
-        Availability: {
-            enabled: boolean;
-            autoGenerate: boolean;
+        SearchProfileCommand: {
+            name: string;
+            keywords: string[];
+            excludedKeywords: string[];
+            locations: string[];
+            remoteOnly: boolean;
+            active: boolean;
         };
-        TailoredContent: {
-            content: string;
+        SearchProfileView: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            keywords: string[];
+            excludedKeywords: string[];
+            locations: string[];
+            remoteOnly: boolean;
+            active: boolean;
+        };
+        ScopeChange: {
+            /** @enum {string} */
+            scope: "NACIONAL" | "INTERNACIONAL";
+        };
+        Feedback: {
+            /** @enum {string} */
+            rating: "GOSTEI" | "NEUTRO" | "NAO_GOSTEI";
+            reasons?: ("SALARIO" | "STACK" | "SENIORIDADE" | "MODELO_TRABALHO" | "EMPRESA" | "LOCALIZACAO")[] | null;
+            comment?: string | null;
+        };
+        Dismissal: {
+            /** @enum {string} */
+            reason: "SEM_INTERESSE" | "SEM_PERFIL_TECNICO";
+        };
+        WatchChange: {
+            /** @enum {string} */
+            watchStatus: "DESCOBERTA" | "MONITORADA" | "ALVO" | "IGNORADA";
+        };
+        Headcount: {
+            /** Format: int32 */
+            headcount: number;
+        };
+        NicheAssignment: {
+            /** Format: int64 */
+            nicheId: number;
+            /** Format: int64 */
+            segmentId?: number | null;
+        };
+        CompanyNiche: {
+            /** Format: int64 */
+            nicheId: number;
+            nicheName: string;
+            /** Format: int64 */
+            segmentId?: number | null;
+            segmentName?: string | null;
+            /** @enum {string} */
+            source: "BCB" | "CNPJ" | "IA" | "VAGA" | "MANUAL";
+            verified: boolean;
+            /** Format: double */
+            confidence: number;
+            /** Format: int32 */
+            fitScore?: number | null;
+            /** @enum {string|null} */
+            fitBand?: "ALTO" | "MEDIO" | "BAIXO" | null;
+            reasons: string[];
+        };
+        SaveJobSnapshot: {
+            url?: string | null;
+            title: string;
+            company: string;
+            descriptionMd?: string | null;
         };
         ResumeRef: {
             /** Format: int64 */
@@ -986,6 +1342,150 @@ export interface components {
             tailoredForTitle?: string | null;
             tailoredForCompany?: string | null;
         };
+        RecognitionView: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            companyId: number;
+            companyName: string;
+            program: string;
+            /** @enum {string} */
+            level: "RANKING_TI" | "RANKING" | "CERTIFICADA" | "EXPIRADA" | "NAO_ENCONTRADA";
+            rankingName?: string | null;
+            /** Format: int32 */
+            rankingPosition?: number | null;
+            /** Format: int32 */
+            year?: number | null;
+            /** Format: date */
+            validUntil?: string | null;
+            evidenceUrl?: string | null;
+            evidenceExcerpt?: string | null;
+            rationale?: string | null;
+            matchedName?: string | null;
+            /** Format: double */
+            confidence: number;
+            verifiedBy: string;
+            reviewStatus: string;
+            source: string;
+            /** Format: date-time */
+            checkedAt: string;
+            homonyms: string[];
+        };
+        RecheckResult: {
+            /** Format: int32 */
+            checked: number;
+        };
+        ImportSource: {
+            text?: string | null;
+            url?: string | null;
+        };
+        ImportItem: {
+            extractedName: string;
+            /** Format: int32 */
+            position?: number | null;
+            /** Format: int64 */
+            companyId?: number | null;
+            companyName?: string | null;
+            /** @enum {string} */
+            match: "EXATO" | "SIMILAR" | "NENHUM";
+            /** Format: double */
+            similarity: number;
+        };
+        ImportPreview: {
+            items: components["schemas"]["ImportItem"][];
+            /** Format: int32 */
+            matched: number;
+        };
+        ConfirmedItem: {
+            /** Format: int64 */
+            companyId: number;
+            /** Format: int32 */
+            position?: number | null;
+        };
+        ImportConfirmation: {
+            /** @enum {string} */
+            level: "RANKING_TI" | "RANKING" | "CERTIFICADA" | "EXPIRADA" | "NAO_ENCONTRADA";
+            /** Format: int32 */
+            year: number;
+            rankingName?: string | null;
+            evidenceUrl?: string | null;
+            items: components["schemas"]["ConfirmedItem"][];
+        };
+        ImportResult: {
+            /** Format: int32 */
+            companies: number;
+        };
+        CreateNiche: {
+            name: string;
+            description?: string | null;
+            fitWeights?: components["schemas"]["FitWeights"] | null;
+            companyKinds: ("CONTRATANTE" | "CONSULTORIA_TI" | "RECRUTAMENTO")[];
+            domainTerms: string[];
+            segments: components["schemas"]["SegmentCommand"][];
+        };
+        FitWeights: {
+            /** Format: double */
+            segment: number;
+            /** Format: double */
+            stack: number;
+            /** Format: double */
+            domain: number;
+            /** Format: double */
+            signals: number;
+        };
+        SegmentCommand: {
+            name: string;
+            description?: string | null;
+            /** Format: int32 */
+            baseFit: number;
+            keywords: string[];
+            authorizationTypes: string[];
+        };
+        NicheView: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            description?: string | null;
+            active: boolean;
+            fitWeights: components["schemas"]["Weights"];
+            companyKinds: string[];
+            domainTerms: string[];
+            segments: components["schemas"]["SegmentView"][];
+            /** Format: int32 */
+            companies: number;
+        };
+        SegmentView: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            description?: string | null;
+            /** Format: int32 */
+            baseFit: number;
+            keywords: string[];
+            authorizationTypes: string[];
+            /** Format: int32 */
+            companies: number;
+            /** Format: int32 */
+            highFit: number;
+            /** Format: int32 */
+            withOpenJobs: number;
+            /** Format: int32 */
+            avgFit?: number | null;
+        };
+        Weights: {
+            /** Format: double */
+            segment: number;
+            /** Format: double */
+            stack: number;
+            /** Format: double */
+            domain: number;
+            /** Format: double */
+            signals: number;
+        };
+        RecomputeResult: {
+            /** Format: int32 */
+            companies: number;
+        };
         ManualJobCommand: {
             title: string;
             company: string;
@@ -1015,6 +1515,10 @@ export interface components {
             description?: string | null;
             /** Format: date-time */
             collectedAt: string;
+        };
+        TailorRequest: {
+            /** Format: int64 */
+            baseResumeId?: number | null;
         };
         StartApplication: {
             /** @enum {string} */
@@ -1173,6 +1677,20 @@ export interface components {
             makeDefault?: boolean | null;
             archived?: boolean | null;
         };
+        UpdateNiche: {
+            name?: string | null;
+            description?: string | null;
+            active?: boolean | null;
+            fitWeights?: components["schemas"]["FitWeights"] | null;
+            domainTerms?: string[] | null;
+        };
+        UpdateSegment: {
+            name?: string | null;
+            description?: string | null;
+            /** Format: int32 */
+            baseFit?: number | null;
+            keywords?: string[] | null;
+        };
         Review: {
             /** @enum {string} */
             classification: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "OUTRO" | "IRRELEVANTE";
@@ -1203,6 +1721,11 @@ export interface components {
             firstSeenAt: string;
             clientSectors: string[];
             contractTypes: string[];
+            cnpj?: string | null;
+            authorizationType?: string | null;
+            gptwLevel?: string | null;
+            /** Format: int32 */
+            gptwYear?: number | null;
             /** Format: int64 */
             jobsTotal: number;
             /** Format: int64 */
@@ -1234,11 +1757,26 @@ export interface components {
             /** Format: int64 */
             resumeVersionId: number;
         };
+        Availability: {
+            enabled: boolean;
+            autoGenerate: boolean;
+        };
         DownloadLink: {
             /** Format: uri */
             url: string;
             /** Format: date-time */
             expiresAt: string;
+        };
+        RecognitionStatus: {
+            enabled: boolean;
+            searchConfigured: boolean;
+            provider: string;
+            /** Format: int32 */
+            searchesThisMonth: number;
+            /** Format: int32 */
+            monthlyLimit: number;
+            /** Format: int32 */
+            pendingReview: number;
         };
         NotificationView: {
             /** Format: int64 */
@@ -1251,6 +1789,49 @@ export interface components {
             readAt?: string | null;
             /** Format: date-time */
             createdAt: string;
+        };
+        NicheCompany: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** @enum {string} */
+            watchStatus: "DESCOBERTA" | "MONITORADA" | "ALVO" | "IGNORADA";
+            kind: string;
+            clientSectors: string[];
+            authorizationType?: string | null;
+            /** Format: int64 */
+            segmentId: number;
+            segmentName: string;
+            /** @enum {string} */
+            source: "BCB" | "CNPJ" | "IA" | "VAGA" | "MANUAL";
+            verified: boolean;
+            /** Format: int32 */
+            fitScore?: number | null;
+            /** @enum {string|null} */
+            fitBand?: "ALTO" | "MEDIO" | "BAIXO" | null;
+            reasons: string[];
+            components: {
+                [key: string]: number;
+            };
+            gptwLevel?: string | null;
+            /** Format: int32 */
+            gptwYear?: number | null;
+            /** Format: int32 */
+            jobsActive: number;
+            /** Format: int32 */
+            jobsLast90Days: number;
+            /** Format: int32 */
+            applications: number;
+            trend: number[];
+        };
+        PageResponseNicheCompany: {
+            items: components["schemas"]["NicheCompany"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
         };
         JobListItem: {
             /** Format: int64 */
@@ -1281,6 +1862,9 @@ export interface components {
             summary?: string | null;
             matchedSkills: string[];
             gaps: string[];
+            gptwLevel?: string | null;
+            /** Format: int32 */
+            scoreWithBonus?: number | null;
         };
         PageResponseJobListItem: {
             items: components["schemas"]["JobListItem"][];
@@ -1335,17 +1919,17 @@ export interface components {
             dismissal?: components["schemas"]["JobDismissal"] | null;
             analysis?: components["schemas"]["JobAnalysis"] | null;
         };
-        JobFeedback: {
-            /** @enum {string} */
-            rating: "GOSTEI" | "NEUTRO" | "NAO_GOSTEI";
-            reasons: ("SALARIO" | "STACK" | "SENIORIDADE" | "MODELO_TRABALHO" | "EMPRESA" | "LOCALIZACAO")[];
-            comment?: string | null;
-        };
         JobDismissal: {
             /** @enum {string} */
             reason: "SEM_INTERESSE" | "SEM_PERFIL_TECNICO";
             /** Format: date-time */
             dismissedAt: string;
+        };
+        JobFeedback: {
+            /** @enum {string} */
+            rating: "GOSTEI" | "NEUTRO" | "NAO_GOSTEI";
+            reasons: ("SALARIO" | "STACK" | "SENIORIDADE" | "MODELO_TRABALHO" | "EMPRESA" | "LOCALIZACAO")[];
+            comment?: string | null;
         };
         TimelineEvent: {
             /** Format: int64 */
@@ -1543,6 +2127,13 @@ export interface components {
             status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
             cards: components["schemas"]["BoardCard"][];
         };
+        SeedSourceView: {
+            key: string;
+            label: string;
+            available: boolean;
+            unavailableReason?: string | null;
+            running: boolean;
+        };
         MailboxStatus: {
             configured: boolean;
             connected: boolean;
@@ -1560,6 +2151,32 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    editTailoredResume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TailoredContent"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TailoredResumeView"];
+                };
+            };
+        };
+    };
     update: {
         parameters: {
             query?: never;
@@ -1606,30 +2223,6 @@ export interface operations {
             };
         };
     };
-    feedback: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Feedback"];
-            };
-        };
-        responses: {
-            /** @description No Content */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     scope: {
         parameters: {
             query?: never;
@@ -1642,6 +2235,30 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ScopeChange"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    feedback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Feedback"];
             };
         };
         responses: {
@@ -1698,6 +2315,30 @@ export interface operations {
             };
         };
     };
+    watchStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WatchChange"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     headcount: {
         parameters: {
             query?: never;
@@ -1719,6 +2360,32 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    assign: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NicheAssignment"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyNiche"][];
+                };
             };
         };
     };
@@ -1765,6 +2432,28 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    saveTailoredResume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ResumeRef"];
+                };
             };
         };
     };
@@ -1862,6 +2551,116 @@ export interface operations {
             };
         };
     };
+    reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    confirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecognitionView"];
+                };
+            };
+        };
+    };
+    recheck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecheckResult"];
+                };
+            };
+        };
+    };
+    preview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportSource"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ImportPreview"];
+                };
+            };
+        };
+    };
+    confirmImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportConfirmation"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ImportResult"];
+                };
+            };
+        };
+    };
     readAll: {
         parameters: {
             query?: never;
@@ -1881,6 +2680,96 @@ export interface operations {
         };
     };
     list_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NicheView"][];
+                };
+            };
+        };
+    };
+    create_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateNiche"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NicheView"];
+                };
+            };
+        };
+    };
+    addSegment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SegmentCommand"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NicheView"];
+                };
+            };
+        };
+    };
+    recompute: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecomputeResult"];
+                };
+            };
+        };
+    };
+    list_3: {
         parameters: {
             query?: {
                 status?: string;
@@ -1908,7 +2797,7 @@ export interface operations {
             };
         };
     };
-    create_1: {
+    create_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -1928,6 +2817,54 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["JobView"];
+                };
+            };
+        };
+    };
+    tailoredResumes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TailoredResumeView"][];
+                };
+            };
+        };
+    };
+    requestTailoredResume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TailorRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TailoredResumeView"];
                 };
             };
         };
@@ -2019,6 +2956,28 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    check: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecognitionView"];
+                };
             };
         };
     };
@@ -2133,6 +3092,26 @@ export interface operations {
             };
         };
     };
+    run: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     collect: {
         parameters: {
             query?: never;
@@ -2199,6 +3178,59 @@ export interface operations {
             };
         };
     };
+    update_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateNiche"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NicheView"];
+                };
+            };
+        };
+    };
+    updateSegment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                segmentId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSegment"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NicheView"];
+                };
+            };
+        };
+    };
     review: {
         parameters: {
             query?: never;
@@ -2245,7 +3277,7 @@ export interface operations {
             };
         };
     };
-    update_2: {
+    update_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -2343,6 +3375,70 @@ export interface operations {
             };
         };
     };
+    tailoredResume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TailoredResumeView"];
+                };
+            };
+        };
+    };
+    tailoredResumeDocx: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": string;
+                };
+            };
+        };
+    };
+    tailoringAvailability: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Availability"];
+                };
+            };
+        };
+    };
     file: {
         parameters: {
             query?: never;
@@ -2365,6 +3461,46 @@ export interface operations {
             };
         };
     };
+    status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecognitionStatus"];
+                };
+            };
+        };
+    };
+    pending: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecognitionView"][];
+                };
+            };
+        };
+    };
     recent: {
         parameters: {
             query?: never;
@@ -2381,6 +3517,38 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["NotificationView"][];
+                };
+            };
+        };
+    };
+    companies: {
+        parameters: {
+            query?: {
+                segment?: number;
+                gptw?: boolean;
+                hasOpenJobs?: boolean;
+                neverApplied?: boolean;
+                financialClients?: boolean;
+                q?: string;
+                sort?: string;
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PageResponseNicheCompany"];
                 };
             };
         };
@@ -2447,7 +3615,7 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_4: {
         parameters: {
             query?: {
                 pending?: boolean;
@@ -2490,11 +3658,12 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_5: {
         parameters: {
             query?: {
                 watch?: "DESCOBERTA" | "MONITORADA" | "ALVO" | "IGNORADA";
                 kind?: "CONTRATANTE" | "CONSULTORIA_TI" | "RECRUTAMENTO";
+                gptw?: boolean;
             };
             header?: never;
             path?: never;
@@ -2556,6 +3725,50 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["WeeklyMetrics"][];
+                };
+            };
+        };
+    };
+    history: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecognitionView"][];
+                };
+            };
+        };
+    };
+    companyNiches: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyNiche"][];
                 };
             };
         };
@@ -2640,7 +3853,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_6: {
         parameters: {
             query?: {
                 status?: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
@@ -2683,7 +3896,27 @@ export interface operations {
             };
         };
     };
-    status: {
+    sources: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SeedSourceView"][];
+                };
+            };
+        };
+    };
+    status_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -2763,6 +3996,29 @@ export interface operations {
             };
         };
     };
+    clear: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                companyId: number;
+                nicheId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyNiche"][];
+                };
+            };
+        };
+    };
     disconnect: {
         parameters: {
             query?: never;
@@ -2778,167 +4034,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    tailoredResumes: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                jobId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["TailoredResumeView"][];
-                };
-            };
-        };
-    };
-    requestTailoredResume: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                jobId: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["TailorRequest"];
-            };
-        };
-        responses: {
-            /** @description Accepted */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["TailoredResumeView"];
-                };
-            };
-        };
-    };
-    tailoredResume: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["TailoredResumeView"];
-                };
-            };
-        };
-    };
-    editTailoredResume: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TailoredContent"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["TailoredResumeView"];
-                };
-            };
-        };
-    };
-    saveTailoredResume: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ResumeRef"];
-                };
-            };
-        };
-    };
-    tailoredResumeDocx: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /** Format: byte */
-                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": string;
-                };
-            };
-        };
-    };
-    tailoringAvailability: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["Availability"];
-                };
             };
         };
     };

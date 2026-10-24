@@ -63,6 +63,10 @@ public class Company {
 		this.notes = blankToNull(notes);
 	}
 
+	public void changeWatchStatus(WatchStatus watchStatus) {
+		this.watchStatus = watchStatus;
+	}
+
 	public Long getId() {
 		return this.id;
 	}

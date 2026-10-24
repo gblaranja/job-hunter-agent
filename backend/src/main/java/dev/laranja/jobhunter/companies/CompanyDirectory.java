@@ -1,5 +1,7 @@
 package dev.laranja.jobhunter.companies;
 
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.Clock;
 import java.util.Objects;
 
@@ -51,6 +53,70 @@ public class CompanyDirectory {
 		return company.getId();
 	}
 
+	/**
+	 * Cadastra ou atualiza uma empresa vinda de uma base pública (Banco Central, Receita), casando pela raiz do CNPJ
+	 * e depois pelo nome. Entra como descoberta e não publica {@link CompanyDiscovered}: as importações trazem
+	 * milhares de empresas e não devem disparar buscas pagas.
+	 */
+	public SeededCompany upsertSeeded(SeedCompanyCommand command) {
+		String normalized = CompanyNameNormalizer.normalize(command.name());
+		if (normalized.isEmpty()) {
+			throw new BusinessRuleException("O nome da empresa está vazio.");
+		}
+		Long existing = this.jdbc.sql("select id from company where cnpj = :cnpj")
+			.param("cnpj", command.cnpj())
+			.query(Long.class)
+			.optional()
+			.or(() -> this.companies.findByNormalizedName(normalized)
+				.or(() -> this.companies.findByAlias(normalized))
+				.map(Company::getId))
+			.orElse(null);
+		if (existing != null) {
+			this.jdbc.sql("""
+					update company set
+					    cnpj = coalesce(cnpj, case when not exists (select 1 from company o where o.cnpj = :cnpj) then :cnpj end),
+					    authorization_type = :authorization, website = coalesce(website, :website)
+					where id = :id
+					""")
+				.param("id", existing)
+				.param("cnpj", command.cnpj())
+				.param("authorization", command.authorizationType())
+				.param("website", command.website(), Types.VARCHAR)
+				.update();
+			return new SeededCompany(existing, false);
+		}
+		long id = this.jdbc.sql("""
+				insert into company (name, normalized_name, website, hq_location, kind, watch_status, cnpj,
+				                     authorization_type, first_seen_at)
+				values (:name, :normalized, :website, :location, :kind, 'DESCOBERTA', :cnpj, :authorization, :now)
+				returning id
+				""")
+			.param("name", command.name().strip())
+			.param("normalized", normalized)
+			.param("website", command.website(), Types.VARCHAR)
+			.param("location", command.location(), Types.VARCHAR)
+			.param("kind", command.kind().name())
+			.param("cnpj", command.cnpj())
+			.param("authorization", command.authorizationType())
+			.param("now", Timestamp.from(this.clock.instant()))
+			.query(Long.class)
+			.single();
+		return new SeededCompany(id, true);
+	}
+
+	/** Uma empresa descoberta passa a ser monitorada (fit alto no nicho ou vaga de tecnologia publicada). */
+	public boolean promoteToMonitored(long id) {
+		return this.jdbc.sql("update company set watch_status = 'MONITORADA' where id = :id and watch_status = 'DESCOBERTA'")
+			.param("id", id)
+			.update() > 0;
+	}
+
+	/** Muda só o acompanhamento, sem tocar nos demais dados (botão "Marcar como alvo" da tela Nichos). */
+	public void changeWatchStatus(long id, WatchStatus watchStatus) {
+		Company company = require(id);
+		company.changeWatchStatus(watchStatus);
+	}
+
 	public void update(long id, UpdateCompanyCommand command) {
 		require(id).update(command.watchStatus(), command.website(), command.atsType(), command.atsSlug(),
 				command.notes());
@@ -71,6 +137,11 @@ public class CompanyDirectory {
 			.param("source", source.getId())
 			.update();
 		this.jdbc.sql("update company_alias set company_id = :target where company_id = :source")
+			.param("target", target.getId())
+			.param("source", source.getId())
+			.update();
+		// O histórico dos selos vale para a empresa mesclada; nicho e fit são recalculados para o destino.
+		this.jdbc.sql("update company_recognition set company_id = :target where company_id = :source")
 			.param("target", target.getId())
 			.param("source", source.getId())
 			.update();
