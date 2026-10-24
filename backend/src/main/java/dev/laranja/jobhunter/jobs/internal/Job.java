@@ -44,6 +44,8 @@ public class Job {
 	@Enumerated(EnumType.STRING)
 	private JobScope scope;
 
+	private boolean scopeLocked;
+
 	private String salaryRange;
 
 	private String url;
@@ -69,7 +71,9 @@ public class Job {
 		job.company = command.company().strip();
 		job.location = blankToNull(command.location());
 		job.workModel = (command.workModel() != null) ? command.workModel() : WorkModel.NAO_INFORMADO;
-		job.scope = (command.scope() != null) ? command.scope() : JobScopeDetector.detect(command.description());
+		job.scope = (command.scope() != null) ? command.scope()
+				: JobScopeDetector.detect(command.title(), command.location(), command.description());
+		job.scopeLocked = command.scope() != null;
 		job.salaryRange = blankToNull(command.salaryRange());
 		job.url = blankToNull(command.url());
 		job.rawDescription = blankToNull(command.description());

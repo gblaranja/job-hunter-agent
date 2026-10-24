@@ -110,7 +110,7 @@ export function InboxPage() {
     <>
       <PageHeader
         title="Caixa de vagas"
-        description="Vagas que ainda não viraram candidatura, da maior para a menor aderência ao seu currículo padrão, separadas entre nacionais e internacionais (descrição em inglês). As marcadas com “Não gostei”, como encerradas ou sem interesse saem daqui."
+        description="Vagas que ainda não viraram candidatura, da maior para a menor aderência ao seu currículo padrão, separadas entre nacionais e internacionais (no exterior ou anunciadas em inglês). As marcadas com “Não gostei”, como encerradas ou sem interesse saem daqui."
         actions={
           jobs.data &&
           otherTotal !== undefined && (
@@ -157,7 +157,7 @@ export function InboxPage() {
                 : 'Nenhuma vaga internacional por aqui.'
           }
         >
-          {!query && scope === 'INTERNACIONAL' && 'Vagas com a descrição em inglês aparecem nesta seção.'}
+          {!query && scope === 'INTERNACIONAL' && 'Vagas no exterior ou anunciadas em inglês aparecem nesta seção.'}
           {!query && scope === 'NACIONAL' && (
             <>
               Conecte o Gmail e rode a coleta em <Link to="/settings" className="text-primary underline">Configurações</Link>.
