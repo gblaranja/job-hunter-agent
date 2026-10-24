@@ -114,6 +114,18 @@ O login com Google reaproveita a credencial OAuth do Gmail. Como cada instalaç�
 2. Defina `JOBHUNTER_ALLOWED_EMAIL` com o e-mail da sua conta Google (e, fora do padrão, `JOBHUNTER_GOOGLE_REDIRECT_URI`).
 3. Reinicie o backend: o botão **Entrar com Google** aparece na tela de login.
 
+### Alertas no Telegram
+
+As notificações importantes também chegam ao celular por um bot do Telegram: vaga aderente de empresa-alvo (`VAGA_ALVO`, score a partir de 60), follow-up vencido (`FOLLOW_UP`), preparação de entrevista pronta (`PREPARACAO_PRONTA`) e o resumo do dia às 7h30 (`RESUMO_DIARIO`). O envio acontece depois que a notificação é gravada; se o Telegram não responder, ela é reenviada na próxima subida do backend. Nada é enviado a outras pessoas: o bot só fala com você.
+
+1. No Telegram, abra uma conversa com o [@BotFather](https://t.me/BotFather), mande `/newbot` e escolha um nome e um usuário para o bot. Ele responde com o token (algo como `123456789:AA...`).
+2. Abra a conversa com o seu bot e mande `/start` (o bot só pode escrever para quem falou com ele antes).
+3. Descubra o chat id: acesse `https://api.telegram.org/bot<token>/getUpdates` no navegador e copie o número em `"chat":{"id":...}`.
+4. Defina `JOBHUNTER_TELEGRAM_BOT_TOKEN` e `JOBHUNTER_TELEGRAM_CHAT_ID` e, para os links abrirem no celular, `JOBHUNTER_PUBLIC_URL` com o endereço do backoffice. Reinicie o backend.
+5. Em **Configurações → Telegram**, use **Enviar teste**.
+
+O token fica só no servidor e nunca vai para o log. Para mudar o que vai ao celular, liste os tipos em `JOBHUNTER_TELEGRAM_TYPES`, separados por vírgula; os demais ficam só no sino.
+
 ### Nichos e selo GPTW
 
 A tela **Nichos** lista as empresas do Financeiro e das Consultorias pelo fit (subsegmento 35%, stack das vagas 30%, domínio 20%, sinais 15%; os pesos são editáveis), com a justificativa de cada uma. As empresas importadas entram como descobertas e sobem para monitoradas quando o fit é alto ou quando publicam vaga.

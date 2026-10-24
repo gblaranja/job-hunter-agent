@@ -50,6 +50,8 @@ public class GoogleApiStubConfiguration {
 			registry.add("jobhunter.niches.bcb.base-url", googleApi::baseUrl);
 			registry.add("jobhunter.recognition.search.base-url", googleApi::baseUrl);
 			registry.add("jobhunter.sourcing.linkedin-descriptions.base-url", googleApi::baseUrl);
+			// Bot API do Telegram; o token e o chat id só são ligados nos testes do próprio canal.
+			registry.add("jobhunter.notifications.telegram.base-url", googleApi::baseUrl);
 			// Desligada por padrão (termos do LinkedIn); ligada aqui para os testes da própria busca.
 			registry.add("jobhunter.sourcing.linkedin-descriptions.enabled", () -> "true");
 		};
