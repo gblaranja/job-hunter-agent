@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import dev.laranja.jobhunter.analysis.JobKnockout;
 import dev.laranja.jobhunter.analysis.JobSalary;
 import dev.laranja.jobhunter.analysis.PartialSkillMatch;
+import dev.laranja.jobhunter.analysis.RequirementEvidence;
 import dev.laranja.jobhunter.analysis.Seniority;
 import dev.laranja.jobhunter.analysis.internal.LlmOutputs.ScoreAdjustment;
 import dev.laranja.jobhunter.jobs.JobView;
@@ -98,17 +99,19 @@ public class AnalysisEngine {
 		List<JobKnockout> knockouts = KnockoutEvaluator.evaluate(requirements.knockouts(), this.profiles.current());
 		if (resume.isEmpty()) {
 			return new Outcome(status, requirements, null, null, null, List.of(), List.of(), null, version, error,
-					List.of(), knockouts);
+					List.of(), knockouts, List.of());
 		}
 		DeterministicScorer.Result base = capped(this.scorer.score(requirements, resumeSkills(resume.get()),
 				targetSeniority(resume.get())), knockouts);
 		Integer adjustment = null;
 		String justification = null;
+		List<RequirementEvidence> evidence = null;
 		if ("COMPLETO".equals(status)) {
 			try {
 				ScoreAdjustment adjusted = adjust(job, requirements, base, knockouts, resume.get(), feedback);
 				adjustment = adjusted.clamped();
 				justification = adjusted.justification();
+				evidence = EvidenceValidator.valid(adjusted.evidence(), resume.get().text());
 				version = version + "+" + this.ai.models().scoring() + "|" + Prompts.MATCH_SCORE.id();
 			}
 			catch (LlmException ex) {
@@ -121,7 +124,7 @@ public class AnalysisEngine {
 			score = Math.min(score, this.properties.knockoutCap());
 		}
 		return new Outcome(status, requirements, base.score(), adjustment, score, base.matchedSkills(), base.gaps(),
-				justification, version, error, base.partialMatches(), knockouts);
+				justification, version, error, base.partialMatches(), knockouts, evidence);
 	}
 
 	/** Modelo e versão do prompt de extração em uso. */
@@ -141,12 +144,12 @@ public class AnalysisEngine {
 		List<JobKnockout> knockouts = KnockoutEvaluator.evaluate(requirements.knockouts(), this.profiles.current());
 		if (resume.isEmpty()) {
 			return new Outcome(status, requirements, null, null, null, List.of(), List.of(), null, version, null,
-					List.of(), knockouts);
+					List.of(), knockouts, List.of());
 		}
 		DeterministicScorer.Result base = capped(this.scorer.score(requirements, resumeSkills(resume.get()),
 				targetSeniority(resume.get())), knockouts);
 		return new Outcome(status, requirements, base.score(), null, base.score(), base.matchedSkills(), base.gaps(),
-				null, version, null, base.partialMatches(), knockouts);
+				null, version, null, base.partialMatches(), knockouts, null);
 	}
 
 	/** Um eliminatório não atendido limita o score; o breakdown mostra quanto foi descontado. */
@@ -244,7 +247,14 @@ public class AnalysisEngine {
 	public record Outcome(String status, JobRequirements requirements, @Nullable Integer deterministicScore,
 			@Nullable Integer llmAdjustment, @Nullable Integer matchScore, List<String> matchedSkills, List<String> gaps,
 			@Nullable String justification, String modelVersion, @Nullable String error,
-			List<PartialSkillMatch> partialMatches, List<JobKnockout> knockouts) {
+			List<PartialSkillMatch> partialMatches, List<JobKnockout> knockouts,
+			@Nullable List<RequirementEvidence> evidence) {
+
+		/** Sem evidência nova (repontuação ou falha do LLM): a anterior vale se o currículo for o mesmo. */
+		public boolean keepsEvidence() {
+			return this.evidence == null;
+		}
+
 	}
 
 	/** Requisitos lidos de uma análise anterior. */

@@ -48,7 +48,8 @@ public class ResumeFit {
 				select seniority, required_skills::text as required, nice_to_have::text as nice, work_model, summary,
 				       employer_kind, client_sectors::text as sectors, contract_type, model_version, match_score,
 				       matched_skills::text as matched, gaps::text as gaps, justification, knockouts::text as knockouts,
-				       salary::text as salary, partial_skills::text as partial, job_family, international_eligibility
+				       salary::text as salary, partial_skills::text as partial, job_family, international_eligibility,
+				       evidence::text as evidence
 				from job_analysis where job_id = :jobId
 				""")
 			.param("jobId", jobId)
@@ -60,7 +61,7 @@ public class ResumeFit {
 					readObjects(rs.getString("knockouts"), JobKnockout.class),
 					(rs.getString("salary") != null) ? this.json.readValue(rs.getString("salary"), JobSalary.class) : null,
 					readObjects(rs.getString("partial"), PartialSkillMatch.class), rs.getString("job_family"),
-					rs.getString("international_eligibility")))
+					rs.getString("international_eligibility"), readObjects(rs.getString("evidence"), RequirementEvidence.class)))
 			.optional();
 	}
 
@@ -110,13 +111,14 @@ public class ResumeFit {
 	 * @param knockouts eliminatórios comparados com os dados da triagem
 	 * @param salary remuneração informada na vaga
 	 * @param partialSkills requisitos cobertos em parte por uma skill equivalente
+	 * @param evidence trechos do currículo que comprovam requisitos (validados contra o texto)
 	 */
 	public record JobAnalysisView(@Nullable String seniority, List<String> requiredSkills, List<String> niceToHave,
 			@Nullable String workModel, @Nullable String summary, @Nullable String employerKind,
 			List<String> clientSectors, @Nullable String contractType, String modelVersion, @Nullable Integer matchScore,
 			List<String> matchedSkills, List<String> gaps, @Nullable String justification, List<JobKnockout> knockouts,
 			@Nullable JobSalary salary, List<PartialSkillMatch> partialSkills, @Nullable String jobFamily,
-			@Nullable String internationalEligibility) {
+			@Nullable String internationalEligibility, List<RequirementEvidence> evidence) {
 
 		/** Obrigatórias e depois desejáveis, sem repetir. */
 		public List<String> keywords() {

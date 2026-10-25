@@ -54,7 +54,9 @@ class LlmAnalysisIntegrationTests extends IntegrationTest {
 					"""))));
 		this.anthropicApi.stubFor(WireMock.post("/v1/messages").withRequestBody(containing("avalia a aderência"))
 			.willReturn(okJson(AnthropicStubConfiguration.messageWith("""
-					{"adjustment": 5, "justification": "Experiência com motores de decisão compensa a falta de AWS."}
+					{"adjustment": 5, "justification": "Experiência com motores de decisão compensa a falta de AWS.",
+					 "evidence": [{"requirement": "Kafka", "quote": "Spring Boot, Kafka e Docker"},
+					              {"requirement": "AWS", "quote": "5 anos de AWS em produção"}]}
 					"""))));
 	}
 
@@ -85,6 +87,9 @@ class LlmAnalysisIntegrationTests extends IntegrationTest {
 			.andExpect(jsonPath("$.analysis.knockouts[1].type").value("CONTRATO"))
 			.andExpect(jsonPath("$.analysis.salary.min").value(15000))
 			.andExpect(jsonPath("$.analysis.jobFamily").value("BACKEND"))
+			// a citação inventada (AWS) não está no currículo e é descartada
+			.andExpect(jsonPath("$.analysis.evidence.length()").value(1))
+			.andExpect(jsonPath("$.analysis.evidence[0].requirement").value("Kafka"))
 			.andExpect(jsonPath("$.analysis.internationalEligibility").value("BRASIL"));
 		this.mvc.perform(get("/api/jobs").param("inbox", "true").with(owner()))
 			.andExpect(jsonPath("$.items[0].matchScore").value(81))

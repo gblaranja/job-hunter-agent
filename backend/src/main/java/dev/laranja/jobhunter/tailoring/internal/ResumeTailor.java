@@ -59,6 +59,7 @@ public class ResumeTailor {
 				Desejáveis: %s
 				Já atendidas pelo currículo: %s
 				Lacunas: %s
+				Evidências no currículo (destaque estes trechos; não invente outros): %s
 				Score de aderência atual: %s
 				Resumo: %s
 
@@ -66,7 +67,7 @@ public class ResumeTailor {
 				%s
 				""".formatted(job.title(), job.company(), orDash(job.location()), job.workModel(),
 				orDash(analysis.seniority()), join(analysis.requiredSkills()), join(analysis.niceToHave()),
-				join(analysis.matchedSkills()), join(analysis.gaps()),
+				join(analysis.matchedSkills()), join(analysis.gaps()), evidence(analysis),
 				(analysis.matchScore() != null) ? analysis.matchScore() : "—", orDash(analysis.summary()),
 				(job.description() == null || job.description().isBlank())
 						? "(sem descrição; use o título e os requisitos)" : job.description());
@@ -80,6 +81,14 @@ public class ResumeTailor {
 
 	private static String join(List<String> values) {
 		return values.isEmpty() ? "—" : String.join(", ", values);
+	}
+
+	private static String evidence(JobAnalysisView analysis) {
+		return analysis.evidence().isEmpty() ? "—"
+				: analysis.evidence()
+					.stream()
+					.map(item -> item.requirement() + ": \"" + item.quote() + "\"")
+					.collect(java.util.stream.Collectors.joining("; "));
 	}
 
 	private static String orDash(@Nullable String value) {

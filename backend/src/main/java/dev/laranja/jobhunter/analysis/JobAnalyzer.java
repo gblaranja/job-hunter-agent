@@ -151,13 +151,14 @@ public class JobAnalyzer {
 				                          employer_kind, client_sectors, contract_type, resume_version_id,
 				                          deterministic_score, llm_adjustment, match_score, matched_skills, gaps,
 				                          justification, model_version, attempts, next_attempt_at, last_error, analyzed_at,
-				                          partial_skills, knockouts, salary, job_family, international_eligibility)
+				                          partial_skills, knockouts, salary, job_family, international_eligibility,
+				                          evidence)
 				values (:jobId, :status, :seniority, cast(:required as jsonb), cast(:nice as jsonb), :workModel, :summary,
 				        :employerKind, cast(:clientSectors as jsonb), :contractType, :resumeId,
 				        :deterministic, :adjustment, :score, cast(:matched as jsonb), cast(:gaps as jsonb),
 				        :justification, :modelVersion, :attempts, :nextAttempt, :error, :now,
 				        cast(:partial as jsonb), cast(:knockouts as jsonb), cast(:salary as jsonb), :jobFamily,
-				        :eligibility)
+				        :eligibility, cast(:evidence as jsonb))
 				on conflict (job_id) do update set
 				    status = excluded.status, seniority = excluded.seniority, required_skills = excluded.required_skills,
 				    nice_to_have = excluded.nice_to_have, work_model = excluded.work_model, summary = excluded.summary,
@@ -169,7 +170,11 @@ public class JobAnalyzer {
 				    attempts = excluded.attempts, next_attempt_at = excluded.next_attempt_at,
 				    last_error = excluded.last_error, analyzed_at = excluded.analyzed_at,
 				    partial_skills = excluded.partial_skills, knockouts = excluded.knockouts, salary = excluded.salary,
-				    job_family = excluded.job_family, international_eligibility = excluded.international_eligibility
+				    job_family = excluded.job_family, international_eligibility = excluded.international_eligibility,
+				    evidence = case when not :keepEvidence then excluded.evidence
+				                    when job_analysis.resume_version_id is not distinct from excluded.resume_version_id
+				                        then job_analysis.evidence
+				                    else '[]' end
 				""")
 			.param("jobId", jobId)
 			.param("status", outcome.status())
@@ -199,6 +204,8 @@ public class JobAnalyzer {
 					? this.json.writeValueAsString(outcome.requirements().salary()) : null, Types.VARCHAR)
 			.param("jobFamily", outcome.requirements().jobFamily(), Types.VARCHAR)
 			.param("eligibility", outcome.requirements().internationalEligibility(), Types.VARCHAR)
+			.param("evidence", this.json.writeValueAsString(outcome.keepsEvidence() ? List.of() : outcome.evidence()))
+			.param("keepEvidence", outcome.keepsEvidence())
 			.update();
 	}
 

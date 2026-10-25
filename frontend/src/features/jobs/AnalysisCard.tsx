@@ -111,6 +111,19 @@ export function AnalysisCard({ jobId, analysis }: { jobId: number; analysis?: Jo
             </p>
           )}
           {analysis.knockouts.length > 0 && <KnockoutList knockouts={analysis.knockouts} />}
+          {analysis.evidence.length > 0 && (
+            <section className="space-y-2">
+              <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Evidências no currículo</h3>
+              <ul className="space-y-1.5 text-sm">
+                {analysis.evidence.map((item, index) => (
+                  <li key={`${item.requirement}-${index}`}>
+                    <span className="font-medium">{item.requirement}:</span>{' '}
+                    <span className="text-muted-foreground">“{item.quote}”</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
           <section className="space-y-2">
             <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Obrigatórias</h3>
             {analysis.requiredSkills.length ? (

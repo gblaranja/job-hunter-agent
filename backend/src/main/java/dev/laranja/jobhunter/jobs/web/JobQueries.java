@@ -143,7 +143,7 @@ class JobQueries {
 				       employer_kind, contract_type, deterministic_score, llm_adjustment, match_score,
 				       matched_skills::text as matched, gaps::text as gaps, justification, model_version, last_error,
 				       analyzed_at, partial_skills::text as partial, knockouts::text as knockouts, salary::text as salary,
-				       job_family, international_eligibility
+				       job_family, international_eligibility, evidence::text as evidence
 				from job_analysis where job_id = :jobId
 				""")
 			.param("jobId", job.id())
@@ -157,7 +157,8 @@ class JobQueries {
 					listOf(rs.getString("knockouts"), JobDetail.Knockout.class),
 					(rs.getString("salary") != null) ? this.json.readValue(rs.getString("salary"), JobDetail.Salary.class)
 							: null,
-					rs.getString("job_family"), rs.getString("international_eligibility")))
+					rs.getString("job_family"), rs.getString("international_eligibility"),
+					listOf(rs.getString("evidence"), JobDetail.Evidence.class)))
 			.optional()
 			.orElse(null);
 		return new JobDetail(job, application, timeline, feedback, dismissal, analysis);
