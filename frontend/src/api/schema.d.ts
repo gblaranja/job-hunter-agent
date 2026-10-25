@@ -1675,6 +1675,15 @@ export interface components {
             evidence: string;
             suggestion: string;
         };
+        GupyExperience: {
+            role: string;
+            company: string;
+            description: string;
+        };
+        GupyProfile: {
+            skills: string;
+            experiences: components["schemas"]["GupyExperience"][];
+        };
         InsightReport: {
             /** Format: int64 */
             id: number;
@@ -1694,6 +1703,11 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        LinkedinProfile: {
+            headline: string;
+            about?: string | null;
+            skills: string[];
+        };
         Recommendations: {
             gaps: components["schemas"]["GapAdvice"][];
             bullets: components["schemas"]["BulletRewrite"][];
@@ -1701,6 +1715,9 @@ export interface components {
             diagnosis: string;
             diagnosisExplanation: string;
             source: string;
+            gupyProfile?: components["schemas"]["GupyProfile"] | null;
+            linkedinProfile?: components["schemas"]["LinkedinProfile"] | null;
+            profileChanges?: string[] | null;
         };
         ResumePerformance: {
             /** Format: int64 */
