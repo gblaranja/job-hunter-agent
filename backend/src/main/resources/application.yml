@@ -76,6 +76,9 @@ jobhunter:
       interval: ${JOBHUNTER_LINKEDIN_DESCRIPTIONS_INTERVAL:PT1M}
   ai:
     api-key: ${JOBHUNTER_AI_API_KEY:}
+  analysis:
+    # teto do score quando a vaga tem um eliminatório que você não atende
+    knockout-cap: ${JOBHUNTER_KNOCKOUT_CAP:40}
   tailoring:
     # gera o currículo adaptado ao marcar "Tenho interesse" numa vaga (precisa da Claude API)
     auto-generate: ${JOBHUNTER_TAILORING_AUTO:true}

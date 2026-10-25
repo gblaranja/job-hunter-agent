@@ -38,3 +38,21 @@ export function toDateInput(value: string | null | undefined): string {
 export function fromDateInput(value: string): string | null {
   return value ? new Date(`${value}T12:00:00`).toISOString() : null
 }
+
+const salaryPeriods: Record<string, string> = { MENSAL: 'por mês', ANUAL: 'por ano', HORA: 'por hora' }
+
+/** Faixa salarial como veio da vaga: "R$ 12.000 a R$ 15.000 por mês · PJ". */
+export function formatSalary(salary: {
+  min?: number | null
+  max?: number | null
+  currency: string
+  period: string
+  regime?: string | null
+}): string {
+  const money = (value: number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: salary.currency, maximumFractionDigits: 0 }).format(value)
+  const min = salary.min ?? salary.max
+  const max = salary.max ?? salary.min
+  const range = min == null || max == null ? '—' : min === max ? money(min) : `${money(min)} a ${money(max)}`
+  return [`${range} ${salaryPeriods[salary.period] ?? ''}`.trim(), salary.regime].filter(Boolean).join(' · ')
+}

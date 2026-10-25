@@ -61,7 +61,9 @@ class JobQueries {
 				       coalesce(j.scope, 'NACIONAL') as scope, j.url, j.source, j.collected_at,
 				       j.raw_description, a.id as application_id, coalesce(a.status, 'NOVA') as status,
 				       f.rating, f.reasons, an.match_score, an.summary, an.matched_skills::text as matched,
-				       an.gaps::text as gaps, g.level as gptw_level, an.match_score + coalesce(g.bonus, 0) as score_with_bonus
+				       an.gaps::text as gaps, g.level as gptw_level, an.match_score + coalesce(g.bonus, 0) as score_with_bonus,
+				       (select count(*) from jsonb_array_elements(an.knockouts) k
+				        where k->>'status' = 'NAO_ATENDE') as failed_knockouts
 				""" + LIST_FROM + """
 				-- a caixa de vagas é ordenada por aderência com o bônus GPTW; as demais listas, pela data da coleta
 				order by case when :inbox then an.match_score + coalesce(g.bonus, 0) end desc nulls last,
@@ -83,7 +85,8 @@ class JobQueries {
 					preview(rs.getString("raw_description")), JdbcRows.nullableLong(rs, "application_id"),
 					rs.getString("status"), JdbcRows.nullableEnum(rs, "rating", FeedbackRating.class),
 					reasons(rs), integer(rs, "match_score"), rs.getString("summary"), list(rs.getString("matched")),
-					list(rs.getString("gaps")), rs.getString("gptw_level"), integer(rs, "score_with_bonus")))
+					list(rs.getString("gaps")), rs.getString("gptw_level"), integer(rs, "score_with_bonus"),
+					rs.getInt("failed_knockouts")))
 			.list();
 		long total = this.jdbc.sql("select count(*) " + LIST_FROM)
 			.param("status", filter.status(), Types.VARCHAR)
@@ -138,7 +141,8 @@ class JobQueries {
 				select status, seniority, required_skills::text as required, nice_to_have::text as nice, summary,
 				       employer_kind, contract_type, deterministic_score, llm_adjustment, match_score,
 				       matched_skills::text as matched, gaps::text as gaps, justification, model_version, last_error,
-				       analyzed_at, partial_skills::text as partial
+				       analyzed_at, partial_skills::text as partial, knockouts::text as knockouts, salary::text as salary,
+				       job_family, international_eligibility
 				from job_analysis where job_id = :jobId
 				""")
 			.param("jobId", job.id())
@@ -148,7 +152,11 @@ class JobQueries {
 					integer(rs, "llm_adjustment"), integer(rs, "match_score"), list(rs.getString("matched")),
 					list(rs.getString("gaps")), rs.getString("justification"), rs.getString("model_version"),
 					rs.getString("last_error"), JdbcRows.instant(rs, "analyzed_at"),
-					listOf(rs.getString("partial"), JobDetail.PartialSkill.class)))
+					listOf(rs.getString("partial"), JobDetail.PartialSkill.class),
+					listOf(rs.getString("knockouts"), JobDetail.Knockout.class),
+					(rs.getString("salary") != null) ? this.json.readValue(rs.getString("salary"), JobDetail.Salary.class)
+							: null,
+					rs.getString("job_family"), rs.getString("international_eligibility")))
 			.optional()
 			.orElse(null);
 		return new JobDetail(job, application, timeline, feedback, dismissal, analysis);
