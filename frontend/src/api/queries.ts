@@ -711,6 +711,17 @@ export function useReanalyze() {
   })
 }
 
+// Respostas do formulário de candidatura (rascunhos; nada é enviado)
+
+export type ScreeningAnswers = Schemas['ScreeningAnswersView']
+
+export function useScreeningAnswers(jobId: number) {
+  return useMutation({
+    mutationFn: (body: { questions: string[]; coverLetter: boolean }) =>
+      unwrap(api.POST('/api/jobs/{id}/screening-answers', { params: { path: { id: jobId } }, body })),
+  })
+}
+
 // Currículos adaptados por vaga
 
 export type TailoredResume = Schemas['TailoredResumeView']
