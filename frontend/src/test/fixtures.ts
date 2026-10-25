@@ -16,6 +16,7 @@ export function resume(overrides: Partial<ResumeItem> = {}): ResumeItem {
     interviewRate: 1 / 3,
     skills: ['Java', 'Spring Boot'],
     hasText: true,
+    lint: [],
     ...overrides,
   }
 }

@@ -1436,6 +1436,11 @@ export interface components {
             tailoredForJobId?: number | null;
             tailoredForTitle?: string | null;
             tailoredForCompany?: string | null;
+            lint: components["schemas"]["ResumeLintWarning"][];
+        };
+        ResumeLintWarning: {
+            code: string;
+            message: string;
         };
         RecognitionView: {
             /** Format: int64 */

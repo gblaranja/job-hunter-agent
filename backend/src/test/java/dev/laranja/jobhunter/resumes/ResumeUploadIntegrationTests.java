@@ -31,7 +31,9 @@ class ResumeUploadIntegrationTests extends IntegrationTest {
 		this.mvc.perform(get("/api/resumes").with(owner()))
 			.andExpect(jsonPath("$[0].id").value(id))
 			.andExpect(jsonPath("$[0].isDefault").value(true))
-			.andExpect(jsonPath("$[0].contentType").value("application/pdf"));
+			.andExpect(jsonPath("$[0].contentType").value("application/pdf"))
+			// o teste do ATS roda no upload: o PDF mínimo não tem texto legível
+			.andExpect(jsonPath("$[0].lint[0].code").exists());
 
 		String response = this.mvc.perform(get("/api/resumes/{id}/file", id).with(owner()))
 			.andExpect(status().isOk())
