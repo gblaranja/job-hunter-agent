@@ -40,6 +40,10 @@ public class ResumeVersion {
 	@JdbcTypeCode(SqlTypes.JSON)
 	private List<String> skills;
 
+	/** Avisos do teste "o que o ATS lê", em JSON. */
+	@JdbcTypeCode(SqlTypes.JSON)
+	private String lint;
+
 	@Column(name = "is_default")
 	private boolean defaultVersion;
 
@@ -78,6 +82,14 @@ public class ResumeVersion {
 
 	public void useExtractedText(String text) {
 		this.extractedText = text;
+	}
+
+	public void useLint(String lintJson) {
+		this.lint = lintJson;
+	}
+
+	public String getLint() {
+		return this.lint;
 	}
 
 	public void useSkills(List<String> skills) {

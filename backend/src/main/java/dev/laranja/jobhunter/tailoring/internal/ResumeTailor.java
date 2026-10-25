@@ -25,9 +25,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class ResumeTailor {
 
-	static final String PROMPT_ID = "tailor-resume@v1";
+	static final String PROMPT_ID = "tailor-resume@v2";
 
-	private static final String PROMPT = load("prompts/tailor-resume.v1.md");
+	private static final String PROMPT = load("prompts/tailor-resume.v2.md");
 
 	private final LlmClient llm;
 

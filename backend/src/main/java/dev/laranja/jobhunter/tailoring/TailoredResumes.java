@@ -310,10 +310,10 @@ public class TailoredResumes {
 
 	@Transactional(readOnly = true)
 	public List<TailoredResumeView> forJob(long jobId) {
-		return this.jdbc.sql(SELECT + " where t.job_id = :jobId order by t.created_at desc, t.id desc")
+		return withCoverage(jobId, this.jdbc.sql(SELECT + " where t.job_id = :jobId order by t.created_at desc, t.id desc")
 			.param("jobId", jobId)
 			.query((rs, row) -> toView(rs))
-			.list();
+			.list());
 	}
 
 	@Transactional(readOnly = true)
@@ -326,11 +326,12 @@ public class TailoredResumes {
 
 	@Transactional(readOnly = true)
 	public TailoredResumeView get(long id) {
-		return this.jdbc.sql(SELECT + " where t.id = :id")
+		TailoredResumeView view = this.jdbc.sql(SELECT + " where t.id = :id")
 			.param("id", id)
 			.query((rs, row) -> toView(rs))
 			.optional()
 			.orElseThrow(() -> NotFoundException.of("Currículo adaptado", id));
+		return withCoverage(view.jobId(), List.of(view)).get(0);
 	}
 
 	/** A análise da vaga; se ela ainda não rodou (vaga recém-criada), roda agora. */
@@ -367,7 +368,23 @@ public class TailoredResumes {
 				(Integer) rs.getObject("score_after"), rs.getBoolean("edited"),
 				JdbcRows.nullableLong(rs, "resume_version_id"), rs.getString("resume_label"),
 				rs.getString("model_version"), rs.getString("last_error"), JdbcRows.instant(rs, "created_at"),
-				JdbcRows.instant(rs, "updated_at"));
+				JdbcRows.instant(rs, "updated_at"), null);
+	}
+
+	/** Calcula a cobertura do texto adaptado na leitura, com a análise atual da vaga. */
+	private List<TailoredResumeView> withCoverage(long jobId, List<TailoredResumeView> views) {
+		if (views.stream().allMatch(view -> view.content() == null)) {
+			return views;
+		}
+		Optional<JobAnalysisView> analysis = this.fit.analysis(jobId);
+		if (analysis.isEmpty()) {
+			return views;
+		}
+		String title = this.jobs.get(jobId).title();
+		return views.stream()
+			.map(view -> (view.content() == null) ? view
+					: view.withAts(this.fit.coverage(analysis.get(), title, view.content(), view.headline())))
+			.toList();
 	}
 
 	private List<String> readList(String value) {

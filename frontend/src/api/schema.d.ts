@@ -423,6 +423,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{id}/screening-answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["screeningAnswers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jobs/{id}/analysis": {
         parameters: {
             query?: never;
@@ -1353,6 +1369,7 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+            ats?: components["schemas"]["AtsCoverage"] | null;
         };
         SearchProfileCommand: {
             name: string;
@@ -1501,6 +1518,11 @@ export interface components {
             tailoredForJobId?: number | null;
             tailoredForTitle?: string | null;
             tailoredForCompany?: string | null;
+            lint: components["schemas"]["ResumeLintWarning"][];
+        };
+        ResumeLintWarning: {
+            code: string;
+            message: string;
         };
         RecognitionView: {
             /** Format: int64 */
@@ -1695,6 +1717,21 @@ export interface components {
             /** Format: int64 */
             id: number;
         };
+        ScreeningQuestions: {
+            questions?: string[] | null;
+            coverLetter: boolean;
+        };
+        ScreeningAnswer: {
+            question: string;
+            answer: string;
+            basis?: string | null;
+            needsInput: boolean;
+        };
+        ScreeningAnswersView: {
+            answers: components["schemas"]["ScreeningAnswer"][];
+            coverLetter?: string | null;
+            source: string;
+        };
         BulletRewrite: {
             original: string;
             rewritten: string;
@@ -1735,6 +1772,15 @@ export interface components {
             evidence: string;
             suggestion: string;
         };
+        GupyExperience: {
+            role: string;
+            company: string;
+            description: string;
+        };
+        GupyProfile: {
+            skills: string;
+            experiences: components["schemas"]["GupyExperience"][];
+        };
         InsightReport: {
             /** Format: int64 */
             id: number;
@@ -1754,6 +1800,11 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        LinkedinProfile: {
+            headline: string;
+            about?: string | null;
+            skills: string[];
+        };
         Recommendations: {
             gaps: components["schemas"]["GapAdvice"][];
             bullets: components["schemas"]["BulletRewrite"][];
@@ -1761,6 +1812,9 @@ export interface components {
             diagnosis: string;
             diagnosisExplanation: string;
             source: string;
+            gupyProfile?: components["schemas"]["GupyProfile"] | null;
+            linkedinProfile?: components["schemas"]["LinkedinProfile"] | null;
+            profileChanges?: string[] | null;
         };
         ResumePerformance: {
             /** Format: int64 */
@@ -3240,6 +3294,32 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CreatedApplication"];
+                };
+            };
+        };
+    };
+    screeningAnswers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScreeningQuestions"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ScreeningAnswersView"];
                 };
             };
         };

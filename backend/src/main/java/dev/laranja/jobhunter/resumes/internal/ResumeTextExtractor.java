@@ -26,16 +26,35 @@ public class ResumeTextExtractor {
 
 	/** Texto do arquivo, ou {@code null} se não houver texto legível (PDF escaneado, arquivo corrompido). */
 	public @Nullable String extract(byte[] content) {
+		return extractDocument(content).text();
+	}
+
+	/** Texto e número de páginas (quando o formato informa), para o teste do que o ATS lê. */
+	public Extracted extractDocument(byte[] content) {
 		BodyContentHandler handler = new BodyContentHandler(MAX_CHARACTERS);
+		Metadata metadata = new Metadata();
 		try (InputStream input = new ByteArrayInputStream(content)) {
-			new AutoDetectParser().parse(input, handler, new Metadata(), new ParseContext());
+			new AutoDetectParser().parse(input, handler, metadata, new ParseContext());
 		}
 		catch (IOException | SAXException | TikaException ex) {
 			log.warn("Não foi possível extrair o texto do currículo: {}", ex.getMessage());
-			return null;
+			return new Extracted(null, null);
 		}
 		String text = handler.toString().replaceAll("[ \\t\\x0B\\f\\r]+", " ").replaceAll("\\n\\s*\\n+", "\n\n").strip();
-		return text.isEmpty() ? null : text;
+		return new Extracted(text.isEmpty() ? null : text, pages(metadata));
+	}
+
+	private static @Nullable Integer pages(Metadata metadata) {
+		for (String name : new String[] { "xmpTPg:NPages", "meta:page-count", "Page-Count" }) {
+			String value = metadata.get(name);
+			if (value != null && value.strip().matches("\\d+")) {
+				return Integer.parseInt(value.strip());
+			}
+		}
+		return null;
+	}
+
+	public record Extracted(@Nullable String text, @Nullable Integer pages) {
 	}
 
 }
