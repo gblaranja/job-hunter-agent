@@ -90,6 +90,62 @@ public class ResumeFit {
 		return new TextFit(fit.score(), keywords, covered, missing);
 	}
 
+	/**
+	 * Cobertura estilo Jobscan do texto para a vaga: as obrigatórias pesam o dobro das desejáveis, o título da vaga
+	 * deve aparecer no headline, e o texto não deve repetir uma palavra-chave mais de {@value #MAX_REPEATS} vezes
+	 * nem usar clichês.
+	 */
+	public AtsCoverage coverage(JobAnalysisView analysis, String jobTitle, String text, @Nullable String headline) {
+		TextFit fit = evaluate(analysis, text, null);
+		Set<String> covered = fit.covered().stream().map(k -> k.toLowerCase(Locale.ROOT)).collect(Collectors.toSet());
+		Set<String> required = analysis.requiredSkills().stream().map(k -> k.toLowerCase(Locale.ROOT))
+			.collect(Collectors.toSet());
+		int total = 0;
+		int got = 0;
+		for (String keyword : fit.keywords()) {
+			int weight = required.contains(keyword.toLowerCase(Locale.ROOT)) ? 2 : 1;
+			total += weight;
+			if (covered.contains(keyword.toLowerCase(Locale.ROOT))) {
+				got += weight;
+			}
+		}
+		Integer weighted = (total == 0) ? null : (int) Math.round(100.0 * got / total);
+		String normalizedText = " " + TextNormalizer.normalize(text) + " ";
+		List<String> overused = fit.keywords().stream().filter(keyword -> {
+			String term = TextNormalizer.normalize(keyword);
+			return !term.isEmpty() && occurrences(normalizedText, " " + term + " ") > MAX_REPEATS;
+		}).toList();
+		List<String> cliches = CLICHES.stream()
+			.filter(cliche -> normalizedText.contains(" " + TextNormalizer.normalize(cliche) + " "))
+			.toList();
+		String title = TextNormalizer.normalize(jobTitle)
+			.replaceAll("(^| )(senior|sr|pleno|pl|junior|jr|estagio|estagiario|i|ii|iii)(?= |$)", " ")
+			.replaceAll("\\s+", " ")
+			.strip();
+		String head = TextNormalizer.normalize((headline != null) ? headline : firstLine(text));
+		boolean titleInHeadline = !title.isEmpty() && head.contains(title);
+		return new AtsCoverage(weighted, titleInHeadline, overused, cliches);
+	}
+
+	private static final int MAX_REPEATS = 4;
+
+	private static final List<String> CLICHES = List.of("proativo", "proativa", "apaixonado por tecnologia",
+			"apaixonada por tecnologia", "trabalho em equipe", "fora da caixa", "orientado a resultados",
+			"orientada a resultados", "sinergia", "team player", "hard working", "results driven", "dinamico", "dinamica",
+			"resiliente", "perfeccionista");
+
+	private static int occurrences(String text, String needle) {
+		int count = 0;
+		for (int index = text.indexOf(needle); index >= 0; index = text.indexOf(needle, index + 1)) {
+			count++;
+		}
+		return count;
+	}
+
+	private static String firstLine(String text) {
+		return text.lines().map(String::strip).filter(line -> !line.isEmpty()).skip(1).findFirst().orElse("");
+	}
+
 	/** Skills do dicionário que aparecem no texto, com a grafia canônica. */
 	public List<String> skillsIn(String text) {
 		return this.dictionary.detect(text);
@@ -154,6 +210,17 @@ public class ResumeFit {
 	 * @param missing palavras-chave que não aparecem
 	 */
 	public record TextFit(int score, List<String> keywords, List<String> covered, List<String> missing) {
+	}
+
+	/**
+	 * @param weightedCoverage palavras-chave cobertas, com as obrigatórias pesando o dobro (0 a 100); nula sem
+	 * palavras-chave
+	 * @param titleInHeadline o título da vaga (sem a senioridade) aparece no headline
+	 * @param overusedKeywords palavras-chave repetidas mais de 4 vezes
+	 * @param cliches clichês encontrados no texto
+	 */
+	public record AtsCoverage(@Nullable Integer weightedCoverage, boolean titleInHeadline, List<String> overusedKeywords,
+			List<String> cliches) {
 	}
 
 }

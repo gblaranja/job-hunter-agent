@@ -1288,6 +1288,7 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+            ats?: components["schemas"]["AtsCoverage"] | null;
         };
         SearchProfileCommand: {
             name: string;
