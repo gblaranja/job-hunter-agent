@@ -73,6 +73,16 @@ class AnalysisRulesTest {
 	}
 
 	@Test
+	void evidenceMustBeQuotedFromTheResume() {
+		var evidence = List.of(new dev.laranja.jobhunter.analysis.RequirementEvidence("Kafka", "Mensageria com KAFKA (eventos)"),
+				new dev.laranja.jobhunter.analysis.RequirementEvidence("AWS", "Certificado AWS"));
+
+		assertThat(EvidenceValidator.valid(evidence, "Banco X: mensageria com Kafka — eventos de crédito"))
+			.extracting(dev.laranja.jobhunter.analysis.RequirementEvidence::requirement)
+			.containsExactly("Kafka");
+	}
+
+	@Test
 	void distantSeniorityAndOnSiteLowerTheScore() {
 		var requirements = new JobRequirements("JUNIOR", List.of("Java"), List.of(), "PRESENCIAL", null, "CONTRATANTE",
 				List.of(), "CLT");

@@ -1998,6 +1998,7 @@ export interface components {
             salary?: components["schemas"]["JobAnalysisSalary"] | null;
             jobFamily?: string | null;
             internationalEligibility?: string | null;
+            evidence: components["schemas"]["JobRequirementEvidence"][];
         };
         JobAnalysisKnockout: {
             type: string;
@@ -2051,6 +2052,10 @@ export interface components {
         JobPartialSkill: {
             skill: string;
             via: string;
+        };
+        JobRequirementEvidence: {
+            requirement: string;
+            quote: string;
         };
         TimelineEvent: {
             /** Format: int64 */

@@ -38,6 +38,7 @@ record JobDetail(JobView job, @Nullable ApplicationSummary application, List<Tim
 	 * @param salary remuneração informada na vaga
 	 * @param jobFamily família do cargo (BACKEND, DADOS, FORA_DE_TI...)
 	 * @param internationalEligibility BRASIL, LATAM, GLOBAL, PAIS_ESPECIFICO ou NAO_INFORMADO
+	 * @param evidence trechos do currículo que comprovam requisitos
 	 */
 	@Schema(name = "JobAnalysis")
 	record Analysis(String status, @Nullable String seniority, List<String> requiredSkills, List<String> niceToHave,
@@ -45,7 +46,13 @@ record JobDetail(JobView job, @Nullable ApplicationSummary application, List<Tim
 			@Nullable Integer deterministicScore, @Nullable Integer llmAdjustment, @Nullable Integer matchScore,
 			List<String> matchedSkills, List<String> gaps, @Nullable String justification, String modelVersion,
 			@Nullable String lastError, Instant analyzedAt, List<PartialSkill> partialSkills, List<Knockout> knockouts,
-			@Nullable Salary salary, @Nullable String jobFamily, @Nullable String internationalEligibility) {
+			@Nullable Salary salary, @Nullable String jobFamily, @Nullable String internationalEligibility,
+			List<Evidence> evidence) {
+	}
+
+	/** Trecho do currículo ({@code quote}) que comprova um requisito da vaga. */
+	@Schema(name = "JobRequirementEvidence")
+	record Evidence(String requirement, String quote) {
 	}
 
 	/**

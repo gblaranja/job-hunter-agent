@@ -3,6 +3,7 @@ package dev.laranja.jobhunter.analysis.internal;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import dev.laranja.jobhunter.analysis.RequirementEvidence;
 import org.jspecify.annotations.Nullable;
 
 /** Schemas das saídas estruturadas do LLM usadas pela análise. */
@@ -12,7 +13,8 @@ final class LlmOutputs {
 	}
 
 	record ScoreAdjustment(@JsonPropertyDescription("Ajuste ao score determinístico, de -10 a 10") int adjustment,
-			@JsonPropertyDescription("Uma ou duas frases explicando o ajuste") String justification) {
+			@JsonPropertyDescription("Uma ou duas frases explicando o ajuste") String justification,
+			@JsonPropertyDescription("Evidência no currículo de cada requisito comprovado") @Nullable List<RequirementEvidence> evidence) {
 
 		int clamped() {
 			return Math.max(-10, Math.min(10, this.adjustment));
