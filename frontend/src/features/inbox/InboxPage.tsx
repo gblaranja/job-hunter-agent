@@ -212,6 +212,11 @@ function InboxCard({ job }: { job: JobListItem }) {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            {job.failedKnockouts > 0 && (
+              <Badge variant="destructive" title="Requisitos eliminatórios que você não atende">
+                {job.failedKnockouts === 1 ? '1 eliminatório' : `${job.failedKnockouts} eliminatórios`}
+              </Badge>
+            )}
             <Badge variant="outline">{originLabels[job.origin]}</Badge>
             {job.location && !sameAsWorkModel(job.location, job.workModel) && <Badge variant="secondary" className="max-w-full whitespace-normal">{job.location}</Badge>}
             {job.workModel !== 'NAO_INFORMADO' && <Badge variant="secondary">{workModelLabels[job.workModel]}</Badge>}

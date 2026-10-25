@@ -47,7 +47,8 @@ public class ResumeFit {
 		return this.jdbc.sql("""
 				select seniority, required_skills::text as required, nice_to_have::text as nice, work_model, summary,
 				       employer_kind, client_sectors::text as sectors, contract_type, model_version, match_score,
-				       matched_skills::text as matched, gaps::text as gaps, justification
+				       matched_skills::text as matched, gaps::text as gaps, justification, knockouts::text as knockouts,
+				       salary::text as salary, partial_skills::text as partial, job_family, international_eligibility
 				from job_analysis where job_id = :jobId
 				""")
 			.param("jobId", jobId)
@@ -55,7 +56,11 @@ public class ResumeFit {
 					readList(rs.getString("nice")), rs.getString("work_model"), rs.getString("summary"),
 					rs.getString("employer_kind"), readList(rs.getString("sectors")), rs.getString("contract_type"),
 					rs.getString("model_version"), (Integer) rs.getObject("match_score"), readList(rs.getString("matched")),
-					readList(rs.getString("gaps")), rs.getString("justification")))
+					readList(rs.getString("gaps")), rs.getString("justification"),
+					readObjects(rs.getString("knockouts"), JobKnockout.class),
+					(rs.getString("salary") != null) ? this.json.readValue(rs.getString("salary"), JobSalary.class) : null,
+					readObjects(rs.getString("partial"), PartialSkillMatch.class), rs.getString("job_family"),
+					rs.getString("international_eligibility")))
 			.optional();
 	}
 
@@ -89,16 +94,29 @@ public class ResumeFit {
 		return this.dictionary.detect(text);
 	}
 
+	private <T> List<T> readObjects(String value, Class<T> type) {
+		return (value == null) ? List.of()
+				: this.json.readValue(value, this.json.getTypeFactory().constructCollectionType(List.class, type));
+	}
+
 	@SuppressWarnings("unchecked")
 	private List<String> readList(String value) {
 		return (value == null) ? List.of() : (List<String>) this.json.readValue(value, List.class);
 	}
 
-	/** Requisitos e score da análise salva de uma vaga. */
+	/**
+	 * Requisitos e score da análise salva de uma vaga.
+	 *
+	 * @param knockouts eliminatórios comparados com os dados da triagem
+	 * @param salary remuneração informada na vaga
+	 * @param partialSkills requisitos cobertos em parte por uma skill equivalente
+	 */
 	public record JobAnalysisView(@Nullable String seniority, List<String> requiredSkills, List<String> niceToHave,
 			@Nullable String workModel, @Nullable String summary, @Nullable String employerKind,
 			List<String> clientSectors, @Nullable String contractType, String modelVersion, @Nullable Integer matchScore,
-			List<String> matchedSkills, List<String> gaps, @Nullable String justification) {
+			List<String> matchedSkills, List<String> gaps, @Nullable String justification, List<JobKnockout> knockouts,
+			@Nullable JobSalary salary, List<PartialSkillMatch> partialSkills, @Nullable String jobFamily,
+			@Nullable String internationalEligibility) {
 
 		/** Obrigatórias e depois desejáveis, sem repetir. */
 		public List<String> keywords() {
@@ -121,7 +139,8 @@ public class ResumeFit {
 			return new StoredRequirements(this.seniority, this.requiredSkills, this.niceToHave,
 					(this.workModel != null) ? this.workModel : "NAO_INFORMADO", this.summary,
 					(this.employerKind != null) ? this.employerKind : "CONTRATANTE", this.clientSectors,
-					(this.contractType != null) ? this.contractType : "NAO_INFORMADO", this.modelVersion);
+					(this.contractType != null) ? this.contractType : "NAO_INFORMADO", this.modelVersion, this.knockouts,
+					this.salary, this.jobFamily, this.internationalEligibility);
 		}
 
 	}

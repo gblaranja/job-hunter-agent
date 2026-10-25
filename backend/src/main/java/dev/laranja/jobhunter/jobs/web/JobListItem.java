@@ -19,10 +19,11 @@ import org.jspecify.annotations.Nullable;
  * @param matchScore aderência ao currículo padrão (0 a 100); nulo antes da análise ou sem currículo
  * @param gptwLevel selo GPTW vigente da empresa (RANKING_TI, RANKING ou CERTIFICADA)
  * @param scoreWithBonus aderência mais o bônus GPTW (+10, +7 ou +4), usada na ordenação da caixa de vagas
+ * @param failedKnockouts eliminatórios da vaga que a pessoa não atende
  */
 record JobListItem(long id, String title, String company, @Nullable Long companyId, @Nullable String location,
 		WorkModel workModel, JobScope scope, @Nullable String url, JobOrigin origin, Instant collectedAt,
 		@Nullable String preview, @Nullable Long applicationId, String status, @Nullable FeedbackRating rating, List<FeedbackReason> reasons,
 		@Nullable Integer matchScore, @Nullable String summary, List<String> matchedSkills, List<String> gaps,
-		@Nullable String gptwLevel, @Nullable Integer scoreWithBonus) {
+		@Nullable String gptwLevel, @Nullable Integer scoreWithBonus, int failedKnockouts) {
 }

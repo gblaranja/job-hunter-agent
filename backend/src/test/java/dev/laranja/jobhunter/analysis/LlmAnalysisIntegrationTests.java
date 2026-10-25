@@ -45,7 +45,12 @@ class LlmAnalysisIntegrationTests extends IntegrationTest {
 					{"seniority": "SENIOR", "requiredSkills": ["Java", "Spring Boot", "Kafka", "AWS"],
 					 "niceToHave": ["k8s"], "workModel": "REMOTO",
 					 "summary": "Evoluir o motor de crédito em Java e Spring Boot com eventos em Kafka.",
-					 "employerKind": "CONTRATANTE", "clientSectors": [], "contractType": "CLT"}
+					 "employerKind": "CONTRATANTE", "clientSectors": [], "contractType": "CLT",
+					 "knockouts": [{"type": "IDIOMA", "text": "Inglês avançado", "value": "INGLES:AVANCADO"},
+					               {"type": "XPTO", "text": "ignorado", "value": "x"}],
+					 "salary": {"min": 15000, "max": 18000, "currency": "BRL", "period": "MENSAL", "regime": "CLT",
+					            "text": "R$ 15 mil a R$ 18 mil"},
+					 "jobFamily": "BACKEND", "internationalEligibility": "BRASIL"}
 					"""))));
 		this.anthropicApi.stubFor(WireMock.post("/v1/messages").withRequestBody(containing("avalia a aderência"))
 			.willReturn(okJson(AnthropicStubConfiguration.messageWith("""
@@ -74,7 +79,13 @@ class LlmAnalysisIntegrationTests extends IntegrationTest {
 			.andExpect(jsonPath("$.analysis.matchScore").value(81))
 			.andExpect(jsonPath("$.analysis.gaps[0]").value("AWS"))
 			.andExpect(jsonPath("$.analysis.justification").value(containsString("motores de decisão")))
-			.andExpect(jsonPath("$.analysis.modelVersion").value(containsString("extract-requirements@v1")));
+			.andExpect(jsonPath("$.analysis.modelVersion").value(containsString("extract-requirements@v2")))
+			.andExpect(jsonPath("$.analysis.knockouts[0].type").value("IDIOMA"))
+			.andExpect(jsonPath("$.analysis.knockouts[0].status").value("SEM_INFORMACAO"))
+			.andExpect(jsonPath("$.analysis.knockouts[1].type").value("CONTRATO"))
+			.andExpect(jsonPath("$.analysis.salary.min").value(15000))
+			.andExpect(jsonPath("$.analysis.jobFamily").value("BACKEND"))
+			.andExpect(jsonPath("$.analysis.internationalEligibility").value("BRASIL"));
 		this.mvc.perform(get("/api/jobs").param("inbox", "true").with(owner()))
 			.andExpect(jsonPath("$.items[0].matchScore").value(81))
 			.andExpect(jsonPath("$.items[0].summary").value(containsString("motor de crédito")));

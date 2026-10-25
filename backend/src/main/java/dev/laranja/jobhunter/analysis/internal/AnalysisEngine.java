@@ -1,10 +1,13 @@
 package dev.laranja.jobhunter.analysis.internal;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import dev.laranja.jobhunter.analysis.JobKnockout;
+import dev.laranja.jobhunter.analysis.JobSalary;
 import dev.laranja.jobhunter.analysis.PartialSkillMatch;
 import dev.laranja.jobhunter.analysis.Seniority;
 import dev.laranja.jobhunter.analysis.internal.LlmOutputs.ScoreAdjustment;
@@ -15,12 +18,16 @@ import dev.laranja.jobhunter.shared.ai.LlmClient;
 import dev.laranja.jobhunter.shared.ai.LlmClient.Effort;
 import dev.laranja.jobhunter.shared.ai.LlmClient.LlmRequest;
 import dev.laranja.jobhunter.shared.ai.LlmException;
+import dev.laranja.jobhunter.profile.CandidateProfiles;
 import org.jspecify.annotations.Nullable;
+
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 import org.springframework.stereotype.Component;
 
 /** Executa uma análise: requisitos, score determinístico e, com o LLM, a extração refinada e o ajuste do score. */
 @Component
+@EnableConfigurationProperties(AnalysisProperties.class)
 public class AnalysisEngine {
 
 	private static final String DETERMINISTIC_VERSION = "deterministico@v1";
@@ -37,13 +44,19 @@ public class AnalysisEngine {
 
 	private final AiProperties ai;
 
+	private final CandidateProfiles profiles;
+
+	private final AnalysisProperties properties;
+
 	AnalysisEngine(RequirementsExtractor extractor, DeterministicScorer scorer, SkillDictionary dictionary,
-			LlmClient llm, AiProperties ai) {
+			LlmClient llm, AiProperties ai, CandidateProfiles profiles, AnalysisProperties properties) {
 		this.extractor = extractor;
 		this.scorer = scorer;
 		this.dictionary = dictionary;
 		this.llm = llm;
 		this.ai = ai;
+		this.profiles = profiles;
+		this.properties = properties;
 	}
 
 	/**
@@ -82,17 +95,18 @@ public class AnalysisEngine {
 			status = "DETERMINISTICO";
 		}
 
+		List<JobKnockout> knockouts = KnockoutEvaluator.evaluate(requirements.knockouts(), this.profiles.current());
 		if (resume.isEmpty()) {
 			return new Outcome(status, requirements, null, null, null, List.of(), List.of(), null, version, error,
-					List.of());
+					List.of(), knockouts);
 		}
-		DeterministicScorer.Result base = this.scorer.score(requirements, resumeSkills(resume.get()),
-				targetSeniority(resume.get()));
+		DeterministicScorer.Result base = capped(this.scorer.score(requirements, resumeSkills(resume.get()),
+				targetSeniority(resume.get())), knockouts);
 		Integer adjustment = null;
 		String justification = null;
 		if ("COMPLETO".equals(status)) {
 			try {
-				ScoreAdjustment adjusted = adjust(job, requirements, base, resume.get(), feedback);
+				ScoreAdjustment adjusted = adjust(job, requirements, base, knockouts, resume.get(), feedback);
 				adjustment = adjusted.clamped();
 				justification = adjusted.justification();
 				version = version + "+" + this.ai.models().scoring() + "|" + Prompts.MATCH_SCORE.id();
@@ -103,26 +117,48 @@ public class AnalysisEngine {
 			}
 		}
 		int score = clamp(base.score() + ((adjustment != null) ? adjustment : 0));
+		if (KnockoutEvaluator.anyFailed(knockouts)) {
+			score = Math.min(score, this.properties.knockoutCap());
+		}
 		return new Outcome(status, requirements, base.score(), adjustment, score, base.matchedSkills(), base.gaps(),
-				justification, version, error, base.partialMatches());
+				justification, version, error, base.partialMatches(), knockouts);
+	}
+
+	/** Modelo e versão do prompt de extração em uso. */
+	public String extractionVersion() {
+		return this.extractor.extractionVersion();
 	}
 
 	/** Só a parte determinística, sobre os requisitos já salvos; o ajuste do LLM fica pendente para depois. */
 	public Outcome deterministicRescore(JobView job, Optional<ResumeProfile> resume,
 			Optional<StoredRequirements> previous) {
 		JobRequirements requirements = previous.map(StoredRequirements::toRequirements)
+			.map(stored -> this.extractor.withRules(stored, job))
 			.orElseGet(() -> this.extractor.deterministic(job));
 		String version = previous.map(StoredRequirements::modelVersion).orElse(DETERMINISTIC_VERSION);
 		boolean llmPending = this.llm.enabled() && version.contains(this.extractor.extractionVersion());
 		String status = llmPending ? "PENDENTE" : "DETERMINISTICO";
+		List<JobKnockout> knockouts = KnockoutEvaluator.evaluate(requirements.knockouts(), this.profiles.current());
 		if (resume.isEmpty()) {
 			return new Outcome(status, requirements, null, null, null, List.of(), List.of(), null, version, null,
-					List.of());
+					List.of(), knockouts);
 		}
-		DeterministicScorer.Result base = this.scorer.score(requirements, resumeSkills(resume.get()),
-				targetSeniority(resume.get()));
+		DeterministicScorer.Result base = capped(this.scorer.score(requirements, resumeSkills(resume.get()),
+				targetSeniority(resume.get())), knockouts);
 		return new Outcome(status, requirements, base.score(), null, base.score(), base.matchedSkills(), base.gaps(),
-				null, version, null, base.partialMatches());
+				null, version, null, base.partialMatches(), knockouts);
+	}
+
+	/** Um eliminatório não atendido limita o score; o breakdown mostra quanto foi descontado. */
+	private DeterministicScorer.Result capped(DeterministicScorer.Result result, List<JobKnockout> knockouts) {
+		int cap = this.properties.knockoutCap();
+		if (!KnockoutEvaluator.anyFailed(knockouts) || result.score() <= cap) {
+			return result;
+		}
+		Map<String, Integer> breakdown = new LinkedHashMap<>(result.breakdown());
+		breakdown.put("eliminatorios", cap - result.score());
+		return new DeterministicScorer.Result(cap, result.matchedSkills(), result.gaps(), breakdown,
+				result.partialMatches());
 	}
 
 	/** Só o score determinístico, para um conjunto de skills qualquer (a prévia de um currículo adaptado). */
@@ -133,7 +169,7 @@ public class AnalysisEngine {
 	}
 
 	private ScoreAdjustment adjust(JobView job, JobRequirements requirements, DeterministicScorer.Result base,
-			ResumeProfile resume, List<FeedbackExample> feedback) {
+			List<JobKnockout> knockouts, ResumeProfile resume, List<FeedbackExample> feedback) {
 		// O currículo fica no bloco de sistema (em cache); vaga, cálculo e feedback variam a cada chamada.
 		String resumeText = (resume.text() == null) ? String.join(", ", resume.skills())
 				: resume.text().substring(0, Math.min(RESUME_CHARACTERS, resume.text().length()));
@@ -149,6 +185,7 @@ public class AnalysisEngine {
 				Skills atendidas: %s
 				Atendidas em parte (equivalente): %s
 				Lacunas: %s
+				Eliminatórios (o cálculo já limita o score quando um não é atendido; não desconte de novo): %s
 
 				Exemplos recentes do feedback da pessoa:
 				%s
@@ -156,7 +193,7 @@ public class AnalysisEngine {
 				String.join(", ", requirements.requiredSkills()), String.join(", ", requirements.niceToHave()),
 				orDash(requirements.summary()), base.score(), describe(base.breakdown()),
 				String.join(", ", base.matchedSkills()), describePartial(base.partialMatches()),
-				String.join(", ", base.gaps()), describeFeedback(feedback));
+				String.join(", ", base.gaps()), describeKnockouts(knockouts), describeFeedback(feedback));
 		return this.llm.structured(new LlmRequest("match-score", this.ai.models().scoring(), system, user, 1500,
 				Effort.LOW), ScoreAdjustment.class);
 	}
@@ -171,6 +208,13 @@ public class AnalysisEngine {
 
 	private static String describe(Map<String, Integer> breakdown) {
 		return breakdown.entrySet().stream().map(e -> e.getKey() + " " + e.getValue()).collect(Collectors.joining(", "));
+	}
+
+	private static String describeKnockouts(List<JobKnockout> knockouts) {
+		return knockouts.isEmpty() ? "nenhum"
+				: knockouts.stream()
+					.map(knockout -> knockout.type() + " " + knockout.value() + ": " + knockout.status())
+					.collect(Collectors.joining("; "));
 	}
 
 	private static String describePartial(List<PartialSkillMatch> partial) {
@@ -200,17 +244,33 @@ public class AnalysisEngine {
 	public record Outcome(String status, JobRequirements requirements, @Nullable Integer deterministicScore,
 			@Nullable Integer llmAdjustment, @Nullable Integer matchScore, List<String> matchedSkills, List<String> gaps,
 			@Nullable String justification, String modelVersion, @Nullable String error,
-			List<PartialSkillMatch> partialMatches) {
+			List<PartialSkillMatch> partialMatches, List<JobKnockout> knockouts) {
 	}
 
 	/** Requisitos lidos de uma análise anterior. */
 	public record StoredRequirements(@Nullable String seniority, List<String> requiredSkills, List<String> niceToHave,
 			String workModel, @Nullable String summary, String employerKind, List<String> clientSectors,
-			String contractType, String modelVersion) {
+			String contractType, String modelVersion, List<JobKnockout> knockouts, @Nullable JobSalary salary,
+			@Nullable String jobFamily, @Nullable String internationalEligibility) {
+
+		public StoredRequirements {
+			knockouts = (knockouts == null) ? List.of() : knockouts;
+		}
+
+		public StoredRequirements(@Nullable String seniority, List<String> requiredSkills, List<String> niceToHave,
+				String workModel, @Nullable String summary, String employerKind, List<String> clientSectors,
+				String contractType, String modelVersion) {
+			this(seniority, requiredSkills, niceToHave, workModel, summary, employerKind, clientSectors, contractType,
+					modelVersion, List.of(), null, null, null);
+		}
 
 		JobRequirements toRequirements() {
+			List<KnockoutRequirement> requirements = this.knockouts.stream()
+				.map(knockout -> new KnockoutRequirement(knockout.type().name(), knockout.text(), knockout.value()))
+				.toList();
 			return new JobRequirements(this.seniority, this.requiredSkills, this.niceToHave, this.workModel, this.summary,
-					this.employerKind, this.clientSectors, this.contractType);
+					this.employerKind, this.clientSectors, this.contractType, requirements, this.salary, this.jobFamily,
+					this.internationalEligibility);
 		}
 
 	}

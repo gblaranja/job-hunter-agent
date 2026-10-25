@@ -2050,6 +2050,8 @@ export interface components {
             gptwLevel?: string | null;
             /** Format: int32 */
             scoreWithBonus?: number | null;
+            /** Format: int32 */
+            failedKnockouts: number;
         };
         PageResponseJobListItem: {
             items: components["schemas"]["JobListItem"][];
@@ -2082,6 +2084,25 @@ export interface components {
             /** Format: date-time */
             analyzedAt: string;
             partialSkills: components["schemas"]["JobPartialSkill"][];
+            knockouts: components["schemas"]["JobAnalysisKnockout"][];
+            salary?: components["schemas"]["JobAnalysisSalary"] | null;
+            jobFamily?: string | null;
+            internationalEligibility?: string | null;
+        };
+        JobAnalysisKnockout: {
+            type: string;
+            text: string;
+            value: string;
+            status: string;
+            reason?: string | null;
+        };
+        JobAnalysisSalary: {
+            min?: number | null;
+            max?: number | null;
+            currency: string;
+            period: string;
+            regime?: string | null;
+            text?: string | null;
         };
         JobApplicationSummary: {
             /** Format: int64 */

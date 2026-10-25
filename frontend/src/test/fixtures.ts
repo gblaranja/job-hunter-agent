@@ -127,6 +127,7 @@ export function inboxJob(overrides: Partial<JobListItem> = {}): JobListItem {
     summary: 'Evoluir o motor de crédito em Java com eventos em Kafka.',
     matchedSkills: ['Java', 'Kafka'],
     gaps: ['AWS'],
+    failedKnockouts: 0,
     ...overrides,
   }
 }

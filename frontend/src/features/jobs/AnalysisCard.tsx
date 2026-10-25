@@ -6,8 +6,46 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { formatDateTime } from '@/lib/format'
-import { seniorityLabels } from '@/lib/labels'
+import { knockoutStatusLabels, knockoutTypeLabels, seniorityLabels } from '@/lib/labels'
+import { formatSalary } from '@/lib/format'
+import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import { RefreshCw, Sparkles } from 'lucide-react'
+
+const knockoutStyles: Record<string, string> = {
+  ATENDE: 'text-success',
+  NAO_ATENDE: 'text-destructive',
+  SEM_INFORMACAO: 'text-muted-foreground',
+}
+
+/** Eliminatórios da vaga com o resultado da comparação com os seus dados. */
+function KnockoutList({ knockouts }: { knockouts: JobAnalysis['knockouts'] }) {
+  const failed = knockouts.filter((knockout) => knockout.status === 'NAO_ATENDE').length
+  return (
+    <section className="space-y-2">
+      <h3 className="flex flex-wrap items-center gap-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        Eliminatórios
+        {failed > 0 && (
+          <Badge variant="destructive" className="normal-case">
+            {failed === 1 ? '1 eliminatório não atendido' : `${failed} eliminatórios não atendidos`}
+          </Badge>
+        )}
+      </h3>
+      <ul className="space-y-1.5 text-sm">
+        {knockouts.map((knockout, index) => (
+          <li key={`${knockout.type}-${index}`} className="flex flex-wrap gap-x-2">
+            <span className={cn('font-medium', knockoutStyles[knockout.status])}>
+              {knockoutStatusLabels[knockout.status] ?? knockout.status}
+            </span>
+            <span>{knockoutTypeLabels[knockout.type] ?? knockout.type}:</span>
+            <span className="text-muted-foreground">“{knockout.text}”</span>
+            {knockout.reason && <span className="w-full text-xs text-muted-foreground">{knockout.reason}</span>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
 
 const statusText: Record<string, string> = {
   DETERMINISTICO: 'Análise por regras (sem IA)',
@@ -66,6 +104,13 @@ export function AnalysisCard({ jobId, analysis }: { jobId: number; analysis?: Jo
             </div>
           </div>
           {analysis.summary && <p className="text-sm">{analysis.summary}</p>}
+          {analysis.salary && (
+            <p className="text-sm">
+              <span className="text-muted-foreground">Salário informado: </span>
+              {formatSalary(analysis.salary)}
+            </p>
+          )}
+          {analysis.knockouts.length > 0 && <KnockoutList knockouts={analysis.knockouts} />}
           <section className="space-y-2">
             <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Obrigatórias</h3>
             {analysis.requiredSkills.length ? (
