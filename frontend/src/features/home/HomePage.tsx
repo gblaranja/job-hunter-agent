@@ -44,7 +44,7 @@ export function HomePage() {
           </nav>
           {/* Entrar é para quem tem a instalação; o visitante chega pelo GitHub, no hero. */}
           <Button asChild size="sm" variant={signedIn ? 'default' : 'ghost'}>
-            <Link to={signedIn ? '/board' : '/login'}>{signedIn ? 'Abrir o painel' : 'Entrar'}</Link>
+            <Link to={signedIn ? '/today' : '/login'}>{signedIn ? 'Abrir o painel' : 'Entrar'}</Link>
           </Button>
         </div>
       </header>
@@ -62,7 +62,7 @@ export function HomePage() {
             <div className="mt-8 flex flex-wrap items-center gap-3">
               {signedIn ? (
                 <Button asChild size="lg">
-                  <Link to="/board">
+                  <Link to="/today">
                     Abrir o painel <ArrowRight />
                   </Link>
                 </Button>

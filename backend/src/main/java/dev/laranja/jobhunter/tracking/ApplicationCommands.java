@@ -60,4 +60,15 @@ public final class ApplicationCommands {
 			@Nullable String descriptionMd) {
 	}
 
+	/**
+	 * Candidatura registrada a partir de um e-mail de confirmação; cargo e empresa vêm do e-mail quando não informados.
+	 * @param resumeVersionId currículo enviado (obrigatório em Aplicada)
+	 */
+	@Schema(name = "ApplicationFromEmail")
+	public record FromEmail(@NotNull Long resumeVersionId, @Size(max = 300) @Nullable String title,
+			@Size(max = 200) @Nullable String company,
+			@Size(max = 2000) @Pattern(regexp = "https?://\\S+", message = "deve ser um link http(s)") @Nullable String url,
+			@Nullable ApplicationChannel channel) {
+	}
+
 }

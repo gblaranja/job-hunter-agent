@@ -1,5 +1,10 @@
 import type {
   ApplicationChannel,
+  DraftKind,
+  ContactRole,
+  InteractionChannel,
+  InteractionDirection,
+  InteractionKind,
   ApplicationStatus,
   DismissReason,
   EmailClassification,
@@ -120,6 +125,11 @@ export const originLabels: Record<JobListItem['origin'], string> = {
   REMOTIVE: 'Remotive',
   GITHUB: 'GitHub (backend-br)',
   ADZUNA: 'Adzuna',
+  SMARTRECRUITERS: 'SmartRecruiters',
+  WORKABLE: 'Workable',
+  TEAMTAILOR: 'Teamtailor',
+  RECRUITEE: 'Recruitee',
+  RECRUTADOR: 'Recrutador',
 }
 
 /** Fonte da coleta: as origens das vagas, mais os alertas do Gmail (que juntam LinkedIn e Gupy). */
@@ -162,6 +172,8 @@ export const classificationLabels: Record<EmailClassification, string> = {
   PEDIDO_INFORMACAO: 'Pedido de informação',
   OFERTA: 'Oferta',
   RECUSA: 'Recusa',
+  CONFIRMACAO_CANDIDATURA: 'Candidatura recebida',
+  CONTATO_RECRUTADOR: 'Abordagem de recrutador',
   OUTRO: 'Outro',
   IRRELEVANTE: 'Irrelevante',
 }
@@ -204,8 +216,18 @@ export const atsLabels: Record<string, string> = {
   GREENHOUSE: 'Greenhouse',
   LEVER: 'Lever',
   ASHBY: 'Ashby',
+  SMARTRECRUITERS: 'SmartRecruiters',
+  WORKABLE: 'Workable',
+  TEAMTAILOR: 'Teamtailor',
+  RECRUITEE: 'Recruitee',
   GUPY: 'Gupy',
   OUTRO: 'Outro',
+}
+
+export const atsSlugStatusLabels: Record<string, string> = {
+  ENCONTRADO: 'job board encontrado',
+  NAO_ENCONTRADO: 'o ATS diz que esse slug não existe',
+  NAO_CONFIRMADO: 'não deu para confirmar (lista vazia ou ATS sem resposta)',
 }
 
 export const diagnosisLabels: Record<string, string> = {
@@ -227,6 +249,7 @@ export const notificationTypeLabels: Record<string, string> = {
   FOLLOW_UP: 'Follow-up',
   PREPARACAO_PRONTA: 'Preparação pronta',
   RESUMO_DIARIO: 'Resumo do dia',
+  FINALISTA: 'Você foi finalista',
 }
 
 export function notificationTypeLabel(type: string): string {
@@ -253,6 +276,39 @@ export const nicheSourceLabels: Record<NicheSource, string> = {
   IA: 'Sugestão da IA',
   VAGA: 'Palavras-chave das vagas',
   MANUAL: 'Sua escolha',
+}
+
+export const contactRoleLabels: Record<ContactRole, string> = {
+  RECRUTADOR: 'Recrutador(a)',
+  HEADHUNTER: 'Headhunter',
+  GESTOR: 'Gestor(a)',
+  INDICACAO: 'Pode indicar',
+  CONEXAO: 'Conexão do LinkedIn',
+  OUTRO: 'Outro',
+}
+
+export const interactionChannelLabels: Record<InteractionChannel, string> = {
+  LINKEDIN: 'LinkedIn',
+  EMAIL: 'E-mail',
+  WHATSAPP: 'WhatsApp',
+  TELEFONE: 'Ligação',
+  PRESENCIAL: 'Pessoalmente',
+  OUTRO: 'Outro',
+}
+
+export const interactionDirectionLabels: Record<InteractionDirection, string> = {
+  ENVIADA: 'Você mandou',
+  RECEBIDA: 'Você recebeu',
+}
+
+export const interactionKindLabels: Record<InteractionKind, string> = {
+  PEDIDO_INDICACAO: 'Pedido de indicação',
+  FOLLOW_UP: 'Follow-up',
+  AGRADECIMENTO: 'Agradecimento',
+  RESPOSTA_RECRUTADOR: 'Resposta a recrutador',
+  ABORDAGEM: 'Abordagem de recrutador',
+  CONVERSA: 'Conversa',
+  OUTRO: 'Outro',
 }
 
 // Triagem: dados da pessoa e eliminatórios das vagas
@@ -297,4 +353,22 @@ export const knockoutStatusLabels: Record<string, string> = {
   ATENDE: 'Atende',
   NAO_ATENDE: 'Não atende',
   SEM_INFORMACAO: 'Sem informação',
+}
+
+export const legitimacyLabels: Record<string, string> = {
+  ALTA: 'Vaga confiável',
+  MEDIA: 'Atenção',
+  BAIXA: 'Possível vaga fantasma',
+  SUSPEITA: 'Suspeita de golpe',
+}
+
+export function nextActionKindLabel(kind: string | null | undefined): string {
+  return kind ? (nextActionKindLabels[kind as NextActionKind] ?? kind) : 'Próxima ação'
+}
+
+export const draftKindLabels: Record<DraftKind, string> = {
+  PEDIDO_INDICACAO: 'Pedir indicação',
+  FOLLOW_UP: 'Follow-up',
+  AGRADECIMENTO: 'Agradecer a entrevista',
+  RESPOSTA_RECRUTADOR: 'Responder recrutador',
 }

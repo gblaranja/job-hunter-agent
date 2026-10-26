@@ -39,7 +39,7 @@ class AnalysisRulesTest {
 		var requirements = new JobRequirements("SENIOR", List.of("Java", "Spring Boot", "Kafka", "AWS"),
 				List.of("Kubernetes", "Terraform"), "REMOTO", null, "CONTRATANTE", List.of(), "CLT");
 
-		var result = new DeterministicScorer().score(requirements, List.of("Java", "Spring Boot", "Kafka", "Kubernetes"),
+		var result = new DeterministicScorer(this.dictionary).score(requirements, List.of("Java", "Spring Boot", "Kafka", "Kubernetes"),
 				Optional.of(Seniority.SENIOR));
 
 		// obrigatórias 3/4 de 70 (53), desejáveis 1/2 de 15 (8), senioridade 10, remoto 5
@@ -50,11 +50,44 @@ class AnalysisRulesTest {
 	}
 
 	@Test
+	void impliedSkillsCountAndEquivalentsCountHalf() {
+		var requirements = new JobRequirements("SENIOR", List.of("Java", "Kafka", "AWS", "Go"), List.of("SQL"), "REMOTO",
+				null, "CONTRATANTE", List.of(), "CLT");
+
+		var result = new DeterministicScorer(this.dictionary).score(requirements, List.of("Spring Boot", "RabbitMQ", "GCP", "PostgreSQL"),
+				Optional.of(Seniority.SENIOR));
+
+		// Java vem de Spring Boot (1), Kafka por RabbitMQ e AWS por GCP (0,5 cada): 2 de 4 = 35; SQL por PostgreSQL = 15
+		assertThat(result.matchedSkills()).containsExactly("Java", "SQL");
+		assertThat(result.partialMatches()).extracting(match -> match.skill() + "~" + match.via())
+			.containsExactly("Kafka~RabbitMQ", "AWS~GCP");
+		assertThat(result.gaps()).containsExactly("Go");
+		assertThat(result.breakdown()).containsEntry("obrigatorias", 35).containsEntry("desejaveis", 15);
+	}
+
+	@Test
+	void relationsAreReadFromTheDictionaryFile() {
+		assertThat(this.dictionary.withImplied(List.of("Spring Boot"))).containsExactly("Spring Boot", "Spring", "Java");
+		assertThat(this.dictionary.partialMatch("RabbitMQ", java.util.Map.of("kafka", "Kafka"))).hasValue("Kafka");
+		assertThat(this.dictionary.partialMatch("Java", java.util.Map.of("python", "Python"))).isEmpty();
+	}
+
+	@Test
+	void evidenceMustBeQuotedFromTheResume() {
+		var evidence = List.of(new dev.laranja.jobhunter.analysis.RequirementEvidence("Kafka", "Mensageria com KAFKA (eventos)"),
+				new dev.laranja.jobhunter.analysis.RequirementEvidence("AWS", "Certificado AWS"));
+
+		assertThat(EvidenceValidator.valid(evidence, "Banco X: mensageria com Kafka — eventos de crédito"))
+			.extracting(dev.laranja.jobhunter.analysis.RequirementEvidence::requirement)
+			.containsExactly("Kafka");
+	}
+
+	@Test
 	void distantSeniorityAndOnSiteLowerTheScore() {
 		var requirements = new JobRequirements("JUNIOR", List.of("Java"), List.of(), "PRESENCIAL", null, "CONTRATANTE",
 				List.of(), "CLT");
 
-		var result = new DeterministicScorer().score(requirements, List.of("Java"), Optional.of(Seniority.SENIOR));
+		var result = new DeterministicScorer(this.dictionary).score(requirements, List.of("Java"), Optional.of(Seniority.SENIOR));
 
 		assertThat(result.breakdown()).containsEntry("senioridade", 0).containsEntry("modeloTrabalho", 1);
 	}

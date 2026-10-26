@@ -43,7 +43,11 @@ class ResumeAdviceLlmIntegrationTests extends IntegrationTest {
 					              "rewritten": "Construí APIs REST em Spring Boot que processam [X] pagamentos por dia.",
 					              "reason": "Mostra escala."}],
 					 "linkedinKeywords": ["Java", "Spring Boot", "Pagamentos"],
-					 "diagnosis": "CURRICULO", "diagnosisExplanation": "Vagas aderentes, pouca conversão."}
+					 "diagnosis": "CURRICULO", "diagnosisExplanation": "Vagas aderentes, pouca conversão.",
+					 "gupyProfile": {"skills": "Java, Spring Boot, Kafka", "experiences": [
+					     {"role": "Desenvolvedora", "company": "Banco Azul", "description": "APIs de crédito em Java."}]},
+					 "linkedinProfile": {"headline": "Backend Java Sênior | Spring Boot | Kafka",
+					     "about": "Desenvolvo sistemas de crédito.", "skills": ["Java", "Kafka"]}}
 					"""))));
 
 		this.mvc.perform(post("/api/insights/generate").with(owner()))
@@ -52,7 +56,10 @@ class ResumeAdviceLlmIntegrationTests extends IntegrationTest {
 			.andExpect(jsonPath("$.recommendations.bullets[0].rewritten").value(
 					"Construí APIs REST em Spring Boot que processam [X] pagamentos por dia."))
 			.andExpect(jsonPath("$.recommendations.diagnosis").value("CURRICULO"))
-			.andExpect(jsonPath("$.modelVersion").value("claude-opus-5-5|resume-advice@v1"));
+			.andExpect(jsonPath("$.recommendations.gupyProfile.experiences[0].company").value("Banco Azul"))
+			.andExpect(jsonPath("$.recommendations.linkedinProfile.headline").value("Backend Java Sênior | Spring Boot | Kafka"))
+			.andExpect(jsonPath("$.recommendations.profileChanges[0]").value("Primeira versão dos textos dos perfis."))
+			.andExpect(jsonPath("$.modelVersion").value("claude-opus-5-5|resume-advice@v2"));
 
 		this.anthropicApi.verify(postRequestedFor(urlPathEqualTo("/v1/messages"))
 			.withRequestBody(containing("\"claude-opus-5-5\""))

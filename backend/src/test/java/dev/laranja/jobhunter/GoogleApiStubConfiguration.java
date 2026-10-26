@@ -43,6 +43,11 @@ public class GoogleApiStubConfiguration {
 			registry.add("jobhunter.sourcing.ats.greenhouse-base-url", googleApi::baseUrl);
 			registry.add("jobhunter.sourcing.ats.lever-base-url", googleApi::baseUrl);
 			registry.add("jobhunter.sourcing.ats.ashby-base-url", googleApi::baseUrl);
+			registry.add("jobhunter.sourcing.ats.lever-jobs-base-url", () -> googleApi.baseUrl() + "/lever-jobs");
+			registry.add("jobhunter.sourcing.ats.smartrecruiters-base-url", googleApi::baseUrl);
+			registry.add("jobhunter.sourcing.ats.workable-base-url", googleApi::baseUrl);
+			registry.add("jobhunter.sourcing.ats.teamtailor-base-url", () -> googleApi.baseUrl() + "/teamtailor/{slug}");
+			registry.add("jobhunter.sourcing.ats.recruitee-base-url", () -> googleApi.baseUrl() + "/recruitee/{slug}");
 			registry.add("jobhunter.sourcing.remotive.base-url", googleApi::baseUrl);
 			registry.add("jobhunter.sourcing.github.base-url", googleApi::baseUrl);
 			registry.add("jobhunter.sourcing.adzuna.base-url", googleApi::baseUrl);
@@ -52,6 +57,8 @@ public class GoogleApiStubConfiguration {
 			// PTAX do Banco Central (API Olinda), para o câmbio dos salários em moeda estrangeira.
 			registry.add("jobhunter.salary.ptax.base-url", googleApi::baseUrl);
 			registry.add("jobhunter.sourcing.linkedin-descriptions.base-url", googleApi::baseUrl);
+			// Importação de vaga por link: as páginas vêm do WireMock local, que o bloqueio de rede interna barraria.
+			registry.add("jobhunter.sourcing.job-import.allow-private-hosts", () -> "true");
 			// Bot API do Telegram; o token e o chat id só são ligados nos testes do próprio canal.
 			registry.add("jobhunter.notifications.telegram.base-url", googleApi::baseUrl);
 			// Desligada por padrão (termos do LinkedIn); ligada aqui para os testes da própria busca.

@@ -7,9 +7,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import dev.laranja.jobhunter.inbox.Mailbox;
 import dev.laranja.jobhunter.jobs.JobCatalog;
 import dev.laranja.jobhunter.jobs.JobOrigin;
 import dev.laranja.jobhunter.jobs.JobView;
+import dev.laranja.jobhunter.jobs.ManualJobCommand;
 import dev.laranja.jobhunter.resumes.ResumeCatalog;
 import dev.laranja.jobhunter.shared.BusinessRuleException;
 import dev.laranja.jobhunter.shared.ConflictException;
@@ -61,11 +63,14 @@ public class ApplicationService {
 
 	private final TrackingProperties.FollowUp followUp;
 
+	private final Mailbox mailbox;
+
 	private final Clock clock;
 
 	ApplicationService(ApplicationRepository applications, ApplicationEventRepository history,
 			JobSnapshotRepository snapshots, JobCatalog jobs, ResumeCatalog resumes, ObjectStorage storage,
-			ApplicationEventPublisher events, JdbcClient jdbc, TrackingProperties properties, Clock clock) {
+			ApplicationEventPublisher events, JdbcClient jdbc, TrackingProperties properties, Mailbox mailbox,
+			Clock clock) {
 		this.applications = applications;
 		this.history = history;
 		this.snapshots = snapshots;
@@ -75,6 +80,7 @@ public class ApplicationService {
 		this.events = events;
 		this.jdbc = jdbc;
 		this.followUp = properties.followUp();
+		this.mailbox = mailbox;
 		this.clock = clock;
 	}
 
@@ -202,6 +208,52 @@ public class ApplicationService {
 	public void updateDetails(long applicationId, ApplicationCommands.UpdateDetails command) {
 		require(applicationId).updateDetails(command.notes(), command.nextActionAt(), command.nextActionKind(),
 				this.clock.instant());
+	}
+
+	/**
+	 * Confirmação de candidatura lida de um e-mail: completa a data da aplicação.
+	 * @return falso quando a candidatura ainda está em Interesse e precisa da sua revisão para ir a Aplicada
+	 */
+	public boolean confirmFromEmail(long applicationId, Instant receivedAt) {
+		return require(applicationId).confirmApplied(receivedAt, this.clock.instant());
+	}
+
+	/**
+	 * Registra a candidatura a partir do e-mail de confirmação de uma vaga que não estava no agente: cadastra a vaga
+	 * (ou usa a já cadastrada), cria a candidatura em Aplicada na data do e-mail e liga o e-mail a ela.
+	 */
+	public long registerFromEmail(long emailId, ApplicationCommands.FromEmail command) {
+		Mailbox.ClassifiedEmail email = this.mailbox.find(emailId).orElseThrow(() -> NotFoundException.of("E-mail", emailId));
+		if (email.applicationId() != null && this.applications.existsById(email.applicationId())) {
+			throw new ConflictException("Esse e-mail já está ligado a uma candidatura.", email.applicationId());
+		}
+		String title = firstNonBlank(command.title(), email.jobGuess(), email.subject());
+		String company = firstNonBlank(command.company(), email.companyGuess(), null);
+		if (title == null || company == null) {
+			throw new BusinessRuleException("Informe o cargo e a empresa da vaga.");
+		}
+		long jobId;
+		try {
+			jobId = this.jobs.registerManual(new ManualJobCommand(title, company, null, null, null, null,
+					blankToNull(command.url()), null)).id();
+		}
+		catch (ConflictException ex) {
+			jobId = ex.existingId();
+		}
+		long applicationId = start(jobId, new ApplicationCommands.Start(ApplicationStatus.APLICADA,
+				command.resumeVersionId(), command.channel(), email.receivedAt(),
+				"Registrada pelo e-mail de confirmação"));
+		this.mailbox.markHandled(emailId, applicationId);
+		return applicationId;
+	}
+
+	private static String firstNonBlank(String first, String second, String third) {
+		for (String value : new String[] { first, second, third }) {
+			if (value != null && !value.isBlank()) {
+				return value.strip();
+			}
+		}
+		return null;
 	}
 
 	/**

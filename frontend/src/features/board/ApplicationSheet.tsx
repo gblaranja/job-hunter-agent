@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { useJob, type BoardCard } from '@/api/queries'
+import { useApplicationContacts, useJob, type BoardCard } from '@/api/queries'
 import { AppliedJobCard } from '@/components/AppliedJobCard'
 import { ErrorBlock, LoadingBlock } from '@/components/QueryState'
 import { StatusBadge } from '@/components/StatusBadge'
@@ -9,12 +9,15 @@ import { ApplicationDetailsForm } from '@/features/applications/ApplicationDetai
 import { FollowUpStatus } from '@/features/applications/FollowUpStatus'
 import { ResponseDialog } from '@/features/applications/ResponseDialog'
 import { Timeline } from '@/features/applications/Timeline'
+import { ContactsCard } from '@/features/network/ContactsCard'
+import { MessageDrafts } from '@/features/network/MessageDrafts'
 import { ArrowUpRight } from 'lucide-react'
 
 /** Painel lateral do kanban: a vaga aplicada, anotações e o histórico da candidatura. */
 export function ApplicationSheet({ card, onClose }: { card: BoardCard; onClose: () => void }) {
   const job = useJob(card.jobId)
   const application = job.data?.application
+  const contacts = useApplicationContacts(card.applicationId)
   // O board só traz status de link quando a vaga já foi congelada na aplicação.
   const hasSnapshot = card.linkStatus != null
 
@@ -47,10 +50,12 @@ export function ApplicationSheet({ card, onClose }: { card: BoardCard; onClose: 
                 nextActionAt={application.nextActionAt}
                 nextActionKind={application.nextActionKind}
               />
-              <ResponseDialog applicationId={application.id} />
+              <ResponseDialog applicationId={application.id} contacts={contacts.data?.contacts} />
+              <ContactsCard jobId={card.jobId} company={card.company} applicationId={application.id} />
+              <MessageDrafts jobId={card.jobId} applicationId={application.id} />
               <section>
                 <h3 className="mb-3 text-sm font-semibold">Histórico</h3>
-                <Timeline events={job.data?.timeline ?? []} />
+                <Timeline events={job.data?.timeline ?? []} interactions={contacts.data?.interactions} />
               </section>
             </>
           )}

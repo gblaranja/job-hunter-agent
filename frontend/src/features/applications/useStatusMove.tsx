@@ -5,7 +5,7 @@ import { ResumePickerDialog } from '@/components/ResumePickerDialog'
 import { statusLabels } from '@/lib/labels'
 import { planMove, type MovePlan } from './planMove'
 
-type Movable = { applicationId: number; status: ApplicationStatus; resumeVersionId?: number | null }
+type Movable = { applicationId: number; status: ApplicationStatus; resumeVersionId?: number | null; jobId?: number }
 type Pending = { item: Movable; target: ApplicationStatus; plan: Extract<MovePlan, { kind: 'confirm' }> }
 
 /**
@@ -45,6 +45,7 @@ export function useStatusMove() {
       requireResume={pending.plan.requireResume}
       requireNote={pending.plan.requireNote}
       pending={changeStatus.isPending}
+      applyCheckJobId={pending.target === 'APLICADA' ? pending.item.jobId : undefined}
       onCancel={() => setPending(null)}
       onConfirm={(choice) => {
         send(pending.item, pending.target, choice)

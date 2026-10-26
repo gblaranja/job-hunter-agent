@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Job Hunter: configurar extensão</title>
+<style>
+  body { font: 14px system-ui, sans-serif; max-width: 480px; margin: 24px auto; padding: 0 16px; }
+  label { display: block; margin-top: 12px; font-weight: 600; }
+  input { width: 100%; box-sizing: border-box; font: inherit; }
+  button { margin-top: 16px; padding: 6px 12px; }
+  .muted { color: #666; }
+</style>
+</head>
+<body>
+  <h1>Configurar</h1>
+  <form id="form">
+    <label for="baseUrl">Endereço da API</label>
+    <input id="baseUrl" type="url" placeholder="http://localhost:8080" required>
+    <label for="appUrl">Endereço do app (para abrir a vaga)</label>
+    <input id="appUrl" type="url" placeholder="http://localhost:5173">
+    <label for="token">Token pessoal</label>
+    <input id="token" type="password" placeholder="jh_..." required>
+    <p class="muted">Gere o token em Configurações → Extensão do navegador. Ele só vale para importar e salvar vagas.</p>
+    <button type="submit">Salvar</button>
+  </form>
+  <p id="message" role="status"></p>
+  <script type="module" src="options.js"></script>
+</body>
+</html>

@@ -25,7 +25,7 @@ export function LoginPage() {
   const [params] = useSearchParams()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const from = (location.state as { from?: string } | null)?.from ?? '/board'
+  const from = (location.state as { from?: string } | null)?.from ?? '/today'
   const googleError = googleErrors[params.get('google') ?? '']
 
   if (me.data) return <Navigate to={from} replace />

@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Job Hunter: salvar vaga",
+  "version": "0.1.0",
+  "description": "Salva a vaga da página aberta no Job Hunter, só quando você clica.",
+  "action": { "default_popup": "popup.html", "default_title": "Salvar vaga no Job Hunter" },
+  "options_page": "options.html",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"]
+}

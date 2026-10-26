@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ConversionSection, ConversionTable } from './ConversionSection'
+import { PlatformProfilesCard } from './PlatformProfilesCard'
 import { formatDate, formatDateTime, formatPercent, rate } from '@/lib/format'
 import { diagnosisLabels, feedbackReasonLabels, seniorityLabels } from '@/lib/labels'
 import { ArrowRight, Loader2, Sparkles } from 'lucide-react'
@@ -205,6 +206,8 @@ function Report({ report }: { report: InsightReport }) {
           </CardContent>
         </Card>
       )}
+
+      <PlatformProfilesCard recommendations={recommendations} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

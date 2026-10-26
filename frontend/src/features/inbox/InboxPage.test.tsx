@@ -25,6 +25,53 @@ describe('InboxPage', () => {
     })
   }
 
+  it('mostra o selo de legitimidade e inclui as suspeitas só quando pedido', async () => {
+    const requests: URLSearchParams[] = []
+    server.use(
+      http.get('/api/jobs', ({ request }) => {
+        const params = new URL(request.url).searchParams
+        requests.push(params)
+        const items = [
+          inboxJob({ id: 1, title: 'Vaga antiga', legitimacy: 'MEDIA', legitimacyReasons: ['No ar há 45 dias'] }),
+          ...(params.get('allLegitimacy') === 'true'
+            ? [inboxJob({ id: 2, title: 'Digitador', legitimacy: 'SUSPEITA', legitimacyReasons: ['Pede pagamento'] })]
+            : []),
+        ]
+        return HttpResponse.json({ items, page: 0, size: 20, total: items.length })
+      }),
+    )
+    renderWithProviders(<InboxPage />)
+
+    expect(await screen.findByText('Atenção')).toHaveAttribute('title', 'No ar há 45 dias')
+    expect(screen.queryByText('Digitador')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByLabelText('Mostrar também as suspeitas'))
+    expect(await screen.findByText('Suspeita de golpe')).toBeInTheDocument()
+    expect(requests.at(-1)?.get('allLegitimacy')).toBe('true')
+  })
+
+  it('mostra as conexões na empresa, o selo de abordagem e filtra por "tenho conexão"', async () => {
+    const requests: URLSearchParams[] = []
+    server.use(
+      http.get('/api/jobs', ({ request }) => {
+        const params = new URL(request.url).searchParams
+        requests.push(params)
+        return HttpResponse.json({
+          items: [inboxJob({ connections: 3, origin: 'RECRUTADOR' })],
+          page: 0,
+          size: 20,
+          total: 1,
+        })
+      }),
+    )
+    renderWithProviders(<InboxPage />)
+
+    expect(await screen.findByText('3 conexões')).toBeInTheDocument()
+    expect(screen.getByText('abordagem')).toBeInTheDocument()
+    await userEvent.click(screen.getByLabelText('Tenho conexão'))
+
+    await vi.waitFor(() => expect(requests.at(-1)?.get('hasConnection')).toBe('true'))
+  })
+
   it('navega entre as páginas da caixa', async () => {
     const requests: URLSearchParams[] = []
     server.use(paginatedInbox(requests))

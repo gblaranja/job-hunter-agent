@@ -1,3 +1,4 @@
+import { ConnectionsImportCard } from '@/features/network/ConnectionsImportCard'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
@@ -20,6 +21,7 @@ import {
   type SearchProfile,
 } from '@/api/queries'
 import { PageHeader } from '@/components/PageHeader'
+import { ApiTokenCard } from './ApiTokenCard'
 import { ErrorBlock, LoadingBlock } from '@/components/QueryState'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -38,7 +40,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatDateTime } from '@/lib/format'
 import { notificationTypeLabel, sourceLabel } from '@/lib/labels'
 import { useTheme } from '@/lib/useTheme'
-import { CandidateProfileCard } from './CandidateProfileCard'
 import {
   Activity,
   Database,
@@ -55,6 +56,7 @@ import {
   Sun,
   Trash2,
 } from 'lucide-react'
+import { CandidateProfileCard } from './CandidateProfileCard'
 
 export function SettingsPage() {
   const [params, setParams] = useSearchParams()
@@ -79,6 +81,8 @@ export function SettingsPage() {
       <CandidateProfileCard />
       <GmailCard />
       <TelegramCard />
+      <ConnectionsImportCard />
+      <ApiTokenCard />
       <CollectionCard />
       <SourceHealthCard />
       <ProfilesCard />

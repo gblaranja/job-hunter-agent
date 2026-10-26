@@ -198,6 +198,21 @@ public class Application {
 		this.updatedAt = now;
 	}
 
+	/**
+	 * Chegou o e-mail confirmando que a candidatura foi recebida: completa a data da aplicação, se faltava.
+	 * @return falso quando a candidatura ainda está em Interesse (mover para Aplicada pede o currículo enviado)
+	 */
+	public boolean confirmApplied(Instant receivedAt, Instant now) {
+		if (this.status == ApplicationStatus.INTERESSE || this.status == ApplicationStatus.NOVA) {
+			return false;
+		}
+		if (this.appliedAt == null || receivedAt.isBefore(this.appliedAt)) {
+			this.appliedAt = receivedAt;
+		}
+		this.updatedAt = now;
+		return true;
+	}
+
 	/** Agenda uma próxima ação sua (não automática), sem mexer nas notas. */
 	public void scheduleNextAction(Instant at, NextActionKind kind, Instant now) {
 		schedule(at, kind, false);

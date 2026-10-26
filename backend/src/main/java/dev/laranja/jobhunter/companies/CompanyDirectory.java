@@ -4,11 +4,13 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Clock;
 import java.util.Objects;
+import java.util.Optional;
 
 import dev.laranja.jobhunter.companies.internal.Company;
 import dev.laranja.jobhunter.companies.internal.CompanyRepository;
 import dev.laranja.jobhunter.shared.BusinessRuleException;
 import dev.laranja.jobhunter.shared.NotFoundException;
+import org.jspecify.annotations.Nullable;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -28,11 +30,15 @@ public class CompanyDirectory {
 
 	private final Clock clock;
 
-	CompanyDirectory(CompanyRepository companies, JdbcClient jdbc, ApplicationEventPublisher events, Clock clock) {
+	private final AtsBoards atsBoards;
+
+	CompanyDirectory(CompanyRepository companies, JdbcClient jdbc, ApplicationEventPublisher events, Clock clock,
+			AtsBoards atsBoards) {
 		this.companies = companies;
 		this.jdbc = jdbc;
 		this.events = events;
 		this.clock = clock;
+		this.atsBoards = atsBoards;
 	}
 
 	/** Encontra a empresa pelo nome normalizado ou por um alias; sem correspondência, cadastra como descoberta. */
@@ -45,6 +51,21 @@ public class CompanyDirectory {
 			.or(() -> this.companies.findByAlias(normalized))
 			.map(Company::getId)
 			.orElseGet(() -> register(name, normalized));
+	}
+
+	/**
+	 * Só procura: a empresa pelo nome normalizado ou por um alias, sem cadastrar nada. Usado por quem cita uma
+	 * empresa sem ter uma vaga dela (um contato, uma conexão do LinkedIn).
+	 */
+	@Transactional(readOnly = true)
+	public Optional<Long> findId(String name) {
+		String normalized = (name == null) ? "" : CompanyNameNormalizer.normalize(name);
+		if (normalized.isEmpty()) {
+			return Optional.empty();
+		}
+		return this.companies.findByNormalizedName(normalized)
+			.or(() -> this.companies.findByAlias(normalized))
+			.map(Company::getId);
 	}
 
 	private long register(String name, String normalized) {
@@ -117,9 +138,31 @@ public class CompanyDirectory {
 		company.changeWatchStatus(watchStatus);
 	}
 
+	/**
+	 * Atualiza os dados editáveis. Com a página de carreira e sem ATS informado, o ATS e o slug vêm do link; um slug
+	 * novo de ATS com coleta automática é conferido no próprio ATS, e um slug que o ATS diz não existir é recusado.
+	 */
 	public void update(long id, UpdateCompanyCommand command) {
-		require(id).update(command.watchStatus(), command.website(), command.atsType(), command.atsSlug(),
-				command.notes());
+		Company company = require(id);
+		if (command.careersUrl() != null) {
+			company.changeCareersUrl(command.careersUrl());
+		}
+		String atsType = blankToNull(command.atsType());
+		String atsSlug = blankToNull(command.atsSlug());
+		if (atsType == null && atsSlug == null && company.getCareersUrl() != null) {
+			Optional<AtsBoard> detected = this.atsBoards.detect(company.getCareersUrl());
+			if (detected.isPresent()) {
+				atsType = detected.get().atsType();
+				atsSlug = detected.get().slug();
+			}
+		}
+		boolean changed = !Objects.equals(atsType, company.getAtsType()) || !Objects.equals(atsSlug, company.getAtsSlug());
+		if (changed && atsType != null && atsSlug != null && this.atsBoards.supports(atsType)
+				&& this.atsBoards.verify(atsType, atsSlug) == AtsSlugStatus.NAO_ENCONTRADO) {
+			throw new BusinessRuleException("O slug \"%s\" não existe no %s. Confira o link da página de carreira."
+				.formatted(atsSlug, atsType));
+		}
+		company.update(command.watchStatus(), command.website(), atsType, atsSlug, command.notes());
 	}
 
 	/**
@@ -162,6 +205,10 @@ public class CompanyDirectory {
 				where id = :id and watch_status = 'DESCOBERTA'
 				  and not exists (select 1 from job where company_id = :id)
 				""").param("id", id).update();
+	}
+
+	private static @Nullable String blankToNull(@Nullable String value) {
+		return (value == null || value.isBlank()) ? null : value.strip();
 	}
 
 	private Company require(long id) {

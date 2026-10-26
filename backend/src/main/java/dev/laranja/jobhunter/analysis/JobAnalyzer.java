@@ -2,6 +2,7 @@ package dev.laranja.jobhunter.analysis;
 
 import java.sql.Array;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -116,6 +117,30 @@ public class JobAnalyzer {
 		return open.size();
 	}
 
+	/**
+	 * Marca para nova extração pelo LLM as análises feitas com um prompt anterior, só nas vagas que valem o custo:
+	 * abertas, com descrição, e com score 50 ou mais ou marcadas como "tenho interesse". O agendador de novas
+	 * tentativas processa aos poucos.
+	 */
+	@Transactional
+	public int markForReextraction() {
+		return this.jdbc.sql("""
+				update job_analysis ja set status = 'PENDENTE', attempts = 0, next_attempt_at = null
+				from job j
+				where j.id = ja.job_id
+				  and ja.status in ('COMPLETO', 'DETERMINISTICO')
+				  and position(:version in ja.model_version) = 0
+				  and length(coalesce(j.raw_description, '')) >= 80
+				  and not exists (select 1 from job_dismissal d where d.job_id = ja.job_id)
+				  and (ja.match_score >= 50
+				       or exists (select 1 from application a where a.job_id = ja.job_id and a.status = 'INTERESSE'))
+				  and not exists (select 1 from application a where a.job_id = ja.job_id
+				                  and a.status in ('OFERTA', 'RECUSADA', 'DESISTI', 'ENCERRADA'))
+				""")
+			.param("version", this.engine.extractionVersion())
+			.update();
+	}
+
 	private void save(long jobId, Long resumeId, Outcome outcome, int previousAttempts) {
 		boolean failed = "FALHOU".equals(outcome.status());
 		int attempts = failed ? previousAttempts + 1 : 0;
@@ -125,11 +150,15 @@ public class JobAnalyzer {
 				insert into job_analysis (job_id, status, seniority, required_skills, nice_to_have, work_model, summary,
 				                          employer_kind, client_sectors, contract_type, resume_version_id,
 				                          deterministic_score, llm_adjustment, match_score, matched_skills, gaps,
-				                          justification, model_version, attempts, next_attempt_at, last_error, analyzed_at)
+				                          justification, model_version, attempts, next_attempt_at, last_error, analyzed_at,
+				                          partial_skills, knockouts, salary, job_family, international_eligibility,
+				                          evidence)
 				values (:jobId, :status, :seniority, cast(:required as jsonb), cast(:nice as jsonb), :workModel, :summary,
 				        :employerKind, cast(:clientSectors as jsonb), :contractType, :resumeId,
 				        :deterministic, :adjustment, :score, cast(:matched as jsonb), cast(:gaps as jsonb),
-				        :justification, :modelVersion, :attempts, :nextAttempt, :error, :now)
+				        :justification, :modelVersion, :attempts, :nextAttempt, :error, :now,
+				        cast(:partial as jsonb), cast(:knockouts as jsonb), cast(:salary as jsonb), :jobFamily,
+				        :eligibility, cast(:evidence as jsonb))
 				on conflict (job_id) do update set
 				    status = excluded.status, seniority = excluded.seniority, required_skills = excluded.required_skills,
 				    nice_to_have = excluded.nice_to_have, work_model = excluded.work_model, summary = excluded.summary,
@@ -139,7 +168,13 @@ public class JobAnalyzer {
 				    match_score = excluded.match_score, matched_skills = excluded.matched_skills, gaps = excluded.gaps,
 				    justification = excluded.justification, model_version = excluded.model_version,
 				    attempts = excluded.attempts, next_attempt_at = excluded.next_attempt_at,
-				    last_error = excluded.last_error, analyzed_at = excluded.analyzed_at
+				    last_error = excluded.last_error, analyzed_at = excluded.analyzed_at,
+				    partial_skills = excluded.partial_skills, knockouts = excluded.knockouts, salary = excluded.salary,
+				    job_family = excluded.job_family, international_eligibility = excluded.international_eligibility,
+				    evidence = case when not :keepEvidence then excluded.evidence
+				                    when job_analysis.resume_version_id is not distinct from excluded.resume_version_id
+				                        then job_analysis.evidence
+				                    else '[]' end
 				""")
 			.param("jobId", jobId)
 			.param("status", outcome.status())
@@ -163,20 +198,31 @@ public class JobAnalyzer {
 			.param("nextAttempt", (nextAttempt != null) ? Timestamp.from(nextAttempt) : null)
 			.param("error", outcome.error())
 			.param("now", Timestamp.from(now))
+			.param("partial", this.json.writeValueAsString(outcome.partialMatches()))
+			.param("knockouts", this.json.writeValueAsString(outcome.knockouts()))
+			.param("salary", (outcome.requirements().salary() != null)
+					? this.json.writeValueAsString(outcome.requirements().salary()) : null, Types.VARCHAR)
+			.param("jobFamily", outcome.requirements().jobFamily(), Types.VARCHAR)
+			.param("eligibility", outcome.requirements().internationalEligibility(), Types.VARCHAR)
+			.param("evidence", this.json.writeValueAsString(outcome.keepsEvidence() ? List.of() : outcome.evidence()))
+			.param("keepEvidence", outcome.keepsEvidence())
 			.update();
 	}
 
 	private Optional<Stored> stored(long jobId) {
 		return this.jdbc.sql("""
 				select seniority, required_skills::text as required, nice_to_have::text as nice, work_model, summary,
-				       employer_kind, client_sectors::text as sectors, contract_type, model_version, attempts
+				       employer_kind, client_sectors::text as sectors, contract_type, model_version, attempts,
+				       knockouts::text as knockouts, salary::text as salary, job_family, international_eligibility
 				from job_analysis where job_id = :jobId
 				""")
 			.param("jobId", jobId)
 			.query((rs, row) -> new Stored(new AnalysisEngine.StoredRequirements(rs.getString("seniority"),
 					readList(rs.getString("required")), readList(rs.getString("nice")), rs.getString("work_model"),
 					rs.getString("summary"), rs.getString("employer_kind"), readList(rs.getString("sectors")),
-					rs.getString("contract_type"), rs.getString("model_version")), rs.getInt("attempts")))
+					rs.getString("contract_type"), rs.getString("model_version"), readKnockouts(rs.getString("knockouts")),
+					readSalary(rs.getString("salary")), rs.getString("job_family"),
+					rs.getString("international_eligibility")), rs.getInt("attempts")))
 			.optional();
 	}
 
@@ -196,6 +242,15 @@ public class JobAnalyzer {
 						rs.getString("rating"), list);
 			})
 			.list();
+	}
+
+	private List<JobKnockout> readKnockouts(String value) {
+		return (value == null) ? List.of()
+				: this.json.readValue(value, this.json.getTypeFactory().constructCollectionType(List.class, JobKnockout.class));
+	}
+
+	private JobSalary readSalary(String value) {
+		return (value == null) ? null : this.json.readValue(value, JobSalary.class);
 	}
 
 	@SuppressWarnings("unchecked")

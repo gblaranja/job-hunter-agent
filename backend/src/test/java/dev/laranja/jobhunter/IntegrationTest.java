@@ -50,7 +50,8 @@ public abstract class IntegrationTest {
 				         email_message, gmail_sync_state, oauth_credential, collection_run, company_alias, company,
 				         job_analysis, llm_usage, insight_report, company_metrics_weekly, notification, tailored_resume,
 				         company_recognition, web_search_cache, company_niche, company_fit, candidate_profile,
-				         star_story, interview_prep, interview_debrief, offer
+				         star_story, interview_prep, interview_debrief, offer, personal_api_token,
+				         contact_interaction, contact
 				restart identity cascade
 				""").update();
 	}

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import { useInboxCount, useInboxJobs, useStartApplication, type JobListItem, type JobScope } from '@/api/queries'
 import { CompanyBadge } from '@/components/CompanyBadge'
+import { LegitimacyBadge } from '@/components/LegitimacyBadge'
 import { FeedbackButtons } from '@/components/FeedbackButtons'
 import { PageHeader } from '@/components/PageHeader'
 import { Pagination } from '@/components/Pagination'
@@ -13,12 +14,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
-import { formatDate } from '@/lib/format'
+import { formatAge, formatDate } from '@/lib/format'
 import { isPageSize } from '@/lib/pagination'
 import { closedJobNote, originLabels, sameAsWorkModel, workModelLabels } from '@/lib/labels'
-import { Ban, ExternalLink, Search } from 'lucide-react'
+import { Ban, ExternalLink, Search, Users } from 'lucide-react'
 import { InterestMenu } from './InterestMenu'
 
 const PAGE_SIZE_KEY = 'job-hunter-inbox-page-size'
@@ -50,7 +52,11 @@ export function InboxPage() {
   const size = readPageSize(params)
   const scope: JobScope = params.get('secao') === INTERNATIONAL_SECTION ? 'INTERNACIONAL' : 'NACIONAL'
   const otherScope: JobScope = scope === 'NACIONAL' ? 'INTERNACIONAL' : 'NACIONAL'
-  const jobs = useInboxJobs({ q: query, scope, page, size })
+  // "Mostrar todas": inclui as vagas de legitimidade baixa e as suspeitas de golpe, que a caixa esconde.
+  const allLegitimacy = params.get('todas') === '1'
+  // "Tenho conexão": só empresas onde você conhece alguém (contato ou conexão do LinkedIn).
+  const hasConnection = params.get('conexao') === '1'
+  const jobs = useInboxJobs({ q: query, scope, page, size, allLegitimacy, hasConnection })
   const otherTotal = useInboxCount({ q: query, scope: otherScope }).data
   const totals: Partial<Record<JobScope, number>> = { [scope]: jobs.data?.total, [otherScope]: otherTotal }
   const top = useRef<HTMLDivElement>(null)
@@ -77,6 +83,19 @@ export function InboxPage() {
         const updated = new URLSearchParams(current)
         if (next === 'INTERNACIONAL') updated.set('secao', INTERNATIONAL_SECTION)
         else updated.delete('secao')
+        updated.delete('page')
+        return updated
+      },
+      { replace: true },
+    )
+  }
+
+  function toggleAll(checked: boolean, param = 'todas') {
+    setParams(
+      (current) => {
+        const updated = new URLSearchParams(current)
+        if (checked) updated.set(param, '1')
+        else updated.delete(param)
         updated.delete('page')
         return updated
       },
@@ -133,18 +152,44 @@ export function InboxPage() {
           ))}
         </TabsList>
       </Tabs>
-      <div ref={top} className="relative mb-4 max-w-xl scroll-mt-4">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-        <Input
-          className="pl-9"
-          placeholder="Filtrar por cargo ou empresa"
-          aria-label="Filtrar vagas"
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value)
-            if (page > 0) changePage({ page: 0 }, true)
-          }}
-        />
+      <div ref={top} className="mb-4 flex scroll-mt-4 flex-wrap items-center gap-4">
+        <div className="relative w-full max-w-xl">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Input
+            className="pl-9"
+            placeholder="Filtrar por cargo ou empresa"
+            aria-label="Filtrar vagas"
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value)
+              if (page > 0) changePage({ page: 0 }, true)
+            }}
+          />
+        </div>
+        <div className="flex items-center gap-2" title="A caixa esconde as possíveis vagas fantasma e as suspeitas de golpe.">
+          <input
+            id="all-legitimacy"
+            type="checkbox"
+            className="size-4 accent-primary"
+            checked={allLegitimacy}
+            onChange={(event) => toggleAll(event.target.checked)}
+          />
+          <Label htmlFor="all-legitimacy" className="text-sm font-normal">
+            Mostrar também as suspeitas
+          </Label>
+        </div>
+        <div className="flex items-center gap-2" title="Empresas onde você tem um contato ou conexão do LinkedIn.">
+          <input
+            id="has-connection"
+            type="checkbox"
+            className="size-4 accent-primary"
+            checked={hasConnection}
+            onChange={(event) => toggleAll(event.target.checked, 'conexao')}
+          />
+          <Label htmlFor="has-connection" className="text-sm font-normal">
+            Tenho conexão
+          </Label>
+        </div>
       </div>
       {jobs.isLoading && <LoadingBlock />}
       {jobs.error && <ErrorBlock error={jobs.error} />}
@@ -209,13 +254,29 @@ function InboxCard({ job }: { job: JobListItem }) {
             <p className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
               {job.company}
               <CompanyBadge level={job.gptwLevel} />
+              <LegitimacyBadge level={job.legitimacy} reasons={job.legitimacyReasons} />
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            {job.failedKnockouts > 0 && (
+              <Badge variant="destructive" title="Requisitos eliminatórios que você não atende">
+                {job.failedKnockouts === 1 ? '1 eliminatório' : `${job.failedKnockouts} eliminatórios`}
+              </Badge>
+            )}
+            {job.origin === 'RECRUTADOR' && (
+              <Badge title="Um recrutador ou agência te procurou com esta oportunidade; o contato está em Contatos">
+                abordagem
+              </Badge>
+            )}
+            {job.connections > 0 && (
+              <Badge variant="secondary" title="Contatos e conexões do LinkedIn na empresa">
+                <Users aria-hidden /> {job.connections === 1 ? '1 conexão' : `${job.connections} conexões`}
+              </Badge>
+            )}
             <Badge variant="outline">{originLabels[job.origin]}</Badge>
             {job.location && !sameAsWorkModel(job.location, job.workModel) && <Badge variant="secondary" className="max-w-full whitespace-normal">{job.location}</Badge>}
             {job.workModel !== 'NAO_INFORMADO' && <Badge variant="secondary">{workModelLabels[job.workModel]}</Badge>}
-            <span>{formatDate(job.collectedAt)}</span>
+            <span title={`Vista pela primeira vez em ${formatDate(job.firstSeenAt)}`}>{formatAge(job.firstSeenAt)}</span>
           </div>
         </div>
         {(job.summary ?? job.preview) && (

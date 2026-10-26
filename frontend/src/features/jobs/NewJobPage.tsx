@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { ApiError } from '@/api/client'
 import {
   useCreateJob,
+  useJobImportPreview,
   useResumes,
   useStartApplication,
   type ApplicationChannel,
@@ -56,6 +57,24 @@ export function NewJobPage() {
   const applied = statusesRequiringResume.has(status)
   const chosenResume = resumeId ?? (defaultResume ? String(defaultResume.id) : undefined)
   const saving = createJob.isPending || startApplication.isPending
+  const importPreview = useJobImportPreview()
+  const [importNotes, setImportNotes] = useState<{ warnings: string[]; existingJobId?: number | null } | null>(null)
+
+  /** Preenche o formulário com o que a página da vaga informa (JSON-LD ou o texto lido pela IA). */
+  function fillFromLink() {
+    importPreview.mutate(url.trim(), {
+      onSuccess: (preview) => {
+        if (preview.title) setTitle(preview.title)
+        if (preview.company) setCompany(preview.company)
+        if (preview.location) setLocation(preview.location)
+        if (preview.workModel) setWorkModel(preview.workModel)
+        if (preview.salaryRange) setSalaryRange(preview.salaryRange)
+        if (preview.description) setDescription(preview.description)
+        setImportNotes({ warnings: preview.warnings, existingJobId: preview.existingJobId })
+      },
+      onError: (error) => toast.error(error.message),
+    })
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -105,7 +124,38 @@ export function NewJobPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="job-url">Link</Label>
-              <Input id="job-url" type="url" placeholder="https://" value={url} onChange={(e) => setUrl(e.target.value)} />
+              <div className="flex flex-wrap gap-2">
+                <Input
+                  id="job-url"
+                  type="url"
+                  placeholder="https://"
+                  className="min-w-0 flex-1"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={fillFromLink}
+                  disabled={!/^https?:\/\/\S+/.test(url.trim()) || importPreview.isPending}
+                >
+                  {importPreview.isPending ? 'Lendo a página…' : 'Preencher pelo link'}
+                </Button>
+              </div>
+              {importNotes && (
+                <ul className="space-y-1 text-sm text-muted-foreground" aria-label="Avisos da importação">
+                  {importNotes.warnings.map((warning) => (
+                    <li key={warning}>{warning}</li>
+                  ))}
+                  {importNotes.existingJobId != null && (
+                    <li>
+                      <Link to={`/jobs/${importNotes.existingJobId}`} className="text-primary underline">
+                        Abrir a vaga cadastrada
+                      </Link>
+                    </li>
+                  )}
+                </ul>
+              )}
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
