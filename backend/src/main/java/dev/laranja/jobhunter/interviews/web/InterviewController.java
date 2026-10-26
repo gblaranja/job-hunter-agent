@@ -36,19 +36,19 @@ class InterviewController {
 
 	/** As preparações da candidatura, a mais recente primeiro. */
 	@GetMapping("/api/applications/{id}/interview-prep")
-	List<InterviewPrepView> preps(@PathVariable long id) {
+	List<InterviewPrepView> interviewPreps(@PathVariable long id) {
 		return this.preps.forApplication(id);
 	}
 
 	/** Gera (ou refaz) a preparação; sem etapa, usa a atual da candidatura. */
 	@PostMapping("/api/applications/{id}/interview-prep")
 	@ResponseStatus(HttpStatus.ACCEPTED)
-	InterviewPrepView requestPrep(@PathVariable long id, @RequestParam(required = false) ApplicationStatus stage) {
+	InterviewPrepView requestInterviewPrep(@PathVariable long id, @RequestParam(required = false) ApplicationStatus stage) {
 		return this.preps.request(id, stage);
 	}
 
 	@GetMapping("/api/applications/{id}/debriefs")
-	List<InterviewDebriefView> debriefs(@PathVariable long id) {
+	List<InterviewDebriefView> interviewDebriefs(@PathVariable long id) {
 		return this.debriefs.forApplication(id);
 	}
 
@@ -70,7 +70,7 @@ class InterviewController {
 	}
 
 	@GetMapping("/api/interviews/recurring-questions")
-	List<InterviewDebriefView.RecurringQuestion> recurringQuestions() {
+	List<InterviewDebriefView.RecurringQuestion> recurringInterviewQuestions() {
 		return this.debriefs.recurringQuestions();
 	}
 

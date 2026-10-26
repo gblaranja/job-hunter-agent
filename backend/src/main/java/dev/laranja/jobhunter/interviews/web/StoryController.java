@@ -29,35 +29,35 @@ class StoryController {
 	}
 
 	@GetMapping("/api/stories")
-	List<StarStoryView> list() {
+	List<StarStoryView> listStories() {
 		return this.stories.list();
 	}
 
 	@GetMapping("/api/stories/{id}")
-	StarStoryView get(@PathVariable long id) {
+	StarStoryView getStory(@PathVariable long id) {
 		return this.stories.get(id);
 	}
 
 	@PostMapping("/api/stories")
 	@ResponseStatus(HttpStatus.CREATED)
-	StarStoryView create(@Valid @RequestBody StarStoryCommand command) {
+	StarStoryView createStory(@Valid @RequestBody StarStoryCommand command) {
 		return this.stories.create(command);
 	}
 
 	@PutMapping("/api/stories/{id}")
-	StarStoryView update(@PathVariable long id, @Valid @RequestBody StarStoryCommand command) {
+	StarStoryView updateStory(@PathVariable long id, @Valid @RequestBody StarStoryCommand command) {
 		return this.stories.update(id, command);
 	}
 
 	@DeleteMapping("/api/stories/{id}")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
-	void delete(@PathVariable long id) {
+	void deleteStory(@PathVariable long id) {
 		this.stories.delete(id);
 	}
 
 	/** Sugere uma versão lapidada do texto enviado; nada é salvo até você aceitar e salvar. */
 	@PostMapping("/api/stories/polish")
-	StarStoryPolish polish(@Valid @RequestBody StarStoryCommand command) {
+	StarStoryPolish polishStory(@Valid @RequestBody StarStoryCommand command) {
 		return this.stories.polish(command);
 	}
 

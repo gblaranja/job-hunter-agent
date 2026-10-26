@@ -83,7 +83,7 @@ function Conversion({ data }: { data: FunnelBreakdown }) {
         <StatTile
           label="Entrevista → oferta"
           value={formatPercent(rate(data.offer, data.interview))}
-          hint={`${data.offer} de ${data.interview} entrevistas`}
+          hint={`${data.offer} de ${data.interview} entrevistas · ${data.accepted} ${data.accepted === 1 ? 'aceita' : 'aceitas'}`}
         />
         <StatTile
           label="Até o primeiro retorno"

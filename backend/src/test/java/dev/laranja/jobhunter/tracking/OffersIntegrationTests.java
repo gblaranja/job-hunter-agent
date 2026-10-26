@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.jayway.jsonpath.JsonPath;
 import dev.laranja.jobhunter.IntegrationTest;
 import dev.laranja.jobhunter.TestFiles;
+import dev.laranja.jobhunter.shared.money.PtaxClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -29,9 +30,14 @@ class OffersIntegrationTests extends IntegrationTest {
 	@Autowired
 	private WireMockServer googleApi;
 
+	@Autowired
+	private PtaxClient ptax;
+
 	@BeforeEach
 	void stubPtax() {
 		this.googleApi.resetAll();
+		// Outro teste do mesmo contexto pode ter guardado a falha do câmbio (sem stub).
+		this.ptax.evictCache();
 		this.googleApi.stubFor(WireMock.get(urlPathMatching("/CotacaoDolarDia.*"))
 			.withQueryParam("$format", equalTo("json"))
 			.willReturn(okJson("""

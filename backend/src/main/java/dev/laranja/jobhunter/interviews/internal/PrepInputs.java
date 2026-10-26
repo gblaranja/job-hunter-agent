@@ -2,6 +2,7 @@ package dev.laranja.jobhunter.interviews.internal;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import dev.laranja.jobhunter.interviews.InterviewDebriefView.RecurringQuestion;
 import dev.laranja.jobhunter.profile.CandidateProfileView;
 import dev.laranja.jobhunter.tracking.ApplicationStatus;
@@ -16,10 +17,12 @@ public record PrepInputs(long applicationId, long jobId, ApplicationStatus stage
 		List<PastDebrief> debriefs, List<RecurringQuestion> recurringQuestions, CandidateProfileView profile) {
 
 	/** Eliminatório da vaga avaliado contra o seu perfil (ATENDE, NAO_ATENDE ou SEM_INFORMACAO). */
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record Knockout(String type, String text, @Nullable String status, @Nullable String reason) {
 	}
 
 	/** Trecho do currículo que comprova um requisito. */
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public record Evidence(String requirement, String quote) {
 	}
 

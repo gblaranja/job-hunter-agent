@@ -76,6 +76,11 @@ public class PtaxClient implements ExchangeRates {
 		return Optional.ofNullable(rate);
 	}
 
+	/** Descarta as cotações e falhas guardadas; a próxima consulta vai à API. */
+	public void evictCache() {
+		this.cache.clear();
+	}
+
 	private @Nullable ExchangeRate fetch(String currency, LocalDate today) {
 		try {
 			for (int back = 0; back <= LOOKBACK_DAYS; back++) {

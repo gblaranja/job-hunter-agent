@@ -61,6 +61,8 @@ class JobController {
 	 * @param inbox só as vagas da caixa: sem candidatura, sem "não gostei" e não descartadas
 	 * @param allLegitimacy na caixa, mostra também as vagas de legitimidade BAIXA e SUSPEITA ("mostrar todas")
 	 * @param hasConnection só vagas de empresas onde você tem um contato ou conexão do LinkedIn
+	 * @param salaryFloor esconde as vagas que pagam menos que a sua pretensão (no equivalente anual); vagas sem
+	 * salário continuam
 	 */
 	@GetMapping
 	PageResponse<JobListItem> list(@RequestParam(required = false) @Pattern(regexp = "[A-Z_]+") String status,
@@ -68,10 +70,11 @@ class JobController {
 			@RequestParam(required = false) JobScope scope, @RequestParam(defaultValue = "false") boolean inbox,
 			@RequestParam(defaultValue = "false") boolean allLegitimacy,
 			@RequestParam(defaultValue = "false") boolean hasConnection,
+			@RequestParam(defaultValue = "false") boolean salaryFloor,
 			@RequestParam(defaultValue = "0") @Min(0) int page,
 			@RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
 		return this.queries.list(new JobQueries.JobListFilter(status, rating, q, scope, inbox, allLegitimacy,
-				hasConnection), page,
+				hasConnection, salaryFloor), page,
 				size);
 	}
 

@@ -44,6 +44,7 @@ class PrepInputsReader {
 				       j.salary_range, an.seniority, an.required_skills::text as required_skills,
 				       an.nice_to_have::text as nice_to_have, an.matched_skills::text as matched_skills,
 				       an.gaps::text as gaps, an.summary, an.contract_type, an.employer_kind,
+				       an.knockouts::text as knockouts, an.evidence::text as evidence,
 				       c.kind, c.sector, c.size_range, c.hq_location, c.website, c.watch_status,
 				       (select g.level || coalesce(' ' || g.year, '') || coalesce(' · ' || g.ranking_name, '')
 				        from company_gptw g where g.company_id = c.id limit 1) as gptw
@@ -60,7 +61,8 @@ class PrepInputsReader {
 					rs.getString("work_model"), rs.getString("salary_range"), rs.getString("seniority"),
 					strings(rs, "required_skills"), strings(rs, "nice_to_have"), strings(rs, "matched_skills"),
 					strings(rs, "gaps"), rs.getString("summary"), rs.getString("contract_type"),
-					rs.getString("employer_kind"), List.of(), List.of(),
+					rs.getString("employer_kind"), list(rs, "knockouts", PrepInputs.Knockout[].class),
+					list(rs, "evidence", PrepInputs.Evidence[].class),
 					new PrepInputs.Company(rs.getString("kind"), rs.getString("sector"), rs.getString("size_range"),
 							rs.getString("hq_location"), rs.getString("website"), rs.getString("watch_status"),
 							rs.getString("gptw")),
@@ -91,6 +93,11 @@ class PrepInputsReader {
 					rs.getDate("interviewed_on").toLocalDate().toString(), strings(rs, "questions"),
 					rs.getString("to_improve"), rs.getString("next_steps")))
 			.list();
+	}
+
+	private <T> List<T> list(ResultSet rs, String column, Class<T[]> type) throws SQLException {
+		@Nullable String value = rs.getString(column);
+		return (value == null) ? List.of() : List.of(this.json.readValue(value, type));
 	}
 
 	private List<String> strings(ResultSet rs, String column) throws SQLException {

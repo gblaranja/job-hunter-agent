@@ -1529,6 +1529,182 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/stories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listStories"];
+        put?: never;
+        post: operations["createStory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getStory"];
+        put: operations["updateStory"];
+        post?: never;
+        delete: operations["deleteStory"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stories/polish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["polishStory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listOffers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/offers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateOffer"];
+        post?: never;
+        delete: operations["deleteOffer"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/offers/{id}/negotiation-draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["offerNegotiationDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/{applicationId}/offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["applicationOffers"];
+        put?: never;
+        post: operations["createOffer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/{id}/interview-prep": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["interviewPreps"];
+        put?: never;
+        post: operations["requestInterviewPrep"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/{id}/debriefs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["interviewDebriefs"];
+        put?: never;
+        post: operations["createDebrief"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/debriefs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateDebrief"];
+        post?: never;
+        delete: operations["deleteDebrief"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interviews/recurring-questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["recurringInterviewQuestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2045,6 +2221,7 @@ export interface components {
             scoreByRating: {
                 [key: string]: number;
             };
+            recurringQuestions?: components["schemas"]["RecurringInterviewQuestion"][] | null;
         };
         Gap: {
             skill: string;
@@ -2513,6 +2690,10 @@ export interface components {
             legitimacyReasons: string[];
             /** Format: int32 */
             connections: number;
+            /** @description equivalente anual em reais do salário da vaga; nulo sem salário ou sem câmbio */
+            salaryEquivalent?: number | null;
+            /** @description a vaga paga menos que a sua pretensão no regime dela */
+            belowSalaryFloor?: boolean | null;
         };
         PageResponseJobListItem: {
             items: components["schemas"]["JobListItem"][];
@@ -2680,6 +2861,11 @@ export interface components {
             /** Format: double */
             medianDaysToFirstResponse?: number | null;
             rankingQuality: components["schemas"]["RankingQuality"];
+            /**
+             * Format: int32
+             * @description candidaturas com uma proposta aceita (efetivação)
+             */
+            accepted: number;
         };
         FunnelGroup: {
             group: string;
@@ -2952,6 +3138,178 @@ export interface components {
             label: string;
             /** Format: date-time */
             lastSyncAt?: string | null;
+        };
+        StarStoryCommand: {
+            title: string;
+            situation?: string | null;
+            task?: string | null;
+            action?: string | null;
+            result?: string | null;
+            reflection?: string | null;
+            skills?: string[] | null;
+        };
+        StarStoryView: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+            situation: string;
+            task: string;
+            action: string;
+            result: string;
+            reflection?: string | null;
+            skills: string[];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        StarStoryPolish: {
+            situation: string;
+            task: string;
+            action: string;
+            result: string;
+            reflection?: string | null;
+            notes: string;
+            warnings: string[];
+        };
+        OfferCommand: {
+            /** @enum {string} */
+            regime: "CLT" | "PJ" | "CONTRACTOR";
+            baseSalary: number;
+            currency?: string | null;
+            /** @enum {string|null} */
+            period?: "MENSAL" | "ANUAL" | "HORA" | null;
+            annualBonus?: number | null;
+            monthlyBenefits?: number | null;
+            benefitsNotes?: string | null;
+            equity?: string | null;
+            /** @enum {string|null} */
+            workModel?: "REMOTO" | "HIBRIDO" | "PRESENCIAL" | "NAO_INFORMADO" | null;
+            /** Format: date */
+            startDate?: string | null;
+            /** Format: date */
+            respondBy?: string | null;
+            /** @enum {string|null} */
+            decision?: "PENDENTE" | "NEGOCIANDO" | "ACEITA" | "RECUSADA" | null;
+            notes?: string | null;
+        };
+        OfferView: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            applicationId: number;
+            /** Format: int64 */
+            jobId: number;
+            title: string;
+            company: string;
+            /** @enum {string} */
+            regime: "CLT" | "PJ" | "CONTRACTOR";
+            baseSalary: number;
+            currency: string;
+            /** @enum {string} */
+            period: "MENSAL" | "ANUAL" | "HORA";
+            annualBonus?: number | null;
+            monthlyBenefits?: number | null;
+            benefitsNotes?: string | null;
+            equity?: string | null;
+            /** @enum {string|null} */
+            workModel?: "REMOTO" | "HIBRIDO" | "PRESENCIAL" | "NAO_INFORMADO" | null;
+            /** Format: date */
+            startDate?: string | null;
+            /** Format: date */
+            respondBy?: string | null;
+            /** @enum {string} */
+            decision: "PENDENTE" | "NEGOCIANDO" | "ACEITA" | "RECUSADA";
+            /** Format: date-time */
+            decidedAt?: string | null;
+            notes?: string | null;
+            annualEquivalent?: number | null;
+            monthlyEquivalent?: number | null;
+            exchangeRate?: number | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        NegotiationDraft: {
+            text: string;
+            source: string;
+        };
+        NegotiationRequest: {
+            targetSalary?: number | null;
+            arguments?: string | null;
+        };
+        InterviewPrepView: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            applicationId: number;
+            /** Format: int64 */
+            jobId: number;
+            /** @enum {string} */
+            stage: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
+            status: string;
+            content?: components["schemas"]["InterviewPrepContent"] | null;
+            source?: string | null;
+            modelVersion?: string | null;
+            lastError?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        InterviewPrepContent: {
+            questions: components["schemas"]["InterviewPrepQuestion"][];
+            technicalTopics: string[];
+            companyFacts: string[];
+            questionsToAsk: string[];
+            pointsToClarify: string[];
+        };
+        InterviewPrepQuestion: {
+            question: string;
+            reason: string;
+            /** Format: int64 */
+            storyId?: number | null;
+            storyTitle?: string | null;
+            answerOutline: string;
+        };
+        InterviewDebriefCommand: {
+            /** @enum {string} */
+            stage: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
+            /** Format: date */
+            interviewedOn: string;
+            questions?: string[] | null;
+            wentWell?: string | null;
+            toImprove?: string | null;
+            /** Format: int32 */
+            rating?: number | null;
+            nextSteps?: string | null;
+        };
+        InterviewDebriefView: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            applicationId: number;
+            /** @enum {string} */
+            stage: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
+            /** Format: date */
+            interviewedOn: string;
+            questions: string[];
+            wentWell?: string | null;
+            toImprove?: string | null;
+            /** Format: int32 */
+            rating?: number | null;
+            nextSteps?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        InterviewDebriefSaved: {
+            debrief: components["schemas"]["InterviewDebriefView"];
+            /** Format: date-time */
+            followUpAt?: string | null;
+        };
+        RecurringInterviewQuestion: {
+            question: string;
+            /** Format: int32 */
+            count: number;
         };
     };
     responses: never;
@@ -3720,6 +4078,7 @@ export interface operations {
                 inbox?: boolean;
                 allLegitimacy?: boolean;
                 hasConnection?: boolean;
+                salaryFloor?: boolean;
                 page?: number;
                 size?: number;
             };
@@ -5472,6 +5831,442 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    listStories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StarStoryView"][];
+                };
+            };
+        };
+    };
+    getStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StarStoryView"];
+                };
+            };
+        };
+    };
+    createStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StarStoryCommand"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StarStoryView"];
+                };
+            };
+        };
+    };
+    updateStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StarStoryCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StarStoryView"];
+                };
+            };
+        };
+    };
+    deleteStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    polishStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StarStoryCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StarStoryPolish"];
+                };
+            };
+        };
+    };
+    listOffers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OfferView"][];
+                };
+            };
+        };
+    };
+    applicationOffers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                applicationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OfferView"][];
+                };
+            };
+        };
+    };
+    createOffer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                applicationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferCommand"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OfferView"];
+                };
+            };
+        };
+    };
+    updateOffer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OfferView"];
+                };
+            };
+        };
+    };
+    deleteOffer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    offerNegotiationDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NegotiationRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NegotiationDraft"];
+                };
+            };
+        };
+    };
+    interviewPreps: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InterviewPrepView"][];
+                };
+            };
+        };
+    };
+    requestInterviewPrep: {
+        parameters: {
+            query?: {
+                stage?: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InterviewPrepView"];
+                };
+            };
+        };
+    };
+    interviewDebriefs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InterviewDebriefView"][];
+                };
+            };
+        };
+    };
+    createDebrief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InterviewDebriefCommand"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InterviewDebriefSaved"];
+                };
+            };
+        };
+    };
+    updateDebrief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InterviewDebriefCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InterviewDebriefView"];
+                };
+            };
+        };
+    };
+    deleteDebrief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recurringInterviewQuestions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecurringInterviewQuestion"][];
+                };
             };
         };
     };

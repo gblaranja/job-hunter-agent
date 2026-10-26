@@ -1,5 +1,6 @@
 package dev.laranja.jobhunter.jobs.web;
 
+import java.math.BigDecimal;
 import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,6 +19,7 @@ import dev.laranja.jobhunter.jobs.JobView;
 import dev.laranja.jobhunter.jobs.Legitimacy;
 import dev.laranja.jobhunter.jobs.WorkModel;
 import dev.laranja.jobhunter.shared.jdbc.JdbcRows;
+import dev.laranja.jobhunter.shared.money.SalaryEquivalent;
 import dev.laranja.jobhunter.shared.web.PageResponse;
 
 import tools.jackson.databind.json.JsonMapper;
@@ -54,6 +56,11 @@ class JobQueries {
 			  and (not :inbox or :allLegitimacy or coalesce(j.legitimacy, 'ALTA') in ('ALTA', 'MEDIA'))
 			  -- "tenho conexão": alguém da sua rede (módulo network) na empresa da vaga
 			  and (not :hasConnection or exists (select 1 from contact ct where ct.company_id = j.company_id))
+			  -- piso salarial: esconde só a vaga que informa salário (com câmbio) abaixo da sua pretensão no regime dela
+			  and (not :salaryFloor or an.salary is null or not coalesce(""" + SalaryFloor.ANNUAL_SQL + """
+			       < case when coalesce(an.salary->>'regime',
+			                            case when upper(coalesce(an.salary->>'currency', 'BRL')) = 'BRL' then 'CLT' end) = 'CLT'
+			              then cast(:floorClt as numeric) else cast(:floorPj as numeric) end, false))
 			""";
 
 	/**
@@ -73,15 +80,22 @@ class JobQueries {
 
 	private final Clock clock;
 
-	JobQueries(JdbcClient jdbc, JsonMapper json, InboxProperties inbox, Clock clock) {
+	private final SalaryFloor salaries;
+
+	JobQueries(JdbcClient jdbc, JsonMapper json, InboxProperties inbox, Clock clock, SalaryFloor salaries) {
 		this.jdbc = jdbc;
 		this.json = json;
 		this.inbox = inbox;
 		this.clock = clock;
+		this.salaries = salaries;
 	}
 
 	PageResponse<JobListItem> list(JobListFilter filter, int page, int size) {
 		String pattern = JdbcRows.containsPattern(filter.query());
+		SalaryFloor.Floors floors = this.salaries.floors();
+		boolean salaryFloor = filter.salaryFloor() && floors.any();
+		// O câmbio só é consultado com o filtro ligado; na exibição, só para as vagas em moeda estrangeira.
+		SalaryFloor.SqlParams money = salaryFloor ? this.salaries.sqlParams() : null;
 		List<JobListItem> items = this.jdbc.sql("""
 				select j.id, j.title, j.company, j.company_id, j.location, j.work_model,
 				       coalesce(j.scope, 'NACIONAL') as scope, j.url, j.source, j.collected_at, j.first_seen_at,
@@ -91,6 +105,7 @@ class JobQueries {
 				       (select count(*) from jsonb_array_elements(an.knockouts) k
 				        where k->>'status' = 'NAO_ATENDE') as failed_knockouts,
 				       (select count(*) from contact ct where ct.company_id = j.company_id) as connections,
+				       an.salary::text as salary,
 				       """ + RANKING_SCORE + """
 				 as score_with_bonus
 				""" + LIST_FROM + """
@@ -107,6 +122,14 @@ class JobQueries {
 			.param("inbox", filter.inbox())
 			.param("allLegitimacy", filter.allLegitimacy())
 			.param("hasConnection", filter.hasConnection())
+			.param("salaryFloor", salaryFloor)
+			.param("floorClt", floors.clt(), Types.NUMERIC)
+			.param("floorPj", floors.pj(), Types.NUMERIC)
+			.param("usd", (money != null) ? money.usd() : null, Types.NUMERIC)
+			.param("eur", (money != null) ? money.eur() : null, Types.NUMERIC)
+			.param("cltBenefits", (money != null) ? money.cltBenefits() : BigDecimal.ZERO)
+			.param("pjTax", (money != null) ? money.pjTax() : BigDecimal.ZERO)
+			.param("pjCosts", (money != null) ? money.pjCosts() : BigDecimal.ZERO)
 			.param("freshnessBonus", this.inbox.freshnessBonus())
 			.param("freshnessWindow", (double) Math.max(1, this.inbox.freshnessWindow().toSeconds()))
 			.param("mediumPenalty", this.inbox.mediumLegitimacyPenalty())
@@ -124,7 +147,8 @@ class JobQueries {
 					list(rs.getString("gaps")), rs.getString("gptw_level"), integer(rs, "score_with_bonus"),
 					rs.getInt("failed_knockouts"), JdbcRows.instant(rs, "first_seen_at"),
 					JdbcRows.nullableEnum(rs, "legitimacy", Legitimacy.class), list(rs.getString("legitimacy_reasons")),
-					rs.getInt("connections")))
+					rs.getInt("connections"), salaryEquivalent(rs.getString("salary")),
+					belowFloor(rs.getString("salary"), floors)))
 			.list();
 		long total = this.jdbc.sql("select count(*) " + LIST_FROM)
 			.param("status", filter.status(), Types.VARCHAR)
@@ -134,6 +158,14 @@ class JobQueries {
 			.param("inbox", filter.inbox())
 			.param("allLegitimacy", filter.allLegitimacy())
 			.param("hasConnection", filter.hasConnection())
+			.param("salaryFloor", salaryFloor)
+			.param("floorClt", floors.clt(), Types.NUMERIC)
+			.param("floorPj", floors.pj(), Types.NUMERIC)
+			.param("usd", (money != null) ? money.usd() : null, Types.NUMERIC)
+			.param("eur", (money != null) ? money.eur() : null, Types.NUMERIC)
+			.param("cltBenefits", (money != null) ? money.cltBenefits() : BigDecimal.ZERO)
+			.param("pjTax", (money != null) ? money.pjTax() : BigDecimal.ZERO)
+			.param("pjCosts", (money != null) ? money.pjCosts() : BigDecimal.ZERO)
 			.query(Long.class)
 			.single();
 		return new PageResponse<>(items, page, size, total);
@@ -247,6 +279,20 @@ class JobQueries {
 	}
 
 	// Começo da descrição em texto corrido, para o card da caixa de vagas (o resumo por IA chega na Fase 3).
+	private BigDecimal salaryEquivalent(String json) {
+		SalaryEquivalent equivalent = this.salaries.equivalent(salary(json));
+		return (equivalent != null) ? equivalent.annualBrl() : null;
+	}
+
+	private Boolean belowFloor(String json, SalaryFloor.Floors floors) {
+		JobDetail.Salary salary = salary(json);
+		return SalaryFloor.below(this.salaries.equivalent(salary), salary, floors);
+	}
+
+	private JobDetail.Salary salary(String json) {
+		return (json != null) ? this.json.readValue(json, JobDetail.Salary.class) : null;
+	}
+
 	private static String preview(String description) {
 		if (description == null) {
 			return null;
@@ -257,8 +303,9 @@ class JobQueries {
 
 	/** @param allLegitimacy na caixa, mostra também as vagas de legitimidade BAIXA e SUSPEITA */
 	/** @param hasConnection só vagas de empresas onde você tem um contato ou conexão */
+	/** @param salaryFloor esconde as vagas abaixo da sua pretensão salarial (equivalente anual) */
 	record JobListFilter(String status, FeedbackRating rating, String query, JobScope scope, boolean inbox,
-			boolean allLegitimacy, boolean hasConnection) {
+			boolean allLegitimacy, boolean hasConnection, boolean salaryFloor) {
 	}
 
 }

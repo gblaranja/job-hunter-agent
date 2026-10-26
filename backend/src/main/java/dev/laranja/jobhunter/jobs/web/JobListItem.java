@@ -1,5 +1,6 @@
 package dev.laranja.jobhunter.jobs.web;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -26,11 +27,15 @@ import org.jspecify.annotations.Nullable;
  * @param legitimacyReasons motivos da legitimidade, em frases curtas
  * @param failedKnockouts eliminatórios da vaga que a pessoa não atende
  * @param connections contatos e conexões do LinkedIn na empresa da vaga
+ * @param salaryEquivalent equivalente anual em reais do salário da vaga (o maior valor da faixa): CLT com 13,33
+ * salários, FGTS e benefícios; PJ líquido; nulo sem salário ou sem câmbio
+ * @param belowSalaryFloor a vaga paga menos que a sua pretensão no regime dela; nulo quando não dá para saber
  */
 record JobListItem(long id, String title, String company, @Nullable Long companyId, @Nullable String location,
 		WorkModel workModel, JobScope scope, @Nullable String url, JobOrigin origin, Instant collectedAt,
 		@Nullable String preview, @Nullable Long applicationId, String status, @Nullable FeedbackRating rating, List<FeedbackReason> reasons,
 		@Nullable Integer matchScore, @Nullable String summary, List<String> matchedSkills, List<String> gaps,
 		@Nullable String gptwLevel, @Nullable Integer scoreWithBonus, int failedKnockouts, Instant firstSeenAt,
-		@Nullable Legitimacy legitimacy, List<String> legitimacyReasons, int connections) {
+		@Nullable Legitimacy legitimacy, List<String> legitimacyReasons, int connections,
+		@Nullable BigDecimal salaryEquivalent, @Nullable Boolean belowSalaryFloor) {
 }

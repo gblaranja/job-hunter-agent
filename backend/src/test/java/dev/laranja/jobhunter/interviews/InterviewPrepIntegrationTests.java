@@ -34,6 +34,11 @@ class InterviewPrepIntegrationTests extends IntegrationTest {
 				{"status": "APLICADA", "resumeVersionId": %d}
 				""".formatted(resumeId));
 		awaitListeners();
+		this.jdbc.sql("""
+				update job_analysis set knockouts = '[{"type": "IDIOMA", "text": "Inglês fluente", "value": "INGLES:FLUENTE",
+				  "status": "NAO_ATENDE", "reason": "Seu inglês é intermediário."}]'::jsonb
+				where job_id = :jobId
+				""").param("jobId", jobId).update();
 
 		move(applicationId, "ENTREVISTA");
 		await(() -> "PRONTO".equals(prepStatus(applicationId)));
@@ -47,6 +52,8 @@ class InterviewPrepIntegrationTests extends IntegrationTest {
 			.andExpect(jsonPath("$[0].jobId").value(jobId))
 			.andExpect(jsonPath(kafkaQuestion + ".storyTitle", hasItem("Eventos no motor de crédito")))
 			.andExpect(jsonPath("$[0].content.questions[-1].question").value(containsString("Banco Alfa")))
+			.andExpect(jsonPath("$[0].content.questions[*].reason",
+					hasItem(containsString("Seu inglês é intermediário."))))
 			.andExpect(jsonPath("$[0].content.pointsToClarify", hasItem(containsString("Faixa salarial"))))
 			.andExpect(jsonPath("$[0].content.questionsToAsk.length()").value(org.hamcrest.Matchers.greaterThan(2)));
 		assertThat(count("select count(*) from notification where type = 'PREPARACAO_PRONTA'")).isEqualTo(1);
