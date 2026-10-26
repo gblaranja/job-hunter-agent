@@ -881,3 +881,75 @@ export function useMarkAllNotificationsRead() {
     onSuccess: () => client.invalidateQueries({ queryKey: ['notifications'] }),
   })
 }
+
+// Contatos e conexões
+
+export type ContactView = Schemas['ContactView']
+export type ContactRole = ContactView['role']
+export type ContactInteractionView = Schemas['ContactInteractionView']
+export type InteractionChannel = ContactInteractionView['channel']
+export type InteractionDirection = ContactInteractionView['direction']
+export type InteractionKind = ContactInteractionView['kind']
+export type ApplicationContacts = Schemas['ApplicationContacts']
+
+/** Tudo o que mostra contatos ou conversas é recarregado depois de qualquer mudança neles. */
+function invalidateContacts(client: QueryClient) {
+  return Promise.all(['contacts', 'jobs'].map((key) => client.invalidateQueries({ queryKey: [key] })))
+}
+
+export function useContacts({ q, role, page, size }: { q?: string; role?: ContactRole; page: number; size: number }) {
+  return useQuery({
+    queryKey: ['contacts', 'list', { q, role, page, size }],
+    queryFn: () =>
+      unwrap(api.GET('/api/contacts', { params: { query: { q: q || undefined, role, page, size } } })),
+    placeholderData: (previous) => previous,
+  })
+}
+
+/** Quem você conhece na empresa da vaga. */
+export function useJobContacts(jobId: number, enabled = true) {
+  return useQuery({
+    queryKey: ['contacts', 'job', jobId],
+    queryFn: () => unwrap(api.GET('/api/jobs/{jobId}/contacts', { params: { path: { jobId } } })),
+    enabled,
+  })
+}
+
+/** Contatos da candidatura e as conversas registradas nela. */
+export function useApplicationContacts(applicationId: number | undefined) {
+  return useQuery({
+    queryKey: ['contacts', 'application', applicationId ?? -1],
+    queryFn: () =>
+      unwrap(api.GET('/api/applications/{id}/contacts', { params: { path: { id: applicationId! } } })),
+    enabled: applicationId !== undefined,
+  })
+}
+
+export function useSaveContact() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id?: number } & Schemas['SaveContact']) =>
+      id === undefined
+        ? unwrap(api.POST('/api/contacts', { body }))
+        : unwrap(api.PUT('/api/contacts/{id}', { params: { path: { id } }, body })),
+    onSuccess: () => invalidateContacts(client),
+  })
+}
+
+/** Apaga o contato e as conversas registradas com ele. */
+export function useDeleteContact() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => unwrap(api.DELETE('/api/contacts/{id}', { params: { path: { id } } })),
+    onSuccess: () => invalidateContacts(client),
+  })
+}
+
+export function useRecordInteraction() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ contactId, ...body }: { contactId: number } & Schemas['RecordInteraction']) =>
+      unwrap(api.POST('/api/contacts/{id}/interactions', { params: { path: { id: contactId } }, body })),
+    onSuccess: () => invalidateContacts(client),
+  })
+}

@@ -27,7 +27,7 @@ async function openMenu() {
 }
 
 describe('MobileNav', () => {
-  it('abre a gaveta "Menu" com as 10 telas do painel, na ordem atual', async () => {
+  it('abre a gaveta "Menu" com as 11 telas do painel, na ordem atual', async () => {
     renderNav()
 
     const menu = await openMenu()
@@ -40,6 +40,7 @@ describe('MobileNav', () => {
       'Nova vaga',
       'Currículos',
       'Empresas',
+      'Contatos',
       'Nichos',
       'Insights',
       'Configurações',

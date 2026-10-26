@@ -1,5 +1,9 @@
 import type {
   ApplicationChannel,
+  ContactRole,
+  InteractionChannel,
+  InteractionDirection,
+  InteractionKind,
   ApplicationStatus,
   DismissReason,
   EmailClassification,
@@ -246,4 +250,37 @@ export const nicheSourceLabels: Record<NicheSource, string> = {
   IA: 'Sugestão da IA',
   VAGA: 'Palavras-chave das vagas',
   MANUAL: 'Sua escolha',
+}
+
+export const contactRoleLabels: Record<ContactRole, string> = {
+  RECRUTADOR: 'Recrutador(a)',
+  HEADHUNTER: 'Headhunter',
+  GESTOR: 'Gestor(a)',
+  INDICACAO: 'Pode indicar',
+  CONEXAO: 'Conexão do LinkedIn',
+  OUTRO: 'Outro',
+}
+
+export const interactionChannelLabels: Record<InteractionChannel, string> = {
+  LINKEDIN: 'LinkedIn',
+  EMAIL: 'E-mail',
+  WHATSAPP: 'WhatsApp',
+  TELEFONE: 'Ligação',
+  PRESENCIAL: 'Pessoalmente',
+  OUTRO: 'Outro',
+}
+
+export const interactionDirectionLabels: Record<InteractionDirection, string> = {
+  ENVIADA: 'Você mandou',
+  RECEBIDA: 'Você recebeu',
+}
+
+export const interactionKindLabels: Record<InteractionKind, string> = {
+  PEDIDO_INDICACAO: 'Pedido de indicação',
+  FOLLOW_UP: 'Follow-up',
+  AGRADECIMENTO: 'Agradecimento',
+  RESPOSTA_RECRUTADOR: 'Resposta a recrutador',
+  ABORDAGEM: 'Abordagem de recrutador',
+  CONVERSA: 'Conversa',
+  OUTRO: 'Outro',
 }

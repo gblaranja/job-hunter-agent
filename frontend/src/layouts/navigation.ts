@@ -9,6 +9,7 @@ import {
   MailCheck,
   PlusCircle,
   Settings,
+  Users,
 } from 'lucide-react'
 
 /** Telas do painel, na ordem do menu: usadas pela sidebar e pela gaveta do celular. */
@@ -20,6 +21,7 @@ export const navigation = [
   { to: '/jobs/new', label: 'Nova vaga', Icon: PlusCircle },
   { to: '/resumes', label: 'Currículos', Icon: FileText },
   { to: '/companies', label: 'Empresas', Icon: Building2 },
+  { to: '/contacts', label: 'Contatos', Icon: Users },
   { to: '/niches', label: 'Nichos', Icon: Layers },
   { to: '/insights', label: 'Insights', Icon: Lightbulb },
   { to: '/settings', label: 'Configurações', Icon: Settings },

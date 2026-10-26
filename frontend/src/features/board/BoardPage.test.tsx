@@ -39,6 +39,7 @@ describe('BoardPage', () => {
           timeline: [],
         }),
       ),
+      http.get('/api/applications/:id/contacts', () => HttpResponse.json({ contacts: [], interactions: [] })),
     )
     renderWithProviders(<BoardPage />)
 

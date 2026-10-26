@@ -31,6 +31,10 @@ const router = createBrowserRouter([
           import('@/features/companies/CompanyDetailPage').then((module) => ({ Component: module.CompanyDetailPage })),
       },
       {
+        path: 'contacts',
+        lazy: () => import('@/features/network/ContactsPage').then((module) => ({ Component: module.ContactsPage })),
+      },
+      {
         path: 'niches',
         lazy: () => import('@/features/niches/NichesPage').then((module) => ({ Component: module.NichesPage })),
       },

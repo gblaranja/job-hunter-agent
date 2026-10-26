@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Clock;
 import java.util.Objects;
+import java.util.Optional;
 
 import dev.laranja.jobhunter.companies.internal.Company;
 import dev.laranja.jobhunter.companies.internal.CompanyRepository;
@@ -45,6 +46,21 @@ public class CompanyDirectory {
 			.or(() -> this.companies.findByAlias(normalized))
 			.map(Company::getId)
 			.orElseGet(() -> register(name, normalized));
+	}
+
+	/**
+	 * Só procura: a empresa pelo nome normalizado ou por um alias, sem cadastrar nada. Usado por quem cita uma
+	 * empresa sem ter uma vaga dela (um contato, uma conexão do LinkedIn).
+	 */
+	@Transactional(readOnly = true)
+	public Optional<Long> findId(String name) {
+		String normalized = (name == null) ? "" : CompanyNameNormalizer.normalize(name);
+		if (normalized.isEmpty()) {
+			return Optional.empty();
+		}
+		return this.companies.findByNormalizedName(normalized)
+			.or(() -> this.companies.findByAlias(normalized))
+			.map(Company::getId);
 	}
 
 	private long register(String name, String normalized) {

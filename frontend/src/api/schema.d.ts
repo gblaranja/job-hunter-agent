@@ -87,6 +87,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/contacts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getContact"];
+        put: operations["updateContact"];
+        post?: never;
+        delete: operations["deleteContact"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}/watch-status": {
         parameters: {
             query?: never;
@@ -417,6 +433,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["generate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listContacts"];
+        put?: never;
+        post: operations["createContact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/contacts/{id}/interactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["contactInteractions"];
+        put?: never;
+        post: operations["recordContactInteraction"];
         delete?: never;
         options?: never;
         head?: never;
@@ -839,6 +887,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{jobId}/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["jobContacts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jobs/{id}": {
         parameters: {
             query?: never;
@@ -1095,6 +1159,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/applications/{id}/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["applicationContacts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/board": {
         parameters: {
             query?: never;
@@ -1320,6 +1400,39 @@ export interface components {
         Dismissal: {
             /** @enum {string} */
             reason: "SEM_INTERESSE" | "SEM_PERFIL_TECNICO";
+        };
+        SaveContact: {
+            name: string;
+            /** @enum {string} */
+            role: "RECRUTADOR" | "HEADHUNTER" | "GESTOR" | "INDICACAO" | "CONEXAO" | "OUTRO";
+            company?: string | null;
+            position?: string | null;
+            linkedinUrl?: string | null;
+            /** Format: email */
+            email?: string | null;
+            notes?: string | null;
+        };
+        ContactView: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** @enum {string} */
+            role: "RECRUTADOR" | "HEADHUNTER" | "GESTOR" | "INDICACAO" | "CONEXAO" | "OUTRO";
+            /** Format: int64 */
+            companyId?: number | null;
+            companyName?: string | null;
+            position?: string | null;
+            linkedinUrl?: string | null;
+            email?: string | null;
+            notes?: string | null;
+            /** @enum {string} */
+            source: "MANUAL" | "LINKEDIN_EXPORT" | "EMAIL";
+            /** Format: date */
+            connectedOn?: string | null;
+            /** Format: date-time */
+            lastInteractionAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
         };
         WatchChange: {
             /** @enum {string} */
@@ -1672,6 +1785,23 @@ export interface components {
             title: string;
             detail: string;
             keyword?: string | null;
+        };
+        RecordInteraction: {
+            /** @enum {string} */
+            channel: "LINKEDIN" | "EMAIL" | "WHATSAPP" | "TELEFONE" | "PRESENCIAL" | "OUTRO";
+            /** @enum {string} */
+            direction: "ENVIADA" | "RECEBIDA";
+            /** @enum {string} */
+            kind: "PEDIDO_INDICACAO" | "FOLLOW_UP" | "AGRADECIMENTO" | "RESPOSTA_RECRUTADOR" | "ABORDAGEM" | "CONVERSA" | "OUTRO";
+            summary?: string | null;
+            /** Format: int64 */
+            applicationId?: number | null;
+            /** Format: date-time */
+            occurredAt?: string | null;
+        };
+        CreatedContactInteraction: {
+            /** Format: int64 */
+            id: number;
         };
         MergeCompany: {
             /** Format: int64 */
@@ -2082,6 +2212,35 @@ export interface components {
             /** Format: double */
             rate?: number | null;
         };
+        PageResponseContactView: {
+            items: components["schemas"]["ContactView"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ContactInteractionView: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            contactId: number;
+            contactName: string;
+            /** @enum {string} */
+            contactRole: "RECRUTADOR" | "HEADHUNTER" | "GESTOR" | "INDICACAO" | "CONEXAO" | "OUTRO";
+            /** Format: int64 */
+            applicationId?: number | null;
+            /** @enum {string} */
+            channel: "LINKEDIN" | "EMAIL" | "WHATSAPP" | "TELEFONE" | "PRESENCIAL" | "OUTRO";
+            /** @enum {string} */
+            direction: "ENVIADA" | "RECEBIDA";
+            /** @enum {string} */
+            kind: "PEDIDO_INDICACAO" | "FOLLOW_UP" | "AGRADECIMENTO" | "RESPOSTA_RECRUTADOR" | "ABORDAGEM" | "CONVERSA" | "OUTRO";
+            summary?: string | null;
+            /** Format: date-time */
+            occurredAt: string;
+        };
         CompanyJob: {
             /** Format: int64 */
             id: number;
@@ -2191,6 +2350,10 @@ export interface components {
             hasPagePdf: boolean;
             /** Format: date-time */
             capturedAt: string;
+        };
+        ApplicationContacts: {
+            contacts: components["schemas"]["ContactView"][];
+            interactions: components["schemas"]["ContactInteractionView"][];
         };
         Board: {
             columns: components["schemas"]["BoardColumn"][];
@@ -2417,6 +2580,74 @@ export interface operations {
         };
     };
     restore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    getContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ContactView"];
+                };
+            };
+        };
+    };
+    updateContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveContact"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ContactView"];
+                };
+            };
+        };
+    };
+    deleteContact: {
         parameters: {
             query?: never;
             header?: never;
@@ -3052,6 +3283,104 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["InsightReport"];
+                };
+            };
+        };
+    };
+    listContacts: {
+        parameters: {
+            query?: {
+                q?: string;
+                companyId?: number;
+                role?: "RECRUTADOR" | "HEADHUNTER" | "GESTOR" | "INDICACAO" | "CONEXAO" | "OUTRO";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PageResponseContactView"];
+                };
+            };
+        };
+    };
+    createContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveContact"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ContactView"];
+                };
+            };
+        };
+    };
+    contactInteractions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ContactInteractionView"][];
+                };
+            };
+        };
+    };
+    recordContactInteraction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordInteraction"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CreatedContactInteraction"];
                 };
             };
         };
@@ -3694,6 +4023,28 @@ export interface operations {
             };
         };
     };
+    jobContacts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ContactView"][];
+                };
+            };
+        };
+    };
     detail: {
         parameters: {
             query?: never;
@@ -4033,6 +4384,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["AppliedListItem"][];
+                };
+            };
+        };
+    };
+    applicationContacts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApplicationContacts"];
                 };
             };
         };

@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { useParams } from 'react-router'
 import { toast } from 'sonner'
 import {
+  useApplicationContacts,
   useChangeResume,
   useJob,
   useResumes,
   useStartApplication,
   useTailoredResumes,
   type ApplicationStatus,
+  type ContactView,
   type JobDetail,
 } from '@/api/queries'
 import { AppliedJobCard } from '@/components/AppliedJobCard'
@@ -31,6 +33,7 @@ import { FollowUpStatus } from '@/features/applications/FollowUpStatus'
 import { ResponseDialog } from '@/features/applications/ResponseDialog'
 import { Timeline } from '@/features/applications/Timeline'
 import { useStatusMove } from '@/features/applications/useStatusMove'
+import { ContactsCard } from '@/features/network/ContactsCard'
 import { closedJobNote, sameAsWorkModel, statusesRequiringResume, statusLabels, workModelLabels } from '@/lib/labels'
 import { ExternalLink } from 'lucide-react'
 
@@ -49,6 +52,7 @@ export function JobDetailPage() {
 function JobDetailView({ detail }: { detail: JobDetail }) {
   const { job, application, timeline } = detail
   const hasSnapshot = application != null && statusesRequiringResume.has(application.status as ApplicationStatus)
+  const contacts = useApplicationContacts(application?.id)
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -122,18 +126,23 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
                 applicationId={application.id}
                 status={application.status as ApplicationStatus}
                 resumeVersionId={application.resumeVersionId}
+                contacts={contacts.data?.contacts}
               />
+              <ContactsCard jobId={job.id} company={job.company} applicationId={application.id} />
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Linha do tempo</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Timeline events={timeline} />
+                  <Timeline events={timeline} interactions={contacts.data?.interactions} />
                 </CardContent>
               </Card>
             </>
           ) : (
-            <StartPanel jobId={job.id} dismissal={detail.dismissal} />
+            <>
+              <StartPanel jobId={job.id} dismissal={detail.dismissal} />
+              <ContactsCard jobId={job.id} company={job.company} />
+            </>
           )}
         </aside>
       </div>
@@ -145,10 +154,12 @@ function StatusPanel({
   applicationId,
   status,
   resumeVersionId,
+  contacts,
 }: {
   applicationId: number
   status: ApplicationStatus
   resumeVersionId?: number | null
+  contacts?: ContactView[]
 }) {
   const { requestMove, dialog } = useStatusMove()
   const resumes = useResumes()
@@ -205,7 +216,7 @@ function StatusPanel({
             </SelectContent>
           </Select>
         </div>
-        <ResponseDialog applicationId={applicationId} />
+        <ResponseDialog applicationId={applicationId} contacts={contacts} />
       </CardContent>
       {dialog}
     </Card>
