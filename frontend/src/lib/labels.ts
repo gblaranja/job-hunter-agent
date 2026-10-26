@@ -305,3 +305,7 @@ export const knockoutStatusLabels: Record<string, string> = {
   NAO_ATENDE: 'Não atende',
   SEM_INFORMACAO: 'Sem informação',
 }
+
+export function nextActionKindLabel(kind: string | null | undefined): string {
+  return kind ? (nextActionKindLabels[kind as NextActionKind] ?? kind) : 'Próxima ação'
+}

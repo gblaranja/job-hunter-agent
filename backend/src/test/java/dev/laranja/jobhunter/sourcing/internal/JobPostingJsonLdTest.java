@@ -52,6 +52,11 @@ class JobPostingJsonLdTest {
 		assertThat(posting.workModel()).isNull();
 		assertThat(posting.salaryRange()).isEqualTo("USD 40/hora");
 		assertThat(JobPostingJsonLd.parse(this.json, List.of("{\"@type\": \"Organization\"}"))).isEmpty();
+		// Gupy: aspas como entidades HTML dentro do script
+		assertThat(JobPostingJsonLd.parse(this.json,
+				List.of("{&quot;@type&quot;:&quot;JobPosting&quot;,&quot;title&quot;:&quot;Dev&quot;}")))
+			.map(Posting::title)
+			.contains("Dev");
 	}
 
 	@Test
