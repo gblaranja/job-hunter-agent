@@ -1,5 +1,7 @@
 package dev.laranja.jobhunter.notifications.internal;
 
+import java.util.stream.Collectors;
+
 import dev.laranja.jobhunter.analysis.JobAnalyzed;
 import dev.laranja.jobhunter.companies.CompanyAlertRaised;
 import dev.laranja.jobhunter.jobs.JobCatalog;
@@ -9,6 +11,8 @@ import dev.laranja.jobhunter.notifications.Notifications;
 import dev.laranja.jobhunter.recognition.RecognitionReviewNeeded;
 import dev.laranja.jobhunter.shared.NotificationRequested;
 import dev.laranja.jobhunter.tailoring.TailoredResumeReady;
+import dev.laranja.jobhunter.tracking.FollowUpsDue;
+import dev.laranja.jobhunter.tracking.NextActionKind;
 
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.modulith.events.ApplicationModuleListener;
@@ -23,6 +27,9 @@ class NotificationTriggers {
 
 	/** Vaga de empresa-alvo a partir deste score vai ao celular (VAGA_ALVO). */
 	static final int TARGET_SCORE = 60;
+
+	/** Empresas citadas no lembrete de follow-up; as demais entram como "e mais N". */
+	private static final int LISTED = 5;
 
 	private final Notifications notifications;
 
@@ -114,6 +121,35 @@ class NotificationTriggers {
 			.param("jobId", jobId)
 			.query(Long.class)
 			.single() > 0;
+	}
+
+	@ApplicationModuleListener
+	void on(FollowUpsDue event) {
+		int total = event.actions().size();
+		long followUps = event.actions().stream().filter(action -> action.kind() == NextActionKind.FOLLOW_UP).count();
+		String title;
+		if (followUps == total) {
+			title = (total == 1) ? "1 follow-up para fazer hoje" : total + " follow-ups para fazer hoje";
+		}
+		else {
+			title = (total == 1) ? "1 próxima ação vencida nas candidaturas"
+					: total + " próximas ações vencidas nas candidaturas";
+		}
+		String body = event.actions()
+			.stream()
+			.limit(LISTED)
+			.map(action -> nextActionLabel(action.kind()) + ": " + action.company())
+			.collect(Collectors.joining(" · ")) + ((total > LISTED) ? " e mais " + (total - LISTED) : "");
+		this.notifications.notify("FOLLOW_UP", title, body, "/board", "follow-up-" + event.day());
+	}
+
+	private static String nextActionLabel(NextActionKind kind) {
+		return switch (kind) {
+			case FOLLOW_UP -> "Follow-up";
+			case RESPONDER -> "Responder";
+			case ENTREVISTA -> "Entrevista";
+			case OUTRO -> "Próxima ação";
+		};
 	}
 
 }

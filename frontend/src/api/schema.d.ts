@@ -535,6 +535,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/applications/{id}/follow-ups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["registerFollowUp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/verify-links": {
         parameters: {
             query?: never;
@@ -1862,6 +1878,8 @@ export interface components {
             notes?: string | null;
             /** Format: date-time */
             nextActionAt?: string | null;
+            /** @enum {string|null} */
+            nextActionKind?: "FOLLOW_UP" | "RESPONDER" | "ENTREVISTA" | "OUTRO" | null;
         };
         ChangeApplicationStatus: {
             /** @enum {string} */
@@ -2036,6 +2054,10 @@ export interface components {
             notes?: string | null;
             /** Format: date-time */
             nextActionAt?: string | null;
+            nextActionKind?: string | null;
+            nextActionAuto: boolean;
+            /** Format: int32 */
+            followUpsSent: number;
         };
         JobCopy: {
             /** Format: int64 */
@@ -2302,6 +2324,8 @@ export interface components {
             resumeLabel?: string | null;
             /** Format: date-time */
             nextActionAt?: string | null;
+            /** @enum {string|null} */
+            nextActionKind?: "FOLLOW_UP" | "RESPONDER" | "ENTREVISTA" | "OUTRO" | null;
             /** @enum {string|null} */
             linkStatus?: "ATIVO" | "REMOVIDO" | "NAO_VERIFICADO" | null;
         };
@@ -3315,6 +3339,26 @@ export interface operations {
                 "application/json": components["schemas"]["RecordResponse"];
             };
         };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    registerFollowUp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description No Content */
             204: {

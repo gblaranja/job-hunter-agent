@@ -134,7 +134,7 @@ class JobQueries {
 	JobDetail detail(JobView job) {
 		JobDetail.ApplicationSummary application = this.jdbc.sql("""
 				select a.id, a.status, a.applied_at, a.channel, a.resume_version_id, r.label as resume_label,
-				       a.notes, a.next_action_at
+				       a.notes, a.next_action_at, a.next_action_kind, a.next_action_auto, a.follow_ups_sent
 				from application a
 				left join resume_version r on r.id = a.resume_version_id
 				where a.job_id = :jobId
@@ -143,7 +143,8 @@ class JobQueries {
 			.query((rs, row) -> new JobDetail.ApplicationSummary(rs.getLong("id"), rs.getString("status"),
 					JdbcRows.instant(rs, "applied_at"), rs.getString("channel"),
 					JdbcRows.nullableLong(rs, "resume_version_id"), rs.getString("resume_label"),
-					rs.getString("notes"), JdbcRows.instant(rs, "next_action_at")))
+					rs.getString("notes"), JdbcRows.instant(rs, "next_action_at"), rs.getString("next_action_kind"),
+					rs.getBoolean("next_action_auto"), rs.getInt("follow_ups_sent")))
 			.optional()
 			.orElse(null);
 		List<JobDetail.TimelineEvent> timeline = (application == null) ? List.of() : this.jdbc.sql("""

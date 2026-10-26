@@ -24,6 +24,7 @@ import dev.laranja.jobhunter.tracking.internal.JobSnapshotRepository;
 
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Transactional
+@EnableConfigurationProperties(TrackingProperties.class)
 public class ApplicationService {
 
 	private static final Duration PDF_LINK_TTL = Duration.ofMinutes(5);
@@ -57,11 +59,13 @@ public class ApplicationService {
 
 	private final JdbcClient jdbc;
 
+	private final TrackingProperties.FollowUp followUp;
+
 	private final Clock clock;
 
 	ApplicationService(ApplicationRepository applications, ApplicationEventRepository history,
 			JobSnapshotRepository snapshots, JobCatalog jobs, ResumeCatalog resumes, ObjectStorage storage,
-			ApplicationEventPublisher events, JdbcClient jdbc, Clock clock) {
+			ApplicationEventPublisher events, JdbcClient jdbc, TrackingProperties properties, Clock clock) {
 		this.applications = applications;
 		this.history = history;
 		this.snapshots = snapshots;
@@ -70,6 +74,7 @@ public class ApplicationService {
 		this.storage = storage;
 		this.events = events;
 		this.jdbc = jdbc;
+		this.followUp = properties.followUp();
 		this.clock = clock;
 	}
 
@@ -83,7 +88,7 @@ public class ApplicationService {
 		}
 		Instant now = this.clock.instant();
 		Application application = this.applications.save(Application.start(jobId, command.status(),
-				command.resumeVersionId(), command.channel(), command.appliedAt(), command.notes(), now));
+				command.resumeVersionId(), command.channel(), command.appliedAt(), command.notes(), this.followUp, now));
 		this.history.save(application.creationEvent());
 		captureSnapshotIfApplied(application, job, now);
 		closeJobIfEnded(application);
@@ -100,7 +105,7 @@ public class ApplicationService {
 		ApplicationStatus from = application.getStatus();
 		Instant now = this.clock.instant();
 		this.history.save(application.moveTo(command.status(), command.resumeVersionId(), command.note(),
-				EventOrigin.MANUAL, now));
+				EventOrigin.MANUAL, this.followUp, now));
 		captureSnapshotIfApplied(application, null, now);
 		closeJobIfEnded(application);
 		this.events.publishEvent(new ApplicationStatusChanged(applicationId, application.getJobId(), from,
@@ -147,7 +152,8 @@ public class ApplicationService {
 				ApplicationStatus back = Objects.equals(applicationId, move.applicationId()) && newTarget != null ? newTarget
 						: move.from();
 				ApplicationStatus from = moved.getStatus();
-				this.history.save(moved.moveTo(back, null, "Correção da classificação de um e-mail", EventOrigin.MANUAL, now));
+				this.history.save(moved.moveTo(back, null, "Correção da classificação de um e-mail", EventOrigin.MANUAL,
+						this.followUp, now));
 				publishChange(moved, from, now);
 			}
 			if (sameTarget || Objects.equals(applicationId, move.applicationId())) {
@@ -194,7 +200,21 @@ public class ApplicationService {
 	}
 
 	public void updateDetails(long applicationId, ApplicationCommands.UpdateDetails command) {
-		require(applicationId).updateDetails(command.notes(), command.nextActionAt(), this.clock.instant());
+		require(applicationId).updateDetails(command.notes(), command.nextActionAt(), command.nextActionKind(),
+				this.clock.instant());
+	}
+
+	/**
+	 * Agenda a próxima ação da candidatura como uma ação sua (um retorno da empresa não a cancela). Usado, por exemplo,
+	 * para o próximo contato depois de uma entrevista.
+	 */
+	public void scheduleNextAction(long applicationId, Instant at, NextActionKind kind) {
+		require(applicationId).scheduleNextAction(at, kind, this.clock.instant());
+	}
+
+	/** Você mandou um follow-up (por e-mail, LinkedIn ou WhatsApp): conta o envio e agenda o próximo. */
+	public void registerFollowUp(long applicationId) {
+		require(applicationId).registerFollowUp(this.followUp, this.clock.instant());
 	}
 
 	public void saveSnapshot(long applicationId, ApplicationCommands.SaveSnapshot command) {
