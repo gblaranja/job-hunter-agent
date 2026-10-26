@@ -30,6 +30,7 @@ const emptyHealth: SourceHealth = { sources: [], unrecognizedAlerts: [] }
 function serveSettings(runs: unknown[] = [], health: SourceHealth = emptyHealth) {
   server.use(
     http.get('/api/admin/sources/health', () => HttpResponse.json(health)),
+    http.get('/api/auth/api-token', () => HttpResponse.json({ exists: false })),
     http.get('/api/notifications/telegram', () =>
       HttpResponse.json({ configured: true, types: ['VAGA_ALVO', 'FOLLOW_UP'] }),
     ),
@@ -143,5 +144,26 @@ describe('SettingsPage', () => {
 
     expect(window.localStorage.getItem('job-hunter-theme')).toBe('dark')
     expect(document.documentElement).toHaveClass('dark')
+  })
+})
+
+describe('token da extensão', () => {
+  it('gera o token, mostra uma vez e depois só o final', async () => {
+    let exists = false
+    serveSettings()
+    server.use(
+      http.get('/api/auth/api-token', () =>
+        HttpResponse.json(exists ? { exists: true, hint: 'wxyz', createdAt: '2026-10-24T10:00:00Z', lastUsedAt: null } : { exists: false }),
+      ),
+      http.post('/api/auth/api-token', () => {
+        exists = true
+        return HttpResponse.json({ token: 'jh_abcwxyz' }, { status: 201 })
+      }),
+    )
+    renderSettingsPage()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Gerar token' }))
+    expect(await screen.findByLabelText('Token gerado')).toHaveValue('jh_abcwxyz')
+    expect(await screen.findByText('wxyz')).toBeInTheDocument()
   })
 })

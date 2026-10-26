@@ -20,6 +20,7 @@ import {
   type SearchProfile,
 } from '@/api/queries'
 import { PageHeader } from '@/components/PageHeader'
+import { ApiTokenCard } from './ApiTokenCard'
 import { ErrorBlock, LoadingBlock } from '@/components/QueryState'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -77,6 +78,7 @@ export function SettingsPage() {
       <AppearanceCard />
       <GmailCard />
       <TelegramCard />
+      <ApiTokenCard />
       <CollectionCard />
       <SourceHealthCard />
       <ProfilesCard />

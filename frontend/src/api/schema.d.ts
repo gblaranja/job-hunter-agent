@@ -487,6 +487,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/api-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["status_apiToken"];
+        put?: never;
+        /** @description Gera um token novo, que invalida o anterior. O texto só aparece nesta resposta. */
+        post: operations["generate_apiToken"];
+        delete: operations["revoke_apiToken"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/ats-check": {
         parameters: {
             query?: never;
@@ -1879,6 +1896,19 @@ export interface components {
             /** @description página de carreira, de onde o ATS e o slug são detectados */
             careersUrl?: string | null;
         };
+        ApiTokenStatus: {
+            exists: boolean;
+            /** @description os 4 últimos caracteres do token */
+            hint?: string | null;
+            /** Format: date-time */
+            createdAt?: string | null;
+            /** Format: date-time */
+            lastUsedAt?: string | null;
+        };
+        GeneratedApiToken: {
+            /** @description mostrado só agora; cole na extensão */
+            token: string;
+        };
         /** @description Link da página de carreira, ou o ATS e o slug, para conferir antes de salvar. */
         CompanyAtsCheckRequest: {
             careersUrl?: string | null;
@@ -3267,6 +3297,64 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["RecognitionView"];
                 };
+            };
+        };
+    };
+    status_apiToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiTokenStatus"];
+                };
+            };
+        };
+    };
+    generate_apiToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["GeneratedApiToken"];
+                };
+            };
+        };
+    };
+    revoke_apiToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
