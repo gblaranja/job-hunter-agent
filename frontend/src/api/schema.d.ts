@@ -423,6 +423,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/import/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["preview_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/insights/generate": {
         parameters: {
             query?: never;
@@ -1614,6 +1630,27 @@ export interface components {
         CreatedApplication: {
             /** Format: int64 */
             id: number;
+        };
+        JobImportRequest: {
+            url: string;
+            jsonLd?: string | null;
+            text?: string | null;
+        };
+        JobImportPreview: {
+            title?: string | null;
+            company?: string | null;
+            location?: string | null;
+            /** @enum {string|null} */
+            workModel?: "REMOTO" | "HIBRIDO" | "PRESENCIAL" | "NAO_INFORMADO" | null;
+            /** @enum {string|null} */
+            scope?: "NACIONAL" | "INTERNACIONAL" | null;
+            salaryRange?: string | null;
+            url: string;
+            description?: string | null;
+            method: string;
+            warnings: string[];
+            /** Format: int64 */
+            existingJobId?: number | null;
         };
         BulletRewrite: {
             original: string;
@@ -3104,6 +3141,30 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    preview_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobImportRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JobImportPreview"];
+                };
             };
         };
     };
