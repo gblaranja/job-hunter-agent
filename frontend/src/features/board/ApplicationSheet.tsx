@@ -10,6 +10,7 @@ import { FollowUpStatus } from '@/features/applications/FollowUpStatus'
 import { ResponseDialog } from '@/features/applications/ResponseDialog'
 import { Timeline } from '@/features/applications/Timeline'
 import { ContactsCard } from '@/features/network/ContactsCard'
+import { MessageDrafts } from '@/features/network/MessageDrafts'
 import { ArrowUpRight } from 'lucide-react'
 
 /** Painel lateral do kanban: a vaga aplicada, anotações e o histórico da candidatura. */
@@ -51,6 +52,7 @@ export function ApplicationSheet({ card, onClose }: { card: BoardCard; onClose: 
               />
               <ResponseDialog applicationId={application.id} contacts={contacts.data?.contacts} />
               <ContactsCard jobId={card.jobId} company={card.company} applicationId={application.id} />
+              <MessageDrafts jobId={card.jobId} applicationId={application.id} />
               <section>
                 <h3 className="mb-3 text-sm font-semibold">Histórico</h3>
                 <Timeline events={job.data?.timeline ?? []} interactions={contacts.data?.interactions} />

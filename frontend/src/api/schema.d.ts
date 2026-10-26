@@ -423,6 +423,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{jobId}/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["draftMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jobs/{jobId}/application": {
         parameters: {
             query?: never;
@@ -1911,6 +1927,20 @@ export interface components {
         TailorRequest: {
             /** Format: int64 */
             baseResumeId?: number | null;
+        };
+        DraftRequest: {
+            /** @enum {string} */
+            kind: "PEDIDO_INDICACAO" | "FOLLOW_UP" | "AGRADECIMENTO" | "RESPOSTA_RECRUTADOR";
+            /** Format: int64 */
+            contactId?: number | null;
+        };
+        MessageDraft: {
+            /** @enum {string} */
+            kind: "PEDIDO_INDICACAO" | "FOLLOW_UP" | "AGRADECIMENTO" | "RESPOSTA_RECRUTADOR";
+            text: string;
+            linkedinNote?: string | null;
+            language: string;
+            source: string;
         };
         StartApplication: {
             /** @enum {string} */
@@ -3752,6 +3782,32 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["TailoredResumeView"];
+                };
+            };
+        };
+    };
+    draftMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MessageDraft"];
                 };
             };
         };

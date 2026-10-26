@@ -37,6 +37,7 @@ import { ResponseDialog } from '@/features/applications/ResponseDialog'
 import { Timeline } from '@/features/applications/Timeline'
 import { useStatusMove } from '@/features/applications/useStatusMove'
 import { ContactsCard } from '@/features/network/ContactsCard'
+import { MessageDrafts } from '@/features/network/MessageDrafts'
 import {
   closedJobNote,
   legitimacyLabels,
@@ -111,6 +112,7 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
             </Card>
           )}
           <TailoredResumeCard jobId={job.id} />
+          <MessageDrafts jobId={job.id} applicationId={application?.id} />
           <ScreeningQuestionsCard jobId={job.id} />
           {application && (
             <Card>

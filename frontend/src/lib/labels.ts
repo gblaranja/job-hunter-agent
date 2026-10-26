@@ -1,5 +1,6 @@
 import type {
   ApplicationChannel,
+  DraftKind,
   ContactRole,
   InteractionChannel,
   InteractionDirection,
@@ -359,4 +360,11 @@ export const legitimacyLabels: Record<string, string> = {
 
 export function nextActionKindLabel(kind: string | null | undefined): string {
   return kind ? (nextActionKindLabels[kind as NextActionKind] ?? kind) : 'Próxima ação'
+}
+
+export const draftKindLabels: Record<DraftKind, string> = {
+  PEDIDO_INDICACAO: 'Pedir indicação',
+  FOLLOW_UP: 'Follow-up',
+  AGRADECIMENTO: 'Agradecer a entrevista',
+  RESPOSTA_RECRUTADOR: 'Responder recrutador',
 }

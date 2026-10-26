@@ -1126,3 +1126,18 @@ export function useApplyCheck(jobId: number | undefined) {
     staleTime: 60_000,
   })
 }
+
+// Rascunhos de mensagem
+
+export type MessageDraft = Schemas['MessageDraft']
+export type DraftKind = MessageDraft['kind']
+
+/** Gera o rascunho (nada é guardado nem enviado). */
+export function useDraftMessage() {
+  return useMutation({
+    mutationFn: ({ jobId, kind, contactId }: { jobId: number; kind: DraftKind; contactId?: number | null }) =>
+      unwrap(
+        api.POST('/api/jobs/{jobId}/drafts', { params: { path: { jobId } }, body: { kind, contactId: contactId ?? null } }),
+      ),
+  })
+}
