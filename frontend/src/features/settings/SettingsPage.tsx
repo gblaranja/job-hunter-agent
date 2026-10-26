@@ -12,12 +12,15 @@ import {
   useSaveSearchProfile,
   useSearchProfiles,
   useSeedSources,
+  useSendTelegramTest,
   useSourceHealth,
+  useTelegramStatus,
   useVerifyLinks,
   type CollectionRun,
   type SearchProfile,
 } from '@/api/queries'
 import { PageHeader } from '@/components/PageHeader'
+import { ApiTokenCard } from './ApiTokenCard'
 import { ErrorBlock, LoadingBlock } from '@/components/QueryState'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -34,9 +37,25 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatDateTime } from '@/lib/format'
-import { sourceLabel } from '@/lib/labels'
+import { notificationTypeLabel, sourceLabel } from '@/lib/labels'
 import { useTheme } from '@/lib/useTheme'
-import { Activity, Database, ExternalLink, Link2, Mail, Monitor, Moon, Pencil, Play, Plus, Sun, Trash2 } from 'lucide-react'
+import {
+  Activity,
+  Database,
+  ExternalLink,
+  Link2,
+  Mail,
+  Monitor,
+  Moon,
+  Pencil,
+  Play,
+  Plus,
+  Send,
+  Smartphone,
+  Sun,
+  Trash2,
+} from 'lucide-react'
+import { CandidateProfileCard } from './CandidateProfileCard'
 
 export function SettingsPage() {
   const [params, setParams] = useSearchParams()
@@ -55,10 +74,13 @@ export function SettingsPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader
         title="Configurações"
-        description="Conexão com o Gmail, coleta de vagas, perfis de busca e as bases públicas de empresas."
+        description="Seus dados para a triagem, conexão com o Gmail, coleta de vagas, perfis de busca e as bases públicas de empresas."
       />
       <AppearanceCard />
+      <CandidateProfileCard />
       <GmailCard />
+      <TelegramCard />
+      <ApiTokenCard />
       <CollectionCard />
       <SourceHealthCard />
       <ProfilesCard />
@@ -229,6 +251,60 @@ function CollectionCard() {
               })}
             </TableBody>
           </Table>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+/** Alertas no celular: o token fica só no backend; aqui aparece se está configurado e o botão de teste. */
+function TelegramCard() {
+  const status = useTelegramStatus()
+  const test = useSendTelegramTest()
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Smartphone className="size-4" aria-hidden /> Telegram
+        </CardTitle>
+        <CardDescription>
+          As notificações que pedem ação também chegam ao celular por um bot do Telegram. O passo a passo para criar o
+          bot está no README, em “Alertas no Telegram”.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {status.isLoading && <LoadingBlock lines={1} />}
+        {status.error && <ErrorBlock error={status.error} />}
+        {status.data && (
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="space-y-1 text-sm">
+              <div className="flex items-center gap-2">
+                {status.data.configured ? <Badge>Configurado</Badge> : <Badge variant="outline">Desligado</Badge>}
+              </div>
+              {status.data.configured ? (
+                <p className="text-muted-foreground">
+                  Vão ao celular: {status.data.types.map(notificationTypeLabel).join(', ') || 'nenhum tipo'}.
+                </p>
+              ) : (
+                <p className="text-muted-foreground">
+                  Defina JOBHUNTER_TELEGRAM_BOT_TOKEN e JOBHUNTER_TELEGRAM_CHAT_ID no backend para receber os alertas.
+                </p>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              disabled={!status.data.configured || test.isPending}
+              onClick={() =>
+                test.mutate(undefined, {
+                  onSuccess: () => toast.success('Mensagem de teste enviada. Confira o Telegram.'),
+                  onError: (error) => toast.error(error.message),
+                })
+              }
+            >
+              <Send aria-hidden /> Enviar teste
+            </Button>
+          </div>
         )}
       </CardContent>
     </Card>

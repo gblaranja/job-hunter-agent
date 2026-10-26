@@ -12,6 +12,10 @@ const router = createBrowserRouter([
     element: <AppLayout />,
     children: [
       {
+        path: 'today',
+        lazy: () => import('@/features/today/TodayPage').then((module) => ({ Component: module.TodayPage })),
+      },
+      {
         path: 'inbox',
         lazy: () => import('@/features/inbox/InboxPage').then((module) => ({ Component: module.InboxPage })),
       },
@@ -69,7 +73,7 @@ const router = createBrowserRouter([
         path: 'resumes',
         lazy: () => import('@/features/resumes/ResumesPage').then((module) => ({ Component: module.ResumesPage })),
       },
-      { path: '*', element: <Navigate to="/board" replace /> },
+      { path: '*', element: <Navigate to="/today" replace /> },
     ],
   },
 ])

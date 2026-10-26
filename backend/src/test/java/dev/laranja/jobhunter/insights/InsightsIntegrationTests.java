@@ -4,6 +4,7 @@ import dev.laranja.jobhunter.IntegrationTest;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.closeTo;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -47,7 +48,9 @@ class InsightsIntegrationTests extends IntegrationTest {
 			.andExpect(jsonPath("$.recommendations.linkedinKeywords").value(hasItem("Spring Boot")))
 			// 2 de 6 chegaram à entrevista (33%): o funil está saudável.
 			.andExpect(jsonPath("$.recommendations.diagnosis").value("EQUILIBRADO"))
-			.andExpect(jsonPath("$.modelVersion").value("regras@v1"));
+			.andExpect(jsonPath("$.recommendations.linkedinProfile.headline").value(containsString("Spring Boot")))
+			.andExpect(jsonPath("$.recommendations.gupyProfile.skills").value(containsString("Spring Boot")))
+			.andExpect(jsonPath("$.modelVersion").value("regras@v2"));
 
 		this.mvc.perform(get("/api/insights/latest").with(owner()))
 			.andExpect(status().isOk())

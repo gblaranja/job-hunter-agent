@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Salvar vaga</title>
+<style>
+  body { font: 14px system-ui, sans-serif; width: 340px; margin: 12px; color: #1a1a1a; }
+  label { display: block; margin-top: 8px; font-weight: 600; }
+  input, textarea { width: 100%; box-sizing: border-box; font: inherit; }
+  button { margin-top: 10px; padding: 6px 12px; }
+  .muted { color: #666; font-size: 12px; }
+  .warn { color: #8a5a00; }
+  .error { color: #b00020; }
+  [hidden] { display: none; }
+</style>
+</head>
+<body>
+  <p class="muted">Lê só esta página, e só agora. O texto selecionado é usado quando a página não tem dados estruturados.</p>
+  <button id="capture">Ler esta vaga</button>
+  <form id="review" hidden>
+    <label for="title">Título</label><input id="title" required>
+    <label for="company">Empresa</label><input id="company" required>
+    <label for="location">Local</label><input id="location">
+    <ul id="warnings" class="warn"></ul>
+    <button type="submit">Salvar no Job Hunter</button>
+  </form>
+  <p id="message" role="status"></p>
+  <p class="muted"><a href="options.html" target="_blank">Configurar</a></p>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

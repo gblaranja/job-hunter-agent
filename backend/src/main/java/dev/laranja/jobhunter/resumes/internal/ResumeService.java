@@ -17,6 +17,7 @@ import dev.laranja.jobhunter.shared.NotFoundException;
 import dev.laranja.jobhunter.shared.storage.DownloadLink;
 import dev.laranja.jobhunter.shared.storage.ObjectStorage;
 import org.jspecify.annotations.Nullable;
+import tools.jackson.databind.json.JsonMapper;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -41,8 +42,11 @@ public class ResumeService {
 
 	private final Clock clock;
 
+	private final JsonMapper json;
+
 	ResumeService(ResumeVersionRepository resumes, ResumeFileValidator validator, ResumeTextExtractor textExtractor,
-			ObjectStorage storage, ApplicationEventPublisher events, Clock clock) {
+			ObjectStorage storage, ApplicationEventPublisher events, Clock clock, JsonMapper json) {
+		this.json = json;
 		this.resumes = resumes;
 		this.validator = validator;
 		this.textExtractor = textExtractor;
@@ -71,7 +75,9 @@ public class ResumeService {
 			ResumeVersion resume = ResumeVersion.create(resolvedLabel, null, fileKey, fileName, type, content.length,
 					sha256, firstDefault, this.clock.instant());
 			resume.changeTargetRole(targetRole);
-			resume.useExtractedText(this.textExtractor.extract(content));
+			ResumeTextExtractor.Extracted extracted = this.textExtractor.extractDocument(content);
+			resume.useExtractedText(extracted.text());
+			resume.useLint(this.json.writeValueAsString(ResumeLint.check(extracted.text(), extracted.pages())));
 			saved = this.resumes.saveAndFlush(resume);
 		}
 		catch (RuntimeException ex) {

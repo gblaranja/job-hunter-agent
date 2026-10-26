@@ -33,6 +33,7 @@ describe('MobileNav', () => {
     const menu = await openMenu()
 
     expect(within(menu).getAllByRole('link').map((link) => link.textContent)).toEqual([
+      'Hoje',
       'Caixa de vagas',
       'Kanban',
       'Minhas candidaturas',

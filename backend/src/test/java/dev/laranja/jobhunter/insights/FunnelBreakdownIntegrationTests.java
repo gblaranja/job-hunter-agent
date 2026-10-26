@@ -35,12 +35,18 @@ class FunnelBreakdownIntegrationTests extends IntegrationTest {
 				insert into tailored_resume (job_id, status, resume_version_id, created_at, updated_at)
 				values (6, 'PRONTO', 2, now(), now())
 				""").update();
+		// A candidatura 1 recebeu uma proposta e aceitou.
+		this.jdbc.sql("""
+				insert into offer (application_id, regime, base_salary, decision, created_at, updated_at)
+				values (1, 'CLT', 12000, 'ACEITA', now(), now())
+				""").update();
 
 		this.mvc.perform(get("/api/insights/funnel").with(owner()))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.applied").value(6))
 			.andExpect(jsonPath("$.interview").value(2))
 			.andExpect(jsonPath("$.offer").value(1))
+			.andExpect(jsonPath("$.accepted").value(1))
 			.andExpect(jsonPath("$.bySource[?(@.group == 'GREENHOUSE')].applied", contains(3)))
 			.andExpect(jsonPath("$.bySource[?(@.group == 'GREENHOUSE')].interview", contains(2)))
 			.andExpect(jsonPath("$.bySource[?(@.group == 'LINKEDIN_ALERTA')].interview", contains(0)))

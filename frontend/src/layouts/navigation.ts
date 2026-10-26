@@ -1,5 +1,6 @@
 import {
   Building2,
+  CalendarCheck,
   FileText,
   Inbox,
   KanbanSquare,
@@ -14,6 +15,7 @@ import {
 
 /** Telas do painel, na ordem do menu: usadas pela sidebar e pela gaveta do celular. */
 export const navigation = [
+  { to: '/today', label: 'Hoje', Icon: CalendarCheck },
   { to: '/inbox', label: 'Caixa de vagas', Icon: Inbox },
   { to: '/board', label: 'Kanban', Icon: KanbanSquare },
   { to: '/applications', label: 'Minhas candidaturas', Icon: ListChecks },

@@ -151,6 +151,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/candidate-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["candidateProfile"];
+        put: operations["updateCandidateProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{id}/snapshot": {
         parameters: {
             query?: never;
@@ -295,6 +311,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications/telegram/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["testTelegram"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications/read-all": {
         parameters: {
             query?: never;
@@ -407,6 +439,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{id}/screening-answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["screeningAnswers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jobs/{id}/analysis": {
         parameters: {
             query?: never;
@@ -417,6 +465,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["reanalyze"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/import/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["preview_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -497,6 +561,40 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["check"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/api-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["status_apiToken"];
+        put?: never;
+        /** @description Gera um token novo, que invalida o anterior. O texto só aparece nesta resposta. */
+        post: operations["generate_apiToken"];
+        delete: operations["revoke_apiToken"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies/ats-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Detecta o ATS e o slug pelo link da página de carreira (ou usa os informados) e confere no ATS se o job board existe, sem gravar nada. */
+        post: operations["checkAts"];
         delete?: never;
         options?: never;
         head?: never;
@@ -759,6 +857,22 @@ export interface paths {
         patch: operations["changeResume"];
         trace?: never;
     };
+    "/api/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["today"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tailored-resumes/{id}": {
         parameters: {
             query?: never;
@@ -871,6 +985,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications/telegram": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["telegram"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/niches/{id}/companies": {
         parameters: {
             query?: never;
@@ -911,6 +1041,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{id}/apply-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["applyCheck"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1287,6 +1433,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{id}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["separateDuplicate"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{companyId}/niches/{nicheId}": {
         parameters: {
             query?: never;
@@ -1368,6 +1530,7 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+            ats?: components["schemas"]["AtsCoverage"] | null;
         };
         SearchProfileCommand: {
             name: string;
@@ -1466,6 +1629,53 @@ export interface components {
             fitBand?: "ALTO" | "MEDIO" | "BAIXO" | null;
             reasons: string[];
         };
+        CandidateProfileCommand: {
+            /** Format: int32 */
+            yearsOfExperience?: number | null;
+            /** @enum {string|null} */
+            englishLevel?: "NENHUM" | "BASICO" | "INTERMEDIARIO" | "AVANCADO" | "FLUENTE" | null;
+            city?: string | null;
+            state?: string | null;
+            /** Format: int32 */
+            maxOnsiteDays?: number | null;
+            acceptedContracts?: string[] | null;
+            workAuthorizations?: string[] | null;
+            /** @enum {string|null} */
+            educationLevel?: "MEDIO" | "TECNICO" | "SUPERIOR_INCOMPLETO" | "SUPERIOR" | "POS" | "MESTRADO" | "DOUTORADO" | null;
+            education?: string | null;
+            certifications?: string[] | null;
+            desiredSalaryClt?: number | null;
+            desiredSalaryPj?: number | null;
+            /** Format: int32 */
+            weeklyGoal?: number | null;
+        };
+        CandidateProfileView: {
+            /** Format: int32 */
+            yearsOfExperience?: number | null;
+            /** @enum {string|null} */
+            englishLevel?: "NENHUM" | "BASICO" | "INTERMEDIARIO" | "AVANCADO" | "FLUENTE" | null;
+            city?: string | null;
+            state?: string | null;
+            /** Format: int32 */
+            maxOnsiteDays?: number | null;
+            acceptedContracts: string[];
+            workAuthorizations: string[];
+            /** @enum {string|null} */
+            educationLevel?: "MEDIO" | "TECNICO" | "SUPERIOR_INCOMPLETO" | "SUPERIOR" | "POS" | "MESTRADO" | "DOUTORADO" | null;
+            education?: string | null;
+            certifications: string[];
+            desiredSalaryClt?: number | null;
+            desiredSalaryPj?: number | null;
+            /** Format: int32 */
+            weeklyGoal: number;
+            /** Format: int32 */
+            suggestedYearsOfExperience?: number | null;
+            /** @enum {string|null} */
+            suggestedEnglishLevel?: "NENHUM" | "BASICO" | "INTERMEDIARIO" | "AVANCADO" | "FLUENTE" | null;
+            suggestedFrom?: string | null;
+            /** Format: date-time */
+            updatedAt?: string | null;
+        };
         SaveJobSnapshot: {
             url?: string | null;
             title: string;
@@ -1502,6 +1712,11 @@ export interface components {
             tailoredForJobId?: number | null;
             tailoredForTitle?: string | null;
             tailoredForCompany?: string | null;
+            lint: components["schemas"]["ResumeLintWarning"][];
+        };
+        ResumeLintWarning: {
+            code: string;
+            message: string;
         };
         RecognitionView: {
             /** Format: int64 */
@@ -1663,7 +1878,7 @@ export interface components {
             /** Format: int64 */
             id: number;
             /** @enum {string} */
-            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA";
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA" | "SMARTRECRUITERS" | "WORKABLE" | "TEAMTAILOR" | "RECRUITEE";
             title: string;
             company: string;
             location?: string | null;
@@ -1695,6 +1910,42 @@ export interface components {
         CreatedApplication: {
             /** Format: int64 */
             id: number;
+        };
+        ScreeningQuestions: {
+            questions?: string[] | null;
+            coverLetter: boolean;
+        };
+        ScreeningAnswer: {
+            question: string;
+            answer: string;
+            basis?: string | null;
+            needsInput: boolean;
+        };
+        ScreeningAnswersView: {
+            answers: components["schemas"]["ScreeningAnswer"][];
+            coverLetter?: string | null;
+            source: string;
+        };
+        JobImportRequest: {
+            url: string;
+            jsonLd?: string | null;
+            text?: string | null;
+        };
+        JobImportPreview: {
+            title?: string | null;
+            company?: string | null;
+            location?: string | null;
+            /** @enum {string|null} */
+            workModel?: "REMOTO" | "HIBRIDO" | "PRESENCIAL" | "NAO_INFORMADO" | null;
+            /** @enum {string|null} */
+            scope?: "NACIONAL" | "INTERNACIONAL" | null;
+            salaryRange?: string | null;
+            url: string;
+            description?: string | null;
+            method: string;
+            warnings: string[];
+            /** Format: int64 */
+            existingJobId?: number | null;
         };
         BulletRewrite: {
             original: string;
@@ -1736,6 +1987,15 @@ export interface components {
             evidence: string;
             suggestion: string;
         };
+        GupyExperience: {
+            role: string;
+            company: string;
+            description: string;
+        };
+        GupyProfile: {
+            skills: string;
+            experiences: components["schemas"]["GupyExperience"][];
+        };
         InsightReport: {
             /** Format: int64 */
             id: number;
@@ -1755,6 +2015,11 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        LinkedinProfile: {
+            headline: string;
+            about?: string | null;
+            skills: string[];
+        };
         Recommendations: {
             gaps: components["schemas"]["GapAdvice"][];
             bullets: components["schemas"]["BulletRewrite"][];
@@ -1762,6 +2027,9 @@ export interface components {
             diagnosis: string;
             diagnosisExplanation: string;
             source: string;
+            gupyProfile?: components["schemas"]["GupyProfile"] | null;
+            linkedinProfile?: components["schemas"]["LinkedinProfile"] | null;
+            profileChanges?: string[] | null;
         };
         ResumePerformance: {
             /** Format: int64 */
@@ -1882,6 +2150,8 @@ export interface components {
             atsType?: string | null;
             atsSlug?: string | null;
             notes?: string | null;
+            /** @description página de carreira; sem valor, fica a que já estava, e texto em branco apaga. Com ATS e slug em branco, os dois são detectados por ela (Greenhouse, Lever, Ashby, SmartRecruiters, Workable, Teamtailor, Recruitee) */
+            careersUrl?: string | null;
         };
         CompanyItem: {
             /** Format: int64 */
@@ -1918,6 +2188,36 @@ export interface components {
             avgDaysOpen?: number | null;
             /** Format: int64 */
             applications: number;
+            /** @description página de carreira, de onde o ATS e o slug são detectados */
+            careersUrl?: string | null;
+        };
+        ApiTokenStatus: {
+            exists: boolean;
+            /** @description os 4 últimos caracteres do token */
+            hint?: string | null;
+            /** Format: date-time */
+            createdAt?: string | null;
+            /** Format: date-time */
+            lastUsedAt?: string | null;
+        };
+        GeneratedApiToken: {
+            /** @description mostrado só agora; cole na extensão */
+            token: string;
+        };
+        /** @description Link da página de carreira, ou o ATS e o slug, para conferir antes de salvar. */
+        CompanyAtsCheckRequest: {
+            careersUrl?: string | null;
+            atsType?: string | null;
+            atsSlug?: string | null;
+        };
+        /** @description ATS e slug detectados e conferidos. */
+        CompanyAtsCheck: {
+            atsType: string;
+            atsSlug: string;
+            /** @description se o ATS tem coleta automática */
+            supported: boolean;
+            /** @enum {string} */
+            status: "ENCONTRADO" | "NAO_ENCONTRADO" | "NAO_CONFIRMADO";
         };
         UpdateApplicationDetails: {
             notes?: string | null;
@@ -1936,6 +2236,82 @@ export interface components {
         ChangeApplicationResume: {
             /** Format: int64 */
             resumeVersionId: number;
+        };
+        TodayAgenda: {
+            /** Format: date */
+            day: string;
+            jobs: components["schemas"]["TodayJob"][];
+            followUps: components["schemas"]["TodayFollowUp"][];
+            emails: components["schemas"]["TodayEmail"][];
+            interviews: components["schemas"]["TodayInterview"][];
+            tailoredResumes: components["schemas"]["TodayTailoredResume"][];
+            weeklyGoal: components["schemas"]["TodayWeeklyGoal"];
+        };
+        TodayEmail: {
+            /** Format: int64 */
+            id: number;
+            sender: string;
+            subject?: string | null;
+            /** Format: date-time */
+            receivedAt: string;
+            classification?: string | null;
+        };
+        TodayFollowUp: {
+            /** Format: int64 */
+            applicationId: number;
+            /** Format: int64 */
+            jobId: number;
+            title: string;
+            company: string;
+            status: string;
+            /** Format: date-time */
+            nextActionAt: string;
+            nextActionKind?: string | null;
+            /** Format: int32 */
+            followUpsSent: number;
+        };
+        TodayInterview: {
+            /** Format: int64 */
+            applicationId: number;
+            /** Format: int64 */
+            jobId: number;
+            title: string;
+            company: string;
+            status: string;
+            /** Format: date-time */
+            nextActionAt?: string | null;
+        };
+        TodayJob: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+            company: string;
+            /** Format: int32 */
+            matchScore: number;
+            /** Format: date-time */
+            firstSeenAt: string;
+            legitimacy?: string | null;
+            url?: string | null;
+        };
+        TodayTailoredResume: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            jobId: number;
+            title: string;
+            company: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        TodayWeeklyGoal: {
+            /** Format: date */
+            weekStart: string;
+            /** Format: int32 */
+            applied: number;
+            /** Format: int32 */
+            aligned: number;
+            /** Format: int32 */
+            goal: number;
         };
         Availability: {
             enabled: boolean;
@@ -1969,6 +2345,10 @@ export interface components {
             readAt?: string | null;
             /** Format: date-time */
             createdAt: string;
+        };
+        TelegramStatus: {
+            configured: boolean;
+            types: string[];
         };
         NicheCompany: {
             /** Format: int64 */
@@ -2027,7 +2407,7 @@ export interface components {
             scope: "NACIONAL" | "INTERNACIONAL";
             url?: string | null;
             /** @enum {string} */
-            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA";
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA" | "SMARTRECRUITERS" | "WORKABLE" | "TEAMTAILOR" | "RECRUITEE";
             /** Format: date-time */
             collectedAt: string;
             preview?: string | null;
@@ -2045,6 +2425,13 @@ export interface components {
             gptwLevel?: string | null;
             /** Format: int32 */
             scoreWithBonus?: number | null;
+            /** Format: int32 */
+            failedKnockouts: number;
+            /** Format: date-time */
+            firstSeenAt: string;
+            /** @enum {string|null} */
+            legitimacy?: "ALTA" | "MEDIA" | "BAIXA" | "SUSPEITA" | null;
+            legitimacyReasons: string[];
         };
         PageResponseJobListItem: {
             items: components["schemas"]["JobListItem"][];
@@ -2076,6 +2463,27 @@ export interface components {
             lastError?: string | null;
             /** Format: date-time */
             analyzedAt: string;
+            partialSkills: components["schemas"]["JobPartialSkill"][];
+            knockouts: components["schemas"]["JobAnalysisKnockout"][];
+            salary?: components["schemas"]["JobAnalysisSalary"] | null;
+            jobFamily?: string | null;
+            internationalEligibility?: string | null;
+            evidence: components["schemas"]["JobRequirementEvidence"][];
+        };
+        JobAnalysisKnockout: {
+            type: string;
+            text: string;
+            value: string;
+            status: string;
+            reason?: string | null;
+        };
+        JobAnalysisSalary: {
+            min?: number | null;
+            max?: number | null;
+            currency: string;
+            period: string;
+            regime?: string | null;
+            text?: string | null;
         };
         JobApplicationSummary: {
             /** Format: int64 */
@@ -2095,6 +2503,16 @@ export interface components {
             /** Format: int32 */
             followUpsSent: number;
         };
+        JobCopy: {
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA";
+            url?: string | null;
+            /** Format: date-time */
+            closedAt?: string | null;
+            canonical: boolean;
+        };
         JobDetail: {
             job: components["schemas"]["JobView"];
             application?: components["schemas"]["JobApplicationSummary"] | null;
@@ -2102,6 +2520,8 @@ export interface components {
             feedback?: components["schemas"]["JobFeedback"] | null;
             dismissal?: components["schemas"]["JobDismissal"] | null;
             analysis?: components["schemas"]["JobAnalysis"] | null;
+            legitimacy: components["schemas"]["JobLegitimacy"];
+            copies: components["schemas"]["JobCopy"][];
         };
         JobDismissal: {
             /** @enum {string} */
@@ -2115,6 +2535,21 @@ export interface components {
             reasons: ("SALARIO" | "STACK" | "SENIORIDADE" | "MODELO_TRABALHO" | "EMPRESA" | "LOCALIZACAO")[];
             comment?: string | null;
         };
+        JobPartialSkill: {
+            skill: string;
+            via: string;
+        };
+        JobRequirementEvidence: {
+            requirement: string;
+            quote: string;
+        };
+        JobLegitimacy: {
+            /** @enum {string|null} */
+            level?: "ALTA" | "MEDIA" | "BAIXA" | "SUSPEITA" | null;
+            reasons: string[];
+            /** Format: int64 */
+            duplicateOfJobId?: number | null;
+        };
         TimelineEvent: {
             /** Format: int64 */
             id: number;
@@ -2126,6 +2561,16 @@ export interface components {
             note?: string | null;
             /** Format: date-time */
             createdAt: string;
+        };
+        ApplyCheck: {
+            /** Format: int64 */
+            jobId: number;
+            linkStatus: string;
+            warnings: components["schemas"]["Warning"][];
+        };
+        Warning: {
+            code: string;
+            message: string;
         };
         LlmUsage: {
             task: string;
@@ -2741,6 +3186,50 @@ export interface operations {
             };
         };
     };
+    candidateProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CandidateProfileView"];
+                };
+            };
+        };
+    };
+    updateCandidateProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CandidateProfileCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CandidateProfileView"];
+                };
+            };
+        };
+    };
     snapshot: {
         parameters: {
             query?: never;
@@ -3013,6 +3502,24 @@ export interface operations {
             };
         };
     };
+    testTelegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readAll: {
         parameters: {
             query?: never;
@@ -3129,6 +3636,7 @@ export interface operations {
                 q?: string;
                 scope?: "NACIONAL" | "INTERNACIONAL";
                 inbox?: boolean;
+                allLegitimacy?: boolean;
                 page?: number;
                 size?: number;
             };
@@ -3247,6 +3755,32 @@ export interface operations {
             };
         };
     };
+    screeningAnswers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScreeningQuestions"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ScreeningAnswersView"];
+                };
+            };
+        };
+    };
     reanalyze: {
         parameters: {
             query?: never;
@@ -3264,6 +3798,30 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    preview_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobImportRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JobImportPreview"];
+                };
             };
         };
     };
@@ -3427,6 +3985,88 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RecognitionView"];
+                };
+            };
+        };
+    };
+    status_apiToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiTokenStatus"];
+                };
+            };
+        };
+    };
+    generate_apiToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["GeneratedApiToken"];
+                };
+            };
+        };
+    };
+    revoke_apiToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    checkAts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompanyAtsCheckRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyAtsCheck"];
                 };
             };
         };
@@ -3845,6 +4485,26 @@ export interface operations {
             };
         };
     };
+    today: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TodayAgenda"];
+                };
+            };
+        };
+    };
     tailoredResume: {
         parameters: {
             query?: never;
@@ -3991,6 +4651,26 @@ export interface operations {
             };
         };
     };
+    telegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TelegramStatus"];
+                };
+            };
+        };
+    };
     companies: {
         parameters: {
             query?: {
@@ -4063,6 +4743,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["JobDetail"];
+                };
+            };
+        };
+    };
+    applyCheck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApplyCheck"];
                 };
             };
         };
@@ -4547,6 +5249,26 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["CollectionRun"][];
                 };
+            };
+        };
+    };
+    separateDuplicate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

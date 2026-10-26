@@ -124,6 +124,10 @@ export const originLabels: Record<JobListItem['origin'], string> = {
   REMOTIVE: 'Remotive',
   GITHUB: 'GitHub (backend-br)',
   ADZUNA: 'Adzuna',
+  SMARTRECRUITERS: 'SmartRecruiters',
+  WORKABLE: 'Workable',
+  TEAMTAILOR: 'Teamtailor',
+  RECRUITEE: 'Recruitee',
 }
 
 /** Fonte da coleta: as origens das vagas, mais os alertas do Gmail (que juntam LinkedIn e Gupy). */
@@ -208,8 +212,18 @@ export const atsLabels: Record<string, string> = {
   GREENHOUSE: 'Greenhouse',
   LEVER: 'Lever',
   ASHBY: 'Ashby',
+  SMARTRECRUITERS: 'SmartRecruiters',
+  WORKABLE: 'Workable',
+  TEAMTAILOR: 'Teamtailor',
+  RECRUITEE: 'Recruitee',
   GUPY: 'Gupy',
   OUTRO: 'Outro',
+}
+
+export const atsSlugStatusLabels: Record<string, string> = {
+  ENCONTRADO: 'job board encontrado',
+  NAO_ENCONTRADO: 'o ATS diz que esse slug não existe',
+  NAO_CONFIRMADO: 'não deu para confirmar (lista vazia ou ATS sem resposta)',
 }
 
 export const diagnosisLabels: Record<string, string> = {
@@ -227,7 +241,14 @@ export const notificationTypeLabels: Record<string, string> = {
   VOLUME_CAIU: 'Volume caiu',
   RELATORIO_SEMANAL: 'Relatório semanal',
   CURRICULO_ADAPTADO: 'Currículo adaptado',
+  VAGA_ALVO: 'Vaga de empresa-alvo',
   FOLLOW_UP: 'Follow-up',
+  PREPARACAO_PRONTA: 'Preparação pronta',
+  RESUMO_DIARIO: 'Resumo do dia',
+}
+
+export function notificationTypeLabel(type: string): string {
+  return notificationTypeLabels[type] ?? type
 }
 
 export const recognitionLevelLabels: Record<RecognitionLevel, string> = {
@@ -252,6 +273,7 @@ export const nicheSourceLabels: Record<NicheSource, string> = {
   MANUAL: 'Sua escolha',
 }
 
+<<<<<<< HEAD
 export const contactRoleLabels: Record<ContactRole, string> = {
   RECRUTADOR: 'Recrutador(a)',
   HEADHUNTER: 'Headhunter',
@@ -283,4 +305,59 @@ export const interactionKindLabels: Record<InteractionKind, string> = {
   ABORDAGEM: 'Abordagem de recrutador',
   CONVERSA: 'Conversa',
   OUTRO: 'Outro',
+=======
+// Triagem: dados da pessoa e eliminatórios das vagas
+
+export const englishLevelLabels: Record<string, string> = {
+  NENHUM: 'Nenhum',
+  BASICO: 'Básico',
+  INTERMEDIARIO: 'Intermediário',
+  AVANCADO: 'Avançado',
+  FLUENTE: 'Fluente',
+}
+
+export const educationLevelLabels: Record<string, string> = {
+  MEDIO: 'Ensino médio',
+  TECNICO: 'Técnico',
+  SUPERIOR_INCOMPLETO: 'Superior incompleto',
+  SUPERIOR: 'Superior completo',
+  POS: 'Pós-graduação',
+  MESTRADO: 'Mestrado',
+  DOUTORADO: 'Doutorado',
+}
+
+export const contractRegimeLabels: Record<string, string> = {
+  CLT: 'CLT',
+  PJ: 'PJ',
+  CONTRACTOR: 'Contractor (exterior)',
+}
+
+export const knockoutTypeLabels: Record<string, string> = {
+  ANOS_EXPERIENCIA: 'Anos de experiência',
+  IDIOMA: 'Idioma',
+  LOCALIDADE: 'Localidade',
+  PRESENCIAL: 'Dias presenciais',
+  AUTORIZACAO_TRABALHO: 'Autorização de trabalho',
+  FUSO: 'Fuso horário',
+  FORMACAO: 'Formação',
+  CERTIFICACAO: 'Certificação',
+  CONTRATO: 'Regime de contratação',
+}
+
+export const knockoutStatusLabels: Record<string, string> = {
+  ATENDE: 'Atende',
+  NAO_ATENDE: 'Não atende',
+  SEM_INFORMACAO: 'Sem informação',
+}
+
+export const legitimacyLabels: Record<string, string> = {
+  ALTA: 'Vaga confiável',
+  MEDIA: 'Atenção',
+  BAIXA: 'Possível vaga fantasma',
+  SUSPEITA: 'Suspeita de golpe',
+}
+
+export function nextActionKindLabel(kind: string | null | undefined): string {
+  return kind ? (nextActionKindLabels[kind as NextActionKind] ?? kind) : 'Próxima ação'
+>>>>>>> feat/conversao-a-funil
 }
