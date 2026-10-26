@@ -229,6 +229,14 @@ export const notificationTypeLabels: Record<string, string> = {
   VOLUME_CAIU: 'Volume caiu',
   RELATORIO_SEMANAL: 'Relatório semanal',
   CURRICULO_ADAPTADO: 'Currículo adaptado',
+  VAGA_ALVO: 'Vaga de empresa-alvo',
+  FOLLOW_UP: 'Follow-up',
+  PREPARACAO_PRONTA: 'Preparação pronta',
+  RESUMO_DIARIO: 'Resumo do dia',
+}
+
+export function notificationTypeLabel(type: string): string {
+  return notificationTypeLabels[type] ?? type
 }
 
 export const recognitionLevelLabels: Record<RecognitionLevel, string> = {
@@ -251,4 +259,11 @@ export const nicheSourceLabels: Record<NicheSource, string> = {
   IA: 'Sugestão da IA',
   VAGA: 'Palavras-chave das vagas',
   MANUAL: 'Sua escolha',
+}
+
+export const legitimacyLabels: Record<string, string> = {
+  ALTA: 'Vaga confiável',
+  MEDIA: 'Atenção',
+  BAIXA: 'Possível vaga fantasma',
+  SUSPEITA: 'Suspeita de golpe',
 }

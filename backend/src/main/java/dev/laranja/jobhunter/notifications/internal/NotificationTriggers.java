@@ -7,8 +7,10 @@ import dev.laranja.jobhunter.jobs.JobView;
 import dev.laranja.jobhunter.niches.CompanySeedCompleted;
 import dev.laranja.jobhunter.notifications.Notifications;
 import dev.laranja.jobhunter.recognition.RecognitionReviewNeeded;
+import dev.laranja.jobhunter.shared.NotificationRequested;
 import dev.laranja.jobhunter.tailoring.TailoredResumeReady;
 
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
 
@@ -19,23 +21,49 @@ class NotificationTriggers {
 	/** Vagas a partir deste score viram notificação. */
 	static final int HIGH_SCORE = 75;
 
+	/** Vaga de empresa-alvo a partir deste score vai ao celular (VAGA_ALVO). */
+	static final int TARGET_SCORE = 60;
+
 	private final Notifications notifications;
 
 	private final JobCatalog jobs;
 
-	NotificationTriggers(Notifications notifications, JobCatalog jobs) {
+	private final JdbcClient jdbc;
+
+	NotificationTriggers(Notifications notifications, JobCatalog jobs, JdbcClient jdbc) {
 		this.notifications = notifications;
 		this.jobs = jobs;
+		this.jdbc = jdbc;
 	}
 
+	/**
+	 * Vaga aderente: de empresa-alvo a partir de {@value #TARGET_SCORE} (VAGA_ALVO, que vai ao Telegram); das demais,
+	 * a partir de {@value #HIGH_SCORE} (VAGA_ADERENTE, só no sino).
+	 */
 	@ApplicationModuleListener
 	void on(JobAnalyzed event) {
-		if (event.matchScore() == null || event.matchScore() < HIGH_SCORE) {
+		if (event.matchScore() == null || event.matchScore() < TARGET_SCORE) {
 			return;
 		}
 		JobView job = this.jobs.get(event.jobId());
+		if (isOpenAtTargetCompany(job.id())) {
+			this.notifications.notify("VAGA_ALVO",
+					"Empresa-alvo: " + job.title() + " (" + event.matchScore() + "% de aderência)",
+					job.company() + ((job.location() != null) ? " · " + job.location() : ""), "/jobs/" + job.id(),
+					"vaga-alvo-" + job.id());
+			return;
+		}
+		if (event.matchScore() < HIGH_SCORE) {
+			return;
+		}
 		this.notifications.notify("VAGA_ADERENTE", "Vaga com " + event.matchScore() + "% de aderência: " + job.title(),
 				job.company(), "/jobs/" + job.id(), "vaga-aderente-" + job.id());
+	}
+
+	/** Pedido de notificação de um módulo que não depende de {@code notifications}. */
+	@ApplicationModuleListener
+	void on(NotificationRequested event) {
+		this.notifications.notify(event.type(), event.title(), event.body(), event.link(), event.dedupKey());
 	}
 
 	@ApplicationModuleListener
@@ -74,6 +102,18 @@ class NotificationTriggers {
 		}
 		this.notifications.notify("IMPORTACAO_CONCLUIDA", "Importação de " + event.label() + " concluída",
 				event.processed() + " empresas lidas, " + event.created() + " novas.", "/niches", null);
+	}
+
+	// Vaga aberta e canônica de empresa marcada como ALVO, sem sinal de golpe (leitura direta de jobs e companies).
+	private boolean isOpenAtTargetCompany(long jobId) {
+		return this.jdbc.sql("""
+				select count(*) from job j join company c on c.id = j.company_id
+				where j.id = :jobId and c.watch_status = 'ALVO' and j.closed_at is null and j.duplicate_of_job_id is null
+				  and coalesce(j.legitimacy, 'ALTA') <> 'SUSPEITA'
+				""")
+			.param("jobId", jobId)
+			.query(Long.class)
+			.single() > 0;
 	}
 
 }

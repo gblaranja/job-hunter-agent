@@ -4,6 +4,10 @@ import java.util.List;
 
 import dev.laranja.jobhunter.notifications.Notifications;
 import dev.laranja.jobhunter.notifications.Notifications.NotificationView;
+import dev.laranja.jobhunter.notifications.internal.TelegramChannel;
+import dev.laranja.jobhunter.notifications.internal.TelegramChannel.TelegramException;
+import dev.laranja.jobhunter.notifications.internal.TelegramChannel.TelegramStatus;
+import dev.laranja.jobhunter.shared.BusinessRuleException;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,8 +24,11 @@ class NotificationController {
 
 	private final Notifications notifications;
 
-	NotificationController(Notifications notifications) {
+	private final TelegramChannel telegram;
+
+	NotificationController(Notifications notifications, TelegramChannel telegram) {
 		this.notifications = notifications;
+		this.telegram = telegram;
 	}
 
 	@GetMapping
@@ -39,6 +46,24 @@ class NotificationController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	void readAll() {
 		this.notifications.markAllRead();
+	}
+
+	/** Se o Telegram está configurado (o token nunca sai do servidor) e quais tipos vão ao celular. */
+	@GetMapping("/telegram")
+	TelegramStatus telegram() {
+		return this.telegram.status();
+	}
+
+	/** Manda uma mensagem de teste ao Telegram; 422 com o motivo quando não está configurado ou o envio falha. */
+	@PostMapping("/telegram/test")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	void testTelegram() {
+		try {
+			this.telegram.sendTest();
+		}
+		catch (TelegramException ex) {
+			throw new BusinessRuleException(ex.getMessage());
+		}
 	}
 
 }

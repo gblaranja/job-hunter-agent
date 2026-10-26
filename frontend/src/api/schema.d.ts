@@ -279,6 +279,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications/telegram/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["testTelegram"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications/read-all": {
         parameters: {
             query?: never;
@@ -401,6 +417,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["reanalyze"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/import/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["preview_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -824,6 +856,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications/telegram": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["telegram"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/niches/{id}/companies": {
         parameters: {
             query?: never;
@@ -1208,6 +1256,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{id}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["separateDuplicate"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{companyId}/niches/{nicheId}": {
         parameters: {
             query?: never;
@@ -1584,6 +1648,27 @@ export interface components {
             /** Format: int64 */
             id: number;
         };
+        JobImportRequest: {
+            url: string;
+            jsonLd?: string | null;
+            text?: string | null;
+        };
+        JobImportPreview: {
+            title?: string | null;
+            company?: string | null;
+            location?: string | null;
+            /** @enum {string|null} */
+            workModel?: "REMOTO" | "HIBRIDO" | "PRESENCIAL" | "NAO_INFORMADO" | null;
+            /** @enum {string|null} */
+            scope?: "NACIONAL" | "INTERNACIONAL" | null;
+            salaryRange?: string | null;
+            url: string;
+            description?: string | null;
+            method: string;
+            warnings: string[];
+            /** Format: int64 */
+            existingJobId?: number | null;
+        };
         BulletRewrite: {
             original: string;
             rewritten: string;
@@ -1858,6 +1943,10 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        TelegramStatus: {
+            configured: boolean;
+            types: string[];
+        };
         NicheCompany: {
             /** Format: int64 */
             id: number;
@@ -1933,6 +2022,11 @@ export interface components {
             gptwLevel?: string | null;
             /** Format: int32 */
             scoreWithBonus?: number | null;
+            /** Format: date-time */
+            firstSeenAt: string;
+            /** @enum {string|null} */
+            legitimacy?: "ALTA" | "MEDIA" | "BAIXA" | "SUSPEITA" | null;
+            legitimacyReasons: string[];
         };
         PageResponseJobListItem: {
             items: components["schemas"]["JobListItem"][];
@@ -1979,6 +2073,16 @@ export interface components {
             /** Format: date-time */
             nextActionAt?: string | null;
         };
+        JobCopy: {
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA";
+            url?: string | null;
+            /** Format: date-time */
+            closedAt?: string | null;
+            canonical: boolean;
+        };
         JobDetail: {
             job: components["schemas"]["JobView"];
             application?: components["schemas"]["JobApplicationSummary"] | null;
@@ -1986,6 +2090,8 @@ export interface components {
             feedback?: components["schemas"]["JobFeedback"] | null;
             dismissal?: components["schemas"]["JobDismissal"] | null;
             analysis?: components["schemas"]["JobAnalysis"] | null;
+            legitimacy: components["schemas"]["JobLegitimacy"];
+            copies: components["schemas"]["JobCopy"][];
         };
         JobDismissal: {
             /** @enum {string} */
@@ -1998,6 +2104,13 @@ export interface components {
             rating: "GOSTEI" | "NEUTRO" | "NAO_GOSTEI";
             reasons: ("SALARIO" | "STACK" | "SENIORIDADE" | "MODELO_TRABALHO" | "EMPRESA" | "LOCALIZACAO")[];
             comment?: string | null;
+        };
+        JobLegitimacy: {
+            /** @enum {string|null} */
+            level?: "ALTA" | "MEDIA" | "BAIXA" | "SUSPEITA" | null;
+            reasons: string[];
+            /** Format: int64 */
+            duplicateOfJobId?: number | null;
         };
         TimelineEvent: {
             /** Format: int64 */
@@ -2794,6 +2907,24 @@ export interface operations {
             };
         };
     };
+    testTelegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readAll: {
         parameters: {
             query?: never;
@@ -2910,6 +3041,7 @@ export interface operations {
                 q?: string;
                 scope?: "NACIONAL" | "INTERNACIONAL";
                 inbox?: boolean;
+                allLegitimacy?: boolean;
                 page?: number;
                 size?: number;
             };
@@ -3045,6 +3177,30 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    preview_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobImportRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JobImportPreview"];
+                };
             };
         };
     };
@@ -3678,6 +3834,26 @@ export interface operations {
             };
         };
     };
+    telegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TelegramStatus"];
+                };
+            };
+        };
+    };
     companies: {
         parameters: {
             query?: {
@@ -4190,6 +4366,26 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["CollectionRun"][];
                 };
+            };
+        };
+    };
+    separateDuplicate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

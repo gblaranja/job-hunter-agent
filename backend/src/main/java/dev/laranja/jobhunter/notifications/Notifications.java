@@ -4,42 +4,60 @@ import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import dev.laranja.jobhunter.shared.jdbc.JdbcRows;
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Notificações dentro do backoffice (o sino); um canal como Telegram pode ser plugado aqui depois. */
+/**
+ * Notificações dentro do backoffice (o sino). Cada notificação gravada publica {@link NotificationCreated}, que o
+ * canal do Telegram escuta para enviar ao celular os tipos configurados.
+ */
 @Service
 @Transactional
 public class Notifications {
 
 	private final JdbcClient jdbc;
 
+	private final ApplicationEventPublisher events;
+
 	private final Clock clock;
 
-	Notifications(JdbcClient jdbc, Clock clock) {
+	Notifications(JdbcClient jdbc, ApplicationEventPublisher events, Clock clock) {
 		this.jdbc = jdbc;
+		this.events = events;
 		this.clock = clock;
 	}
 
-	/** Cria a notificação; com a mesma {@code dedupKey}, a segunda é ignorada. */
-	public void notify(String type, String title, @Nullable String body, @Nullable String link, @Nullable String dedupKey) {
-		this.jdbc.sql("""
+	/**
+	 * Cria a notificação; com a mesma {@code dedupKey}, a segunda é ignorada e não publica nada.
+	 * @return se a notificação foi gravada
+	 */
+	public boolean notify(String type, String title, @Nullable String body, @Nullable String link,
+			@Nullable String dedupKey) {
+		String shortTitle = (title.length() > 300) ? title.substring(0, 300) : title;
+		Optional<Long> id = this.jdbc.sql("""
 				insert into notification (type, title, body, link, dedup_key, created_at)
 				values (:type, :title, :body, :link, :dedupKey, :now)
 				on conflict (dedup_key) do nothing
+				returning id
 				""")
 			.param("type", type)
-			.param("title", title.length() > 300 ? title.substring(0, 300) : title)
+			.param("title", shortTitle)
 			.param("body", body)
 			.param("link", link)
 			.param("dedupKey", dedupKey)
 			.param("now", Timestamp.from(this.clock.instant()))
-			.update();
+			.query(Long.class)
+			.optional();
+		id.ifPresent(created -> this.events
+			.publishEvent(new NotificationCreated(created, type, shortTitle, body, link)));
+		return id.isPresent();
 	}
 
 	@Transactional(readOnly = true)
