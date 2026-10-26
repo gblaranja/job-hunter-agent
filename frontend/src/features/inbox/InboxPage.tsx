@@ -20,7 +20,7 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { formatAge, formatDate } from '@/lib/format'
 import { isPageSize } from '@/lib/pagination'
 import { closedJobNote, originLabels, sameAsWorkModel, workModelLabels } from '@/lib/labels'
-import { Ban, ExternalLink, Search } from 'lucide-react'
+import { Ban, ExternalLink, Search, Users } from 'lucide-react'
 import { InterestMenu } from './InterestMenu'
 
 const PAGE_SIZE_KEY = 'job-hunter-inbox-page-size'
@@ -54,7 +54,9 @@ export function InboxPage() {
   const otherScope: JobScope = scope === 'NACIONAL' ? 'INTERNACIONAL' : 'NACIONAL'
   // "Mostrar todas": inclui as vagas de legitimidade baixa e as suspeitas de golpe, que a caixa esconde.
   const allLegitimacy = params.get('todas') === '1'
-  const jobs = useInboxJobs({ q: query, scope, page, size, allLegitimacy })
+  // "Tenho conexão": só empresas onde você conhece alguém (contato ou conexão do LinkedIn).
+  const hasConnection = params.get('conexao') === '1'
+  const jobs = useInboxJobs({ q: query, scope, page, size, allLegitimacy, hasConnection })
   const otherTotal = useInboxCount({ q: query, scope: otherScope }).data
   const totals: Partial<Record<JobScope, number>> = { [scope]: jobs.data?.total, [otherScope]: otherTotal }
   const top = useRef<HTMLDivElement>(null)
@@ -88,12 +90,12 @@ export function InboxPage() {
     )
   }
 
-  function toggleAll(checked: boolean) {
+  function toggleAll(checked: boolean, param = 'todas') {
     setParams(
       (current) => {
         const updated = new URLSearchParams(current)
-        if (checked) updated.set('todas', '1')
-        else updated.delete('todas')
+        if (checked) updated.set(param, '1')
+        else updated.delete(param)
         updated.delete('page')
         return updated
       },
@@ -176,6 +178,18 @@ export function InboxPage() {
             Mostrar também as suspeitas
           </Label>
         </div>
+        <div className="flex items-center gap-2" title="Empresas onde você tem um contato ou conexão do LinkedIn.">
+          <input
+            id="has-connection"
+            type="checkbox"
+            className="size-4 accent-primary"
+            checked={hasConnection}
+            onChange={(event) => toggleAll(event.target.checked, 'conexao')}
+          />
+          <Label htmlFor="has-connection" className="text-sm font-normal">
+            Tenho conexão
+          </Label>
+        </div>
       </div>
       {jobs.isLoading && <LoadingBlock />}
       {jobs.error && <ErrorBlock error={jobs.error} />}
@@ -247,6 +261,11 @@ function InboxCard({ job }: { job: JobListItem }) {
             {job.failedKnockouts > 0 && (
               <Badge variant="destructive" title="Requisitos eliminatórios que você não atende">
                 {job.failedKnockouts === 1 ? '1 eliminatório' : `${job.failedKnockouts} eliminatórios`}
+              </Badge>
+            )}
+            {job.connections > 0 && (
+              <Badge variant="secondary" title="Contatos e conexões do LinkedIn na empresa">
+                <Users aria-hidden /> {job.connections === 1 ? '1 conexão' : `${job.connections} conexões`}
               </Badge>
             )}
             <Badge variant="outline">{originLabels[job.origin]}</Badge>

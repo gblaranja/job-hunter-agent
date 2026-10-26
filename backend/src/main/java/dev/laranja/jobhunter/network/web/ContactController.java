@@ -1,14 +1,18 @@
 package dev.laranja.jobhunter.network.web;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
 
 import dev.laranja.jobhunter.network.ContactBook;
 import dev.laranja.jobhunter.network.ContactBook.ApplicationContacts;
+import dev.laranja.jobhunter.network.ContactBook.ConnectionsImport;
 import dev.laranja.jobhunter.network.ContactCommands;
 import dev.laranja.jobhunter.network.ContactInteractionView;
 import dev.laranja.jobhunter.network.ContactRole;
 import dev.laranja.jobhunter.network.ContactView;
+import dev.laranja.jobhunter.network.internal.LinkedInConnectionsCsv;
 import dev.laranja.jobhunter.shared.web.PageResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -16,6 +20,7 @@ import jakarta.validation.constraints.Min;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,8 +29,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 class ContactController {
@@ -53,6 +60,14 @@ class ContactController {
 	ResponseEntity<ContactView> createContact(@Valid @RequestBody ContactCommands.Save command) {
 		ContactView contact = this.contacts.create(command);
 		return ResponseEntity.created(URI.create("/api/contacts/" + contact.id())).body(contact);
+	}
+
+	/** Importa o Connections.csv do export de dados do LinkedIn (reimportar atualiza sem duplicar). */
+	@PostMapping(path = "/api/contacts/import/linkedin", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	ConnectionsImport importLinkedInConnections(@RequestPart("file") MultipartFile file) throws IOException {
+		try (InputStream input = file.getInputStream()) {
+			return this.contacts.importConnections(LinkedInConnectionsCsv.parse(input));
+		}
 	}
 
 	@GetMapping("/api/contacts/{id}")

@@ -49,6 +49,23 @@ describe('InboxPage', () => {
     expect(requests.at(-1)?.get('allLegitimacy')).toBe('true')
   })
 
+  it('mostra as conexões na empresa e filtra por "tenho conexão"', async () => {
+    const requests: URLSearchParams[] = []
+    server.use(
+      http.get('/api/jobs', ({ request }) => {
+        const params = new URL(request.url).searchParams
+        requests.push(params)
+        return HttpResponse.json({ items: [inboxJob({ connections: 3 })], page: 0, size: 20, total: 1 })
+      }),
+    )
+    renderWithProviders(<InboxPage />)
+
+    expect(await screen.findByText('3 conexões')).toBeInTheDocument()
+    await userEvent.click(screen.getByLabelText('Tenho conexão'))
+
+    await vi.waitFor(() => expect(requests.at(-1)?.get('hasConnection')).toBe('true'))
+  })
+
   it('navega entre as páginas da caixa', async () => {
     const requests: URLSearchParams[] = []
     server.use(paginatedInbox(requests))

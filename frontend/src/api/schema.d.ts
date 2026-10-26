@@ -535,6 +535,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/contacts/import/linkedin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["importLinkedInConnections"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}/merge": {
         parameters: {
             query?: never;
@@ -2071,6 +2087,14 @@ export interface components {
             /** Format: int64 */
             id: number;
         };
+        ConnectionsImport: {
+            /** Format: int32 */
+            created: number;
+            /** Format: int32 */
+            updated: number;
+            /** Format: int32 */
+            matchedCompanies: number;
+        };
         MergeCompany: {
             /** Format: int64 */
             targetId: number;
@@ -2432,6 +2456,8 @@ export interface components {
             /** @enum {string|null} */
             legitimacy?: "ALTA" | "MEDIA" | "BAIXA" | "SUSPEITA" | null;
             legitimacyReasons: string[];
+            /** Format: int32 */
+            connections: number;
         };
         PageResponseJobListItem: {
             items: components["schemas"]["JobListItem"][];
@@ -3637,6 +3663,7 @@ export interface operations {
                 scope?: "NACIONAL" | "INTERNACIONAL";
                 inbox?: boolean;
                 allLegitimacy?: boolean;
+                hasConnection?: boolean;
                 page?: number;
                 size?: number;
             };
@@ -3939,6 +3966,33 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CreatedContactInteraction"];
+                };
+            };
+        };
+    };
+    importLinkedInConnections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ConnectionsImport"];
                 };
             };
         };

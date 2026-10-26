@@ -25,11 +25,12 @@ import org.jspecify.annotations.Nullable;
  * @param legitimacy chance de a vaga ser real e estar aberta; nula antes da primeira avaliação
  * @param legitimacyReasons motivos da legitimidade, em frases curtas
  * @param failedKnockouts eliminatórios da vaga que a pessoa não atende
+ * @param connections contatos e conexões do LinkedIn na empresa da vaga
  */
 record JobListItem(long id, String title, String company, @Nullable Long companyId, @Nullable String location,
 		WorkModel workModel, JobScope scope, @Nullable String url, JobOrigin origin, Instant collectedAt,
 		@Nullable String preview, @Nullable Long applicationId, String status, @Nullable FeedbackRating rating, List<FeedbackReason> reasons,
 		@Nullable Integer matchScore, @Nullable String summary, List<String> matchedSkills, List<String> gaps,
 		@Nullable String gptwLevel, @Nullable Integer scoreWithBonus, int failedKnockouts, Instant firstSeenAt,
-		@Nullable Legitimacy legitimacy, List<String> legitimacyReasons) {
+		@Nullable Legitimacy legitimacy, List<String> legitimacyReasons, int connections) {
 }

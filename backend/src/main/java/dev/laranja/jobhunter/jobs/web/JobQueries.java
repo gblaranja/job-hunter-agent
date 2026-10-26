@@ -52,6 +52,8 @@ class JobQueries {
 			  and (j.duplicate_of_job_id is null or a.id is not null)
 			  -- a caixa esconde as vagas de legitimidade BAIXA e SUSPEITA, a não ser com "mostrar todas"
 			  and (not :inbox or :allLegitimacy or coalesce(j.legitimacy, 'ALTA') in ('ALTA', 'MEDIA'))
+			  -- "tenho conexão": alguém da sua rede (módulo network) na empresa da vaga
+			  and (not :hasConnection or exists (select 1 from contact ct where ct.company_id = j.company_id))
 			""";
 
 	/**
@@ -88,6 +90,7 @@ class JobQueries {
 				       an.gaps::text as gaps, g.level as gptw_level, j.legitimacy, j.legitimacy_reasons::text as legitimacy_reasons,
 				       (select count(*) from jsonb_array_elements(an.knockouts) k
 				        where k->>'status' = 'NAO_ATENDE') as failed_knockouts,
+				       (select count(*) from contact ct where ct.company_id = j.company_id) as connections,
 				       """ + RANKING_SCORE + """
 				 as score_with_bonus
 				""" + LIST_FROM + """
@@ -103,6 +106,7 @@ class JobQueries {
 			.param("scope", (filter.scope() != null) ? filter.scope().name() : null, Types.VARCHAR)
 			.param("inbox", filter.inbox())
 			.param("allLegitimacy", filter.allLegitimacy())
+			.param("hasConnection", filter.hasConnection())
 			.param("freshnessBonus", this.inbox.freshnessBonus())
 			.param("freshnessWindow", (double) Math.max(1, this.inbox.freshnessWindow().toSeconds()))
 			.param("mediumPenalty", this.inbox.mediumLegitimacyPenalty())
@@ -119,7 +123,8 @@ class JobQueries {
 					reasons(rs), integer(rs, "match_score"), rs.getString("summary"), list(rs.getString("matched")),
 					list(rs.getString("gaps")), rs.getString("gptw_level"), integer(rs, "score_with_bonus"),
 					rs.getInt("failed_knockouts"), JdbcRows.instant(rs, "first_seen_at"),
-					JdbcRows.nullableEnum(rs, "legitimacy", Legitimacy.class), list(rs.getString("legitimacy_reasons"))))
+					JdbcRows.nullableEnum(rs, "legitimacy", Legitimacy.class), list(rs.getString("legitimacy_reasons")),
+					rs.getInt("connections")))
 			.list();
 		long total = this.jdbc.sql("select count(*) " + LIST_FROM)
 			.param("status", filter.status(), Types.VARCHAR)
@@ -128,6 +133,7 @@ class JobQueries {
 			.param("scope", (filter.scope() != null) ? filter.scope().name() : null, Types.VARCHAR)
 			.param("inbox", filter.inbox())
 			.param("allLegitimacy", filter.allLegitimacy())
+			.param("hasConnection", filter.hasConnection())
 			.query(Long.class)
 			.single();
 		return new PageResponse<>(items, page, size, total);
@@ -250,8 +256,9 @@ class JobQueries {
 	}
 
 	/** @param allLegitimacy na caixa, mostra também as vagas de legitimidade BAIXA e SUSPEITA */
+	/** @param hasConnection só vagas de empresas onde você tem um contato ou conexão */
 	record JobListFilter(String status, FeedbackRating rating, String query, JobScope scope, boolean inbox,
-			boolean allLegitimacy) {
+			boolean allLegitimacy, boolean hasConnection) {
 	}
 
 }

@@ -1,3 +1,4 @@
+import { ConnectionsImportCard } from '@/features/network/ConnectionsImportCard'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
@@ -80,6 +81,7 @@ export function SettingsPage() {
       <CandidateProfileCard />
       <GmailCard />
       <TelegramCard />
+      <ConnectionsImportCard />
       <ApiTokenCard />
       <CollectionCard />
       <SourceHealthCard />

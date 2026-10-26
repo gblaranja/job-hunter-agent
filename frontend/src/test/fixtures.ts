@@ -122,6 +122,7 @@ export function inboxJob(overrides: Partial<JobListItem> = {}): JobListItem {
     firstSeenAt: '2026-10-23T10:00:00Z',
     legitimacy: 'ALTA',
     legitimacyReasons: [],
+    connections: 0,
     preview: 'Buscamos pessoa desenvolvedora backend com Java e Kafka.',
     applicationId: null,
     status: 'NOVA',

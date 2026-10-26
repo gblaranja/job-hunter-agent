@@ -3,7 +3,10 @@ package dev.laranja.jobhunter.network;
 import java.sql.Types;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import dev.laranja.jobhunter.companies.CompanyDirectory;
 import dev.laranja.jobhunter.network.internal.Contact;
@@ -120,6 +123,49 @@ public class ContactBook {
 				command.position(), url, command.email(), command.notes(), this.clock.instant());
 		this.contacts.flush();
 		return get(id);
+	}
+
+	/**
+	 * Importa as conexões do export do LinkedIn. Reimportar atualiza empresa e cargo pelo link do perfil, sem
+	 * duplicar nem apagar o que você anotou. Nada é feito na sua conta do LinkedIn.
+	 */
+	public ConnectionsImport importConnections(List<ContactCommands.Connection> connections) {
+		Instant now = this.clock.instant();
+		Map<String, Optional<Long>> companyIds = new HashMap<>();
+		int created = 0;
+		int updated = 0;
+		int matched = 0;
+		for (ContactCommands.Connection connection : connections) {
+			String url = ProfileUrls.normalize(connection.linkedinUrl());
+			if (url == null) {
+				continue;
+			}
+			String company = connection.company();
+			Long companyId = (company == null) ? null
+					: companyIds.computeIfAbsent(company, name -> this.companies.findId(name)).orElse(null);
+			matched += (companyId != null) ? 1 : 0;
+			Optional<Contact> existing = this.contacts.findByLinkedinUrl(url);
+			if (existing.isPresent()) {
+				existing.get().refreshConnection(connection.name(), companyId, company, connection.position(),
+						connection.email(), connection.connectedOn(), now);
+				updated++;
+			}
+			else {
+				this.contacts.save(Contact.create(connection.name(), ContactRole.CONEXAO, ContactSource.LINKEDIN_EXPORT,
+						companyId, company, connection.position(), url, connection.email(), null,
+						connection.connectedOn(), now));
+				created++;
+			}
+		}
+		return new ConnectionsImport(created, updated, matched);
+	}
+
+	/**
+	 * @param created conexões novas
+	 * @param updated conexões que já existiam (empresa e cargo atualizados)
+	 * @param matchedCompanies conexões em empresas que já estão no cadastro
+	 */
+	public record ConnectionsImport(int created, int updated, int matchedCompanies) {
 	}
 
 	/** Apaga o contato e todas as conversas registradas com ele (LGPD). */

@@ -25,6 +25,7 @@ import { formatDate } from '@/lib/format'
 import { atsLabels, companyKindLabels, seniorityLabels, watchStatusLabels, workModelLabels } from '@/lib/labels'
 import { ArrowLeft, Repeat2 } from 'lucide-react'
 import { CompanyAtsForm } from './CompanyAtsForm'
+import { CompanyContactsCard } from '@/features/network/CompanyContactsCard'
 import { CompanyNicheCard } from './CompanyNicheCard'
 import { GptwHistoryCard } from './GptwHistoryCard'
 import { WeeklyJobsChart } from './WeeklyJobsChart'
@@ -176,6 +177,7 @@ export function CompanyDetailPage() {
         <div className="grid gap-6 lg:grid-cols-2">
           <CompanyNicheCard companyId={data.id} />
           <GptwHistoryCard companyId={data.id} />
+          <CompanyContactsCard companyId={data.id} company={data.name} />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">

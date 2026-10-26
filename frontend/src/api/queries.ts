@@ -283,6 +283,7 @@ export function useInboxJobs({
   page,
   size,
   allLegitimacy = false,
+  hasConnection = false,
 }: {
   q?: string
   scope: JobScope
@@ -290,13 +291,25 @@ export function useInboxJobs({
   size: number
   /** mostra também as vagas de legitimidade baixa e suspeitas */
   allLegitimacy?: boolean
+  /** só vagas de empresas onde você tem contato ou conexão do LinkedIn */
+  hasConnection?: boolean
 }) {
   return useQuery({
-    queryKey: ['jobs', 'inbox', { q, scope, page, size, allLegitimacy }],
+    queryKey: ['jobs', 'inbox', { q, scope, page, size, allLegitimacy, hasConnection }],
     queryFn: () =>
       unwrap(
         api.GET('/api/jobs', {
-          params: { query: { inbox: true, q: q || undefined, scope, page, size, allLegitimacy: allLegitimacy || undefined } },
+          params: {
+            query: {
+              inbox: true,
+              q: q || undefined,
+              scope,
+              page,
+              size,
+              allLegitimacy: allLegitimacy || undefined,
+              hasConnection: hasConnection || undefined,
+            },
+          },
         }),
       ),
     placeholderData: (previous) => previous,
@@ -974,11 +987,23 @@ function invalidateContacts(client: QueryClient) {
   return Promise.all(['contacts', 'jobs'].map((key) => client.invalidateQueries({ queryKey: [key] })))
 }
 
-export function useContacts({ q, role, page, size }: { q?: string; role?: ContactRole; page: number; size: number }) {
+export function useContacts({
+  q,
+  role,
+  companyId,
+  page,
+  size,
+}: {
+  q?: string
+  role?: ContactRole
+  companyId?: number
+  page: number
+  size: number
+}) {
   return useQuery({
-    queryKey: ['contacts', 'list', { q, role, page, size }],
+    queryKey: ['contacts', 'list', { q, role, companyId, page, size }],
     queryFn: () =>
-      unwrap(api.GET('/api/contacts', { params: { query: { q: q || undefined, role, page, size } } })),
+      unwrap(api.GET('/api/contacts', { params: { query: { q: q || undefined, role, companyId, page, size } } })),
     placeholderData: (previous) => previous,
   })
 }
@@ -1009,6 +1034,22 @@ export function useSaveContact() {
       id === undefined
         ? unwrap(api.POST('/api/contacts', { body }))
         : unwrap(api.PUT('/api/contacts/{id}', { params: { path: { id } }, body })),
+    onSuccess: () => invalidateContacts(client),
+  })
+}
+
+export type ConnectionsImport = Schemas['ConnectionsImport']
+
+/** Importa o Connections.csv do export de dados do LinkedIn. */
+export function useImportConnections() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const form = new FormData()
+      form.append('file', file)
+      const response = await send('/api/contacts/import/linkedin', { method: 'POST', body: form })
+      return (await response.json()) as ConnectionsImport
+    },
     onSuccess: () => invalidateContacts(client),
   })
 }
