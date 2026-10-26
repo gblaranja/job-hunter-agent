@@ -1,5 +1,6 @@
 package dev.laranja.jobhunter.jobs.web;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -61,13 +62,51 @@ record JobDetail(JobView job, @Nullable ApplicationSummary application, List<Tim
 	/**
 	 * Análise da vaga.
 	 * @param status DETERMINISTICO, PENDENTE, COMPLETO ou FALHOU
+	 * @param partialSkills requisitos cobertos em parte por uma skill equivalente do currículo
+	 * @param knockouts eliminatórios comparados com os dados da triagem
+	 * @param salary remuneração informada na vaga
+	 * @param jobFamily família do cargo (BACKEND, DADOS, FORA_DE_TI...)
+	 * @param internationalEligibility BRASIL, LATAM, GLOBAL, PAIS_ESPECIFICO ou NAO_INFORMADO
+	 * @param evidence trechos do currículo que comprovam requisitos
 	 */
 	@Schema(name = "JobAnalysis")
 	record Analysis(String status, @Nullable String seniority, List<String> requiredSkills, List<String> niceToHave,
 			@Nullable String summary, @Nullable String employerKind, @Nullable String contractType,
 			@Nullable Integer deterministicScore, @Nullable Integer llmAdjustment, @Nullable Integer matchScore,
 			List<String> matchedSkills, List<String> gaps, @Nullable String justification, String modelVersion,
-			@Nullable String lastError, Instant analyzedAt) {
+			@Nullable String lastError, Instant analyzedAt, List<PartialSkill> partialSkills, List<Knockout> knockouts,
+			@Nullable Salary salary, @Nullable String jobFamily, @Nullable String internationalEligibility,
+			List<Evidence> evidence) {
+	}
+
+	/** Trecho do currículo ({@code quote}) que comprova um requisito da vaga. */
+	@Schema(name = "JobRequirementEvidence")
+	record Evidence(String requirement, String quote) {
+	}
+
+	/**
+	 * Eliminatório da vaga.
+	 * @param type ANOS_EXPERIENCIA, IDIOMA, LOCALIDADE, PRESENCIAL, AUTORIZACAO_TRABALHO, FUSO, FORMACAO,
+	 * CERTIFICACAO ou CONTRATO
+	 * @param status ATENDE, NAO_ATENDE ou SEM_INFORMACAO
+	 */
+	@Schema(name = "JobAnalysisKnockout")
+	record Knockout(String type, String text, String value, String status, @Nullable String reason) {
+	}
+
+	/**
+	 * Remuneração como está na vaga.
+	 * @param period MENSAL, ANUAL ou HORA
+	 * @param regime CLT, PJ ou CONTRACTOR
+	 */
+	@Schema(name = "JobAnalysisSalary")
+	record Salary(@Nullable BigDecimal min, @Nullable BigDecimal max, String currency, String period,
+			@Nullable String regime, @Nullable String text) {
+	}
+
+	/** Requisito ({@code skill}) coberto em parte pela skill {@code via} do currículo. */
+	@Schema(name = "JobPartialSkill")
+	record PartialSkill(String skill, String via) {
 	}
 
 	record TimelineEvent(long id, @Nullable String fromStatus, @Nullable String toStatus,

@@ -17,6 +17,8 @@ public interface ResumeVersionRepository extends JpaRepository<ResumeVersion, Lo
 
 	List<ResumeVersion> findByExtractedTextIsNull();
 
+	List<ResumeVersion> findByLintIsNull();
+
 	@Modifying(flushAutomatically = true)
 	@Query("update ResumeVersion r set r.defaultVersion = false where r.defaultVersion = true and r.id <> :keepId")
 	void clearDefaultExcept(long keepId);

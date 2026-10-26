@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import dev.laranja.jobhunter.shared.NotFoundException;
+import dev.laranja.jobhunter.resumes.ResumeLintWarning;
 import dev.laranja.jobhunter.shared.jdbc.JdbcRows;
 
 import tools.jackson.databind.json.JsonMapper;
@@ -19,6 +20,7 @@ class ResumeQueries {
 	private static final String SELECT = """
 			select r.id, r.label, r.target_role, r.file_name, r.content_type, r.size_bytes, r.is_default, r.archived,
 			       r.created_at, coalesce(r.skills, '[]'::jsonb)::text as skills, r.extracted_text is not null as has_text,
+			       r.lint::text as lint,
 			       count(a.id) as applications,
 			       count(a.id) filter (where exists (
 			           select 1 from application_event e
@@ -69,7 +71,10 @@ class ResumeQueries {
 				rs.getBoolean("is_default"), rs.getBoolean("archived"), JdbcRows.instant(rs, "created_at"),
 				applications, interviews, interviewRate, (List<String>) this.json.readValue(rs.getString("skills"), List.class),
 				rs.getBoolean("has_text"), JdbcRows.nullableLong(rs, "tailored_job_id"), rs.getString("tailored_title"),
-				rs.getString("tailored_company"));
+				rs.getString("tailored_company"),
+				(rs.getString("lint") == null) ? List.of()
+						: this.json.readValue(rs.getString("lint"),
+								this.json.getTypeFactory().constructCollectionType(List.class, ResumeLintWarning.class)));
 	}
 
 }

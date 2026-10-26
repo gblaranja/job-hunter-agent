@@ -81,19 +81,23 @@ class TailoringIntegrationTests extends IntegrationTest {
 		long id = ((Number) JsonPath.read(created, "$.id")).longValue();
 		await(() -> "PRONTO".equals(statusOf(id)));
 
-		// Antes: obrigatórias 3/4 (53) + senioridade 10 + remoto 5 = 68; depois, com AWS no texto: 70 + 10 + 5 = 85
+		// Antes: obrigatórias 3/4 (53) + Kubernetes em parte por Docker (8) + senioridade 10 + remoto 5 = 76;
+		// depois, com AWS no texto e sem Docker: 70 + 10 + 5 = 85
 		this.mvc.perform(get("/api/jobs/{jobId}/tailored-resumes", jobId).with(owner()))
 			.andExpect(jsonPath("$[0].headline").value("Desenvolvedor Backend Java Sênior"))
 			.andExpect(jsonPath("$[0].content").value(containsString("# Ana Lima\n## Resumo")))
 			.andExpect(jsonPath("$[0].keywords.length()").value(5))
 			.andExpect(jsonPath("$[0].coveredBefore.length()").value(3))
 			.andExpect(jsonPath("$[0].coveredAfter.length()").value(4))
-			.andExpect(jsonPath("$[0].scoreBefore").value(68))
+			.andExpect(jsonPath("$[0].scoreBefore").value(76))
 			.andExpect(jsonPath("$[0].scoreAfter").value(85))
+			// obrigatórias pesam o dobro: Java, Spring Boot, Kafka e AWS (8 de 8) e Kubernetes de fora (0 de 1)
+			.andExpect(jsonPath("$[0].ats.weightedCoverage").value(89))
+			.andExpect(jsonPath("$[0].ats.cliches.length()").value(0))
 			.andExpect(jsonPath("$[0].unsupportedSkills[0]").value("AWS"))
 			.andExpect(jsonPath("$[0].notCovered[0]").value("Kubernetes"))
 			.andExpect(jsonPath("$[0].changes[0].reason").value("A vaga pede Java e Spring Boot."))
-			.andExpect(jsonPath("$[0].modelVersion").value("claude-opus-5-5|tailor-resume@v1"));
+			.andExpect(jsonPath("$[0].modelVersion").value("claude-opus-5-5|tailor-resume@v2"));
 
 		// Modelo maior com pensamento; o currículo base vai no bloco de sistema e a vaga com a análise na mensagem.
 		this.anthropicApi.verify(postRequestedFor(urlPathEqualTo("/v1/messages"))
@@ -156,6 +160,29 @@ class TailoringIntegrationTests extends IntegrationTest {
 		startApplication(jobId, "{\"status\": \"INTERESSE\"}");
 
 		await(() -> count("select count(*) from tailored_resume where status = 'PRONTO' and job_id = " + jobId) == 1);
+	}
+
+	@Test
+	void draftsScreeningAnswersWithTheDraftingModel() throws Exception {
+		long jobId = analyzedJob();
+		this.anthropicApi.stubFor(WireMock.post("/v1/messages").withRequestBody(containing("formulário de candidatura"))
+			.willReturn(okJson(AnthropicStubConfiguration.messageWith("""
+					{"answers": [{"answer": "Sim, uso Kafka em produção.", "basis": "currículo", "needsInput": false},
+					             {"answer": "", "basis": "Informe sua pretensão.", "needsInput": true}],
+					 "coverLetter": "Olá, tenho interesse na vaga."}
+					"""))));
+
+		this.mvc.perform(post("/api/jobs/{id}/screening-answers", jobId).with(owner())
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"questions\": [\"Você tem experiência com Kafka?\", \"Pretensão?\"], \"coverLetter\": true}"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.source").value("IA"))
+			.andExpect(jsonPath("$.answers[0].answer").value("Sim, uso Kafka em produção."))
+			.andExpect(jsonPath("$.answers[1].needsInput").value(true))
+			.andExpect(jsonPath("$.coverLetter").value("Olá, tenho interesse na vaga."));
+		this.anthropicApi.verify(postRequestedFor(urlPathEqualTo("/v1/messages"))
+			.withRequestBody(containing("formulário de candidatura"))
+			.withRequestBody(containing("Spring Boot Kafka e Docker")));
 	}
 
 	private long analyzedJob() throws Exception {

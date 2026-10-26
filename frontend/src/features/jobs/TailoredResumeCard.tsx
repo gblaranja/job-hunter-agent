@@ -193,6 +193,26 @@ function TailoredVersion({ version }: { version: TailoredResume }) {
         </Comparison>
       </dl>
       {version.keywords.length > 0 && <SkillChips skills={version.keywords} owned={version.coveredAfter} gaps={missing} />}
+      {version.ats && (
+        <div className="space-y-1 text-sm">
+          {version.ats.weightedCoverage != null && (
+            <p>
+              Cobertura ponderada (obrigatórias valem o dobro): <strong>{version.ats.weightedCoverage}%</strong>
+            </p>
+          )}
+          {!version.ats.titleInHeadline && (
+            <p className="text-muted-foreground">O título da vaga não aparece no headline; o ATS costuma comparar os dois.</p>
+          )}
+          {version.ats.overusedKeywords.length > 0 && (
+            <p className="text-muted-foreground">
+              Repetidas mais de 4 vezes: {version.ats.overusedKeywords.join(', ')}.
+            </p>
+          )}
+          {version.ats.cliches.length > 0 && (
+            <p className="text-muted-foreground">Clichês para trocar por um fato: {version.ats.cliches.join(', ')}.</p>
+          )}
+        </div>
+      )}
       {version.unsupportedSkills.length > 0 && (
         <Alert>
           <TriangleAlert />

@@ -38,6 +38,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatDateTime } from '@/lib/format'
 import { notificationTypeLabel, sourceLabel } from '@/lib/labels'
 import { useTheme } from '@/lib/useTheme'
+import { CandidateProfileCard } from './CandidateProfileCard'
 import {
   Activity,
   Database,
@@ -72,9 +73,10 @@ export function SettingsPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader
         title="Configurações"
-        description="Conexão com o Gmail, coleta de vagas, perfis de busca e as bases públicas de empresas."
+        description="Seus dados para a triagem, conexão com o Gmail, coleta de vagas, perfis de busca e as bases públicas de empresas."
       />
       <AppearanceCard />
+      <CandidateProfileCard />
       <GmailCard />
       <TelegramCard />
       <CollectionCard />

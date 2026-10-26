@@ -6,16 +6,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
+import dev.laranja.jobhunter.analysis.PartialSkillMatch;
 import dev.laranja.jobhunter.analysis.Seniority;
 
 import org.springframework.stereotype.Component;
 
 /**
  * Score determinístico de aderência (0 a 100): obrigatórias atendidas (70), desejáveis (15), senioridade (10) e
- * modelo de trabalho (5). É explicável e não oscila entre execuções; o LLM só ajusta em cima dele.
+ * modelo de trabalho (5). É explicável e não oscila entre execuções; o LLM só ajusta em cima dele. As skills do
+ * currículo contam com as que elas implicam (Spring Boot implica Java), e uma skill equivalente em parte
+ * (RabbitMQ para Kafka) vale metade do requisito.
  */
 @Component
 class DeterministicScorer {
@@ -28,20 +29,28 @@ class DeterministicScorer {
 
 	static final int WORK_MODEL_WEIGHT = 5;
 
+	/** Peso de um requisito coberto por uma skill equivalente em parte. */
+	static final double PARTIAL_CREDIT = 0.5;
+
+	private final SkillDictionary dictionary;
+
+	DeterministicScorer(SkillDictionary dictionary) {
+		this.dictionary = dictionary;
+	}
+
 	Result score(JobRequirements requirements, List<String> resumeSkills, Optional<Seniority> targetSeniority) {
-		Set<String> owned = resumeSkills.stream().map(skill -> skill.toLowerCase(Locale.ROOT)).collect(Collectors.toSet());
+		Map<String, String> owned = new LinkedHashMap<>();
+		this.dictionary.withImplied(resumeSkills).forEach(skill -> owned.putIfAbsent(skill.toLowerCase(Locale.ROOT), skill));
 		List<String> matched = new ArrayList<>();
 		List<String> gaps = new ArrayList<>();
-		for (String skill : requirements.requiredSkills()) {
-			(owned.contains(skill.toLowerCase(Locale.ROOT)) ? matched : gaps).add(skill);
-		}
+		List<PartialSkillMatch> partial = new ArrayList<>();
+		double requiredCredit = credit(requirements.requiredSkills(), owned, matched, partial, gaps);
 		double requiredRatio = requirements.requiredSkills().isEmpty() ? 0.5
-				: (double) matched.size() / requirements.requiredSkills().size();
-		long niceMatched = requirements.niceToHave().stream().filter(skill -> owned.contains(skill.toLowerCase(Locale.ROOT))).count();
+				: requiredCredit / requirements.requiredSkills().size();
+		double niceCredit = credit(requirements.niceToHave(), owned, matched, partial, new ArrayList<>());
 		// Sem desejáveis listados, vale a mesma proporção das obrigatórias.
 		double niceRatio = requirements.niceToHave().isEmpty() ? requiredRatio
-				: (double) niceMatched / requirements.niceToHave().size();
-		requirements.niceToHave().stream().filter(skill -> owned.contains(skill.toLowerCase(Locale.ROOT))).forEach(matched::add);
+				: niceCredit / requirements.niceToHave().size();
 
 		int required = (int) Math.round(REQUIRED_WEIGHT * requiredRatio);
 		int nice = (int) Math.round(NICE_WEIGHT * niceRatio);
@@ -53,7 +62,29 @@ class DeterministicScorer {
 		breakdown.put("senioridade", seniority);
 		breakdown.put("modeloTrabalho", workModel);
 		int total = Math.min(100, required + nice + seniority + workModel);
-		return new Result(total, matched, gaps, breakdown);
+		return new Result(total, matched, gaps, breakdown, partial);
+	}
+
+	/** Soma 1 por skill atendida e {@value #PARTIAL_CREDIT} por equivalente parcial; separa o que faltou. */
+	private double credit(List<String> skills, Map<String, String> owned, List<String> matched,
+			List<PartialSkillMatch> partial, List<String> missing) {
+		double credit = 0;
+		for (String skill : skills) {
+			if (owned.containsKey(skill.toLowerCase(Locale.ROOT))) {
+				matched.add(skill);
+				credit += 1;
+				continue;
+			}
+			Optional<String> via = this.dictionary.partialMatch(skill, owned);
+			if (via.isPresent()) {
+				partial.add(new PartialSkillMatch(skill, via.get()));
+				credit += PARTIAL_CREDIT;
+			}
+			else {
+				missing.add(skill);
+			}
+		}
+		return credit;
 	}
 
 	private static int seniorityPoints(Optional<Seniority> job, Optional<Seniority> target) {
@@ -72,7 +103,8 @@ class DeterministicScorer {
 		};
 	}
 
-	record Result(int score, List<String> matchedSkills, List<String> gaps, Map<String, Integer> breakdown) {
+	record Result(int score, List<String> matchedSkills, List<String> gaps, Map<String, Integer> breakdown,
+			List<PartialSkillMatch> partialMatches) {
 	}
 
 }

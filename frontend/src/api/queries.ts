@@ -724,6 +724,27 @@ export function useDeleteSearchProfile() {
   })
 }
 
+// Dados da triagem (eliminatórios, pretensão e meta semanal)
+
+export type CandidateProfile = Schemas['CandidateProfileView']
+export type CandidateProfileCommand = Schemas['CandidateProfileCommand']
+
+export function useCandidateProfile() {
+  return useQuery({ queryKey: ['candidate-profile'], queryFn: () => unwrap(api.GET('/api/candidate-profile')) })
+}
+
+/** Salva e recarrega as vagas: os eliminatórios e o score são recalculados no backend. */
+export function useSaveCandidateProfile() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (body: CandidateProfileCommand) => unwrap(api.PUT('/api/candidate-profile', { body })),
+    onSuccess: (profile) => {
+      client.setQueryData(['candidate-profile'], profile)
+      return Promise.all(['jobs', 'job'].map((key) => client.invalidateQueries({ queryKey: [key] })))
+    },
+  })
+}
+
 // Análise
 
 export type JobAnalysis = Schemas['JobAnalysis']
@@ -734,6 +755,17 @@ export function useReanalyze() {
     mutationFn: (jobId: number) => unwrap(api.POST('/api/jobs/{id}/analysis', { params: { path: { id: jobId } } })),
     onSuccess: () =>
       Promise.all([client.invalidateQueries({ queryKey: ['job'] }), client.invalidateQueries({ queryKey: ['jobs'] })]),
+  })
+}
+
+// Respostas do formulário de candidatura (rascunhos; nada é enviado)
+
+export type ScreeningAnswers = Schemas['ScreeningAnswersView']
+
+export function useScreeningAnswers(jobId: number) {
+  return useMutation({
+    mutationFn: (body: { questions: string[]; coverLetter: boolean }) =>
+      unwrap(api.POST('/api/jobs/{id}/screening-answers', { params: { path: { id: jobId } }, body })),
   })
 }
 

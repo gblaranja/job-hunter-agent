@@ -17,6 +17,7 @@ import { LegitimacyBadge } from '@/components/LegitimacyBadge'
 import { AnalysisCard } from './AnalysisCard'
 import { DismissalActions } from './DismissalActions'
 import { ScopeSwitch } from './ScopeSwitch'
+import { ScreeningQuestionsCard } from './ScreeningQuestionsCard'
 import { TailoredResumeCard } from './TailoredResumeCard'
 import { Markdown } from '@/components/Markdown'
 import { PageHeader } from '@/components/PageHeader'
@@ -106,6 +107,7 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
             </Card>
           )}
           <TailoredResumeCard jobId={job.id} />
+          <ScreeningQuestionsCard jobId={job.id} />
           {application && (
             <Card>
               <CardHeader>

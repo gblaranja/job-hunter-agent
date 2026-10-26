@@ -86,6 +86,8 @@ class JobQueries {
 				       j.raw_description, a.id as application_id, coalesce(a.status, 'NOVA') as status,
 				       f.rating, f.reasons, an.match_score, an.summary, an.matched_skills::text as matched,
 				       an.gaps::text as gaps, g.level as gptw_level, j.legitimacy, j.legitimacy_reasons::text as legitimacy_reasons,
+				       (select count(*) from jsonb_array_elements(an.knockouts) k
+				        where k->>'status' = 'NAO_ATENDE') as failed_knockouts,
 				       """ + RANKING_SCORE + """
 				 as score_with_bonus
 				""" + LIST_FROM + """
@@ -116,8 +118,8 @@ class JobQueries {
 					rs.getString("status"), JdbcRows.nullableEnum(rs, "rating", FeedbackRating.class),
 					reasons(rs), integer(rs, "match_score"), rs.getString("summary"), list(rs.getString("matched")),
 					list(rs.getString("gaps")), rs.getString("gptw_level"), integer(rs, "score_with_bonus"),
-					JdbcRows.instant(rs, "first_seen_at"), JdbcRows.nullableEnum(rs, "legitimacy", Legitimacy.class),
-					list(rs.getString("legitimacy_reasons"))))
+					rs.getInt("failed_knockouts"), JdbcRows.instant(rs, "first_seen_at"),
+					JdbcRows.nullableEnum(rs, "legitimacy", Legitimacy.class), list(rs.getString("legitimacy_reasons"))))
 			.list();
 		long total = this.jdbc.sql("select count(*) " + LIST_FROM)
 			.param("status", filter.status(), Types.VARCHAR)
@@ -174,7 +176,8 @@ class JobQueries {
 				select status, seniority, required_skills::text as required, nice_to_have::text as nice, summary,
 				       employer_kind, contract_type, deterministic_score, llm_adjustment, match_score,
 				       matched_skills::text as matched, gaps::text as gaps, justification, model_version, last_error,
-				       analyzed_at
+				       analyzed_at, partial_skills::text as partial, knockouts::text as knockouts, salary::text as salary,
+				       job_family, international_eligibility, evidence::text as evidence
 				from job_analysis where job_id = :jobId
 				""")
 			.param("jobId", job.id())
@@ -183,7 +186,13 @@ class JobQueries {
 					rs.getString("employer_kind"), rs.getString("contract_type"), integer(rs, "deterministic_score"),
 					integer(rs, "llm_adjustment"), integer(rs, "match_score"), list(rs.getString("matched")),
 					list(rs.getString("gaps")), rs.getString("justification"), rs.getString("model_version"),
-					rs.getString("last_error"), JdbcRows.instant(rs, "analyzed_at")))
+					rs.getString("last_error"), JdbcRows.instant(rs, "analyzed_at"),
+					listOf(rs.getString("partial"), JobDetail.PartialSkill.class),
+					listOf(rs.getString("knockouts"), JobDetail.Knockout.class),
+					(rs.getString("salary") != null) ? this.json.readValue(rs.getString("salary"), JobDetail.Salary.class)
+							: null,
+					rs.getString("job_family"), rs.getString("international_eligibility"),
+					listOf(rs.getString("evidence"), JobDetail.Evidence.class)))
 			.optional()
 			.orElse(null);
 		JobDetail.Legitimacy legitimacy = this.jdbc
@@ -210,6 +219,12 @@ class JobQueries {
 	@SuppressWarnings("unchecked")
 	private List<String> list(String json) {
 		return (json == null) ? List.of() : (List<String>) this.json.readValue(json, List.class);
+	}
+
+	/** Lista jsonb de objetos (as colunas da análise). */
+	private <T> List<T> listOf(String json, Class<T> type) {
+		return (json == null) ? List.of()
+				: this.json.readValue(json, this.json.getTypeFactory().constructCollectionType(List.class, type));
 	}
 
 	private static Integer integer(ResultSet rs, String column) throws SQLException {

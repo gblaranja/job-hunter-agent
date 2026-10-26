@@ -135,6 +135,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/candidate-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["candidateProfile"];
+        put: operations["updateCandidateProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/{id}/snapshot": {
         parameters: {
             query?: never;
@@ -401,6 +417,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{id}/screening-answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["screeningAnswers"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1352,6 +1384,7 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+            ats?: components["schemas"]["AtsCoverage"] | null;
         };
         SearchProfileCommand: {
             name: string;
@@ -1417,6 +1450,53 @@ export interface components {
             fitBand?: "ALTO" | "MEDIO" | "BAIXO" | null;
             reasons: string[];
         };
+        CandidateProfileCommand: {
+            /** Format: int32 */
+            yearsOfExperience?: number | null;
+            /** @enum {string|null} */
+            englishLevel?: "NENHUM" | "BASICO" | "INTERMEDIARIO" | "AVANCADO" | "FLUENTE" | null;
+            city?: string | null;
+            state?: string | null;
+            /** Format: int32 */
+            maxOnsiteDays?: number | null;
+            acceptedContracts?: string[] | null;
+            workAuthorizations?: string[] | null;
+            /** @enum {string|null} */
+            educationLevel?: "MEDIO" | "TECNICO" | "SUPERIOR_INCOMPLETO" | "SUPERIOR" | "POS" | "MESTRADO" | "DOUTORADO" | null;
+            education?: string | null;
+            certifications?: string[] | null;
+            desiredSalaryClt?: number | null;
+            desiredSalaryPj?: number | null;
+            /** Format: int32 */
+            weeklyGoal?: number | null;
+        };
+        CandidateProfileView: {
+            /** Format: int32 */
+            yearsOfExperience?: number | null;
+            /** @enum {string|null} */
+            englishLevel?: "NENHUM" | "BASICO" | "INTERMEDIARIO" | "AVANCADO" | "FLUENTE" | null;
+            city?: string | null;
+            state?: string | null;
+            /** Format: int32 */
+            maxOnsiteDays?: number | null;
+            acceptedContracts: string[];
+            workAuthorizations: string[];
+            /** @enum {string|null} */
+            educationLevel?: "MEDIO" | "TECNICO" | "SUPERIOR_INCOMPLETO" | "SUPERIOR" | "POS" | "MESTRADO" | "DOUTORADO" | null;
+            education?: string | null;
+            certifications: string[];
+            desiredSalaryClt?: number | null;
+            desiredSalaryPj?: number | null;
+            /** Format: int32 */
+            weeklyGoal: number;
+            /** Format: int32 */
+            suggestedYearsOfExperience?: number | null;
+            /** @enum {string|null} */
+            suggestedEnglishLevel?: "NENHUM" | "BASICO" | "INTERMEDIARIO" | "AVANCADO" | "FLUENTE" | null;
+            suggestedFrom?: string | null;
+            /** Format: date-time */
+            updatedAt?: string | null;
+        };
         SaveJobSnapshot: {
             url?: string | null;
             title: string;
@@ -1453,6 +1533,11 @@ export interface components {
             tailoredForJobId?: number | null;
             tailoredForTitle?: string | null;
             tailoredForCompany?: string | null;
+            lint: components["schemas"]["ResumeLintWarning"][];
+        };
+        ResumeLintWarning: {
+            code: string;
+            message: string;
         };
         RecognitionView: {
             /** Format: int64 */
@@ -1668,6 +1753,21 @@ export interface components {
             /** Format: int64 */
             existingJobId?: number | null;
         };
+        ScreeningQuestions: {
+            questions?: string[] | null;
+            coverLetter: boolean;
+        };
+        ScreeningAnswer: {
+            question: string;
+            answer: string;
+            basis?: string | null;
+            needsInput: boolean;
+        };
+        ScreeningAnswersView: {
+            answers: components["schemas"]["ScreeningAnswer"][];
+            coverLetter?: string | null;
+            source: string;
+        };
         BulletRewrite: {
             original: string;
             rewritten: string;
@@ -1708,6 +1808,15 @@ export interface components {
             evidence: string;
             suggestion: string;
         };
+        GupyExperience: {
+            role: string;
+            company: string;
+            description: string;
+        };
+        GupyProfile: {
+            skills: string;
+            experiences: components["schemas"]["GupyExperience"][];
+        };
         InsightReport: {
             /** Format: int64 */
             id: number;
@@ -1727,6 +1836,11 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        LinkedinProfile: {
+            headline: string;
+            about?: string | null;
+            skills: string[];
+        };
         Recommendations: {
             gaps: components["schemas"]["GapAdvice"][];
             bullets: components["schemas"]["BulletRewrite"][];
@@ -1734,6 +1848,9 @@ export interface components {
             diagnosis: string;
             diagnosisExplanation: string;
             source: string;
+            gupyProfile?: components["schemas"]["GupyProfile"] | null;
+            linkedinProfile?: components["schemas"]["LinkedinProfile"] | null;
+            profileChanges?: string[] | null;
         };
         ResumePerformance: {
             /** Format: int64 */
@@ -2004,6 +2121,8 @@ export interface components {
             gptwLevel?: string | null;
             /** Format: int32 */
             scoreWithBonus?: number | null;
+            /** Format: int32 */
+            failedKnockouts: number;
             /** Format: date-time */
             firstSeenAt: string;
             /** @enum {string|null} */
@@ -2040,6 +2159,27 @@ export interface components {
             lastError?: string | null;
             /** Format: date-time */
             analyzedAt: string;
+            partialSkills: components["schemas"]["JobPartialSkill"][];
+            knockouts: components["schemas"]["JobAnalysisKnockout"][];
+            salary?: components["schemas"]["JobAnalysisSalary"] | null;
+            jobFamily?: string | null;
+            internationalEligibility?: string | null;
+            evidence: components["schemas"]["JobRequirementEvidence"][];
+        };
+        JobAnalysisKnockout: {
+            type: string;
+            text: string;
+            value: string;
+            status: string;
+            reason?: string | null;
+        };
+        JobAnalysisSalary: {
+            min?: number | null;
+            max?: number | null;
+            currency: string;
+            period: string;
+            regime?: string | null;
+            text?: string | null;
         };
         JobApplicationSummary: {
             /** Format: int64 */
@@ -2097,6 +2237,14 @@ export interface components {
             reasons: string[];
             /** Format: int64 */
             duplicateOfJobId?: number | null;
+        };
+        JobPartialSkill: {
+            skill: string;
+            via: string;
+        };
+        JobRequirementEvidence: {
+            requirement: string;
+            quote: string;
         };
         TimelineEvent: {
             /** Format: int64 */
@@ -2623,6 +2771,50 @@ export interface operations {
             };
         };
     };
+    candidateProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CandidateProfileView"];
+                };
+            };
+        };
+    };
+    updateCandidateProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CandidateProfileCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CandidateProfileView"];
+                };
+            };
+        };
+    };
     snapshot: {
         parameters: {
             query?: never;
@@ -3144,6 +3336,32 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CreatedApplication"];
+                };
+            };
+        };
+    };
+    screeningAnswers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScreeningQuestions"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ScreeningAnswersView"];
                 };
             };
         };
