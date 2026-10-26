@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+import dev.laranja.jobhunter.interviews.InterviewDebriefView.RecurringQuestion;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -34,9 +35,12 @@ public record InsightReport(long id, LocalDate periodStart, LocalDate periodEnd,
 	 * @param avgScoreApplied score médio das vagas em que você se candidatou
 	 * @param bySeniority conversão aplicada → entrevista por senioridade da vaga
 	 * @param scoreByRating score médio das vagas por avaliação (GOSTEI, NEUTRO, NAO_GOSTEI)
+	 * @param recurringQuestions perguntas que apareceram em mais de um registro pós-entrevista; nulo nos relatórios
+	 * anteriores a esse registro
 	 */
 	public record Funnel(int applied, int screening, int interview, int offer, @Nullable Integer avgScoreApplied,
-			List<Conversion> bySeniority, Map<String, Integer> scoreByRating) {
+			List<Conversion> bySeniority, Map<String, Integer> scoreByRating,
+			@Nullable List<RecurringQuestion> recurringQuestions) {
 	}
 
 	public record Conversion(String group, int applied, int interview) {

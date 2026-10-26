@@ -17,6 +17,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import dev.laranja.jobhunter.insights.FunnelBreakdown;
+import dev.laranja.jobhunter.interviews.InterviewDebriefs;
 import dev.laranja.jobhunter.insights.InsightReport.Conversion;
 import dev.laranja.jobhunter.insights.InsightReport.Funnel;
 import dev.laranja.jobhunter.insights.InsightReport.Gap;
@@ -45,8 +46,11 @@ class InsightAggregator {
 
 	private final JdbcClient jdbc;
 
-	InsightAggregator(JdbcClient jdbc) {
+	private final InterviewDebriefs debriefs;
+
+	InsightAggregator(JdbcClient jdbc, InterviewDebriefs debriefs) {
 		this.jdbc = jdbc;
+		this.debriefs = debriefs;
 	}
 
 	List<SkillDemand> topSkills(Instant since, Set<String> resumeSkills) {
@@ -116,7 +120,7 @@ class InsightAggregator {
 		return new Funnel(applied.size(), count(applied, Reached::screening), count(applied, Reached::interview),
 				count(applied, Reached::offer),
 				scores.isEmpty() ? null : (int) Math.round(scores.stream().mapToInt(Integer::intValue).average().orElse(0)),
-				conversions, scoreByRating);
+				conversions, scoreByRating, this.debriefs.recurringQuestions());
 	}
 
 	List<ResumePerformance> resumePerformance() {
