@@ -14,7 +14,15 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  */
 @ConfigurationProperties("jobhunter.sourcing")
 record SourcingProperties(@DefaultValue Ats ats, @DefaultValue Remotive remotive, @DefaultValue GitHub github,
-		@DefaultValue Adzuna adzuna, @DefaultValue LinkedInDescriptions linkedinDescriptions) {
+		@DefaultValue Adzuna adzuna, @DefaultValue LinkedInDescriptions linkedinDescriptions,
+		@DefaultValue JobImport jobImport) {
+
+	/**
+	 * Importação de vaga por link.
+	 * @param allowPrivateHosts aceita endereços de rede interna e loopback; só nos testes (servidor simulado local)
+	 */
+	record JobImport(@DefaultValue("false") boolean allowPrivateHosts) {
+	}
 
 	/**
 	 * Endereços das APIs dos ATS (trocados pelo WireMock nos testes).

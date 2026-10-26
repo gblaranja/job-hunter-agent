@@ -125,6 +125,15 @@ export function useCreateJob() {
   })
 }
 
+export type JobImportPreview = Schemas['JobImportPreview']
+
+/** Lê a página da vaga pelo link e devolve os campos do cadastro, sem criar nada. */
+export function useJobImportPreview() {
+  return useMutation({
+    mutationFn: (url: string) => unwrap(api.POST('/api/jobs/import/preview', { body: { url } })),
+  })
+}
+
 export function useStartApplication() {
   const client = useQueryClient()
   return useMutation({
