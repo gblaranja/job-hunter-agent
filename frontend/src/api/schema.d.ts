@@ -809,6 +809,22 @@ export interface paths {
         patch: operations["changeResume"];
         trace?: never;
     };
+    "/api/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["today"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tailored-resumes/{id}": {
         parameters: {
             query?: never;
@@ -961,6 +977,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{id}/apply-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["applyCheck"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2075,6 +2107,82 @@ export interface components {
             /** Format: int64 */
             resumeVersionId: number;
         };
+        TodayAgenda: {
+            /** Format: date */
+            day: string;
+            jobs: components["schemas"]["TodayJob"][];
+            followUps: components["schemas"]["TodayFollowUp"][];
+            emails: components["schemas"]["TodayEmail"][];
+            interviews: components["schemas"]["TodayInterview"][];
+            tailoredResumes: components["schemas"]["TodayTailoredResume"][];
+            weeklyGoal: components["schemas"]["TodayWeeklyGoal"];
+        };
+        TodayEmail: {
+            /** Format: int64 */
+            id: number;
+            sender: string;
+            subject?: string | null;
+            /** Format: date-time */
+            receivedAt: string;
+            classification?: string | null;
+        };
+        TodayFollowUp: {
+            /** Format: int64 */
+            applicationId: number;
+            /** Format: int64 */
+            jobId: number;
+            title: string;
+            company: string;
+            status: string;
+            /** Format: date-time */
+            nextActionAt: string;
+            nextActionKind?: string | null;
+            /** Format: int32 */
+            followUpsSent: number;
+        };
+        TodayInterview: {
+            /** Format: int64 */
+            applicationId: number;
+            /** Format: int64 */
+            jobId: number;
+            title: string;
+            company: string;
+            status: string;
+            /** Format: date-time */
+            nextActionAt?: string | null;
+        };
+        TodayJob: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+            company: string;
+            /** Format: int32 */
+            matchScore: number;
+            /** Format: date-time */
+            firstSeenAt: string;
+            legitimacy?: string | null;
+            url?: string | null;
+        };
+        TodayTailoredResume: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            jobId: number;
+            title: string;
+            company: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        TodayWeeklyGoal: {
+            /** Format: date */
+            weekStart: string;
+            /** Format: int32 */
+            applied: number;
+            /** Format: int32 */
+            aligned: number;
+            /** Format: int32 */
+            goal: number;
+        };
         Availability: {
             enabled: boolean;
             autoGenerate: boolean;
@@ -2323,6 +2431,16 @@ export interface components {
             note?: string | null;
             /** Format: date-time */
             createdAt: string;
+        };
+        ApplyCheck: {
+            /** Format: int64 */
+            jobId: number;
+            linkStatus: string;
+            warnings: components["schemas"]["Warning"][];
+        };
+        Warning: {
+            code: string;
+            message: string;
         };
         LlmUsage: {
             task: string;
@@ -4038,6 +4156,26 @@ export interface operations {
             };
         };
     };
+    today: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TodayAgenda"];
+                };
+            };
+        };
+    };
     tailoredResume: {
         parameters: {
             query?: never;
@@ -4254,6 +4392,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["JobDetail"];
+                };
+            };
+        };
+    };
+    applyCheck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApplyCheck"];
                 };
             };
         };

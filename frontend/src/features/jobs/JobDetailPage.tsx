@@ -134,6 +134,7 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
           {application ? (
             <>
               <StatusPanel
+                jobId={job.id}
                 applicationId={application.id}
                 status={application.status as ApplicationStatus}
                 resumeVersionId={application.resumeVersionId}
@@ -157,10 +158,12 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
 }
 
 function StatusPanel({
+  jobId,
   applicationId,
   status,
   resumeVersionId,
 }: {
+  jobId: number
   applicationId: number
   status: ApplicationStatus
   resumeVersionId?: number | null
@@ -180,7 +183,7 @@ function StatusPanel({
           <Label htmlFor="status-select">Etapa</Label>
           <Select
             value={status}
-            onValueChange={(target) => requestMove({ applicationId, status, resumeVersionId }, target as ApplicationStatus)}
+            onValueChange={(target) => requestMove({ applicationId, status, resumeVersionId, jobId }, target as ApplicationStatus)}
           >
             <SelectTrigger id="status-select" className="w-full">
               <SelectValue />
@@ -267,6 +270,7 @@ function StartPanel({ jobId, dismissal }: { jobId: number; dismissal: JobDetail[
           title="Registrar aplicação"
           description="Qual versão do currículo você enviou para esta vaga?"
           preferredResumeId={tailoredResumeId}
+          applyCheckJobId={jobId}
           onCancel={() => setPicking(false)}
           onConfirm={({ resumeVersionId }) => {
             setPicking(false)

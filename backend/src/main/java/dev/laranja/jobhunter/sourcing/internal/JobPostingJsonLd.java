@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import dev.laranja.jobhunter.jobs.WorkModel;
+import org.jsoup.parser.Parser;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
@@ -45,7 +46,13 @@ final class JobPostingJsonLd {
 				root = json.readTree(block.strip());
 			}
 			catch (JacksonException ex) {
-				continue;
+				// a Gupy publica o JSON-LD com as aspas como entidades HTML (&quot;)
+				try {
+					root = json.readTree(Parser.unescapeEntities(block.strip(), false));
+				}
+				catch (JacksonException again) {
+					continue;
+				}
 			}
 			Optional<JsonNode> posting = find(root, 0);
 			if (posting.isPresent()) {

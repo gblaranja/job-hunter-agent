@@ -16,7 +16,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  */
 @ConfigurationProperties("jobhunter.security.google")
 record GoogleLoginProperties(@Nullable String clientId, @Nullable String clientSecret, URI redirectUri,
-		@Nullable String allowedEmail, @DefaultValue("/board") String afterLoginUrl,
+		@Nullable String allowedEmail, @DefaultValue("/today") String afterLoginUrl,
 		@DefaultValue("/login") String loginUrl,
 		@DefaultValue("https://accounts.google.com/o/oauth2/v2/auth") URI authUri,
 		@DefaultValue("https://oauth2.googleapis.com/token") URI tokenUri,

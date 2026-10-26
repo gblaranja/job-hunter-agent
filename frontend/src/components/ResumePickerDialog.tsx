@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { ApplyCheckWarnings } from '@/components/ApplyCheckWarnings'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
@@ -26,6 +27,8 @@ type Props = {
   /** Versão marcada de início no lugar da padrão (a adaptada para a vaga). */
   preferredResumeId?: number
   pending?: boolean
+  /** Vaga a conferir antes de aplicar: mostra os avisos do apply-check. */
+  applyCheckJobId?: number
   onCancel: () => void
   onConfirm: (choice: { resumeVersionId?: number; note?: string }) => void
 }
@@ -39,6 +42,7 @@ export function ResumePickerDialog({
   requireResume = true,
   preferredResumeId,
   pending = false,
+  applyCheckJobId,
   onCancel,
   onConfirm,
 }: Props) {
@@ -59,6 +63,7 @@ export function ResumePickerDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+        {applyCheckJobId !== undefined && <ApplyCheckWarnings jobId={applyCheckJobId} />}
 
         {requireResume && (
           <fieldset className="space-y-2">

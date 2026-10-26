@@ -994,3 +994,22 @@ export function useRevokeApiToken() {
     onSuccess: () => client.invalidateQueries({ queryKey: ['api-token'] }),
   })
 }
+
+// Fila do dia e checagem antes de aplicar
+
+export type TodayAgenda = Schemas['TodayAgenda']
+export type ApplyCheck = Schemas['ApplyCheck']
+
+export function useToday() {
+  return useQuery({ queryKey: ['today'], queryFn: () => unwrap(api.GET('/api/today')), refetchInterval: 5 * 60_000 })
+}
+
+/** Avisos antes de aplicar (link no ar, eliminatórios, legitimidade, score e candidaturas na empresa). */
+export function useApplyCheck(jobId: number | undefined) {
+  return useQuery({
+    queryKey: ['apply-check', jobId],
+    queryFn: () => unwrap(api.GET('/api/jobs/{id}/apply-check', { params: { path: { id: jobId as number } } })),
+    enabled: jobId !== undefined,
+    staleTime: 60_000,
+  })
+}

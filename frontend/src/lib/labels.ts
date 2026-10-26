@@ -319,3 +319,7 @@ export const legitimacyLabels: Record<string, string> = {
   BAIXA: 'Possível vaga fantasma',
   SUSPEITA: 'Suspeita de golpe',
 }
+
+export function nextActionKindLabel(kind: string | null | undefined): string {
+  return kind ? (nextActionKindLabels[kind as NextActionKind] ?? kind) : 'Próxima ação'
+}
