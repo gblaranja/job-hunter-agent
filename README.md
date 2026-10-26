@@ -156,6 +156,16 @@ Para acompanhar uma empresa por ATS, cole o link da página de carreira na tela 
 
 Sem a busca do LinkedIn, as vagas dos alertas chegam só com título, empresa e local; cole a descrição na vaga ou acompanhe a empresa pelo ATS dela. A saúde de cada fonte (última vaga nova, erros e alertas que não viraram vaga) fica em **Configurações → Saúde das fontes**.
 
+### Extensão "Salvar vaga"
+
+A pasta `extension/` tem uma extensão MV3 (Chrome, Edge, Brave) que salva a vaga da página aberta: lê o JSON-LD da página ou o texto que você selecionou, mostra a prévia da importação por link e salva com o seu clique. Ela só age quando você clica, só na aba aberta e nunca em lote (D-03).
+
+1. Em **Configurações → Extensão do navegador**, gere o token pessoal (aparece uma vez; só o hash fica no banco). Ele só vale para `POST /api/jobs/import/preview` e `POST /api/jobs`.
+2. Em `chrome://extensions`, ligue o modo de desenvolvedor e carregue a pasta `extension/` ("Carregar sem compactação").
+3. Nas opções da extensão, informe o endereço da API (por exemplo `http://localhost:8080`), o do app e o token. A extensão pede permissão só para o endereço da API.
+
+Os testes da extensão rodam com `cd extension && npm test` (Node 20+, sem dependências).
+
 ## Roadmap
 
 | Fase | Entrega | Status |

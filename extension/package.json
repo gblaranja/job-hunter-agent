@@ -1,0 +1,1 @@
+{ "name": "job-hunter-extension", "private": true, "type": "module", "scripts": { "test": "node --test test/*.test.mjs" } }

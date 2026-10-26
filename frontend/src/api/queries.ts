@@ -971,3 +971,26 @@ export function useTelegramStatus() {
 export function useSendTelegramTest() {
   return useMutation({ mutationFn: () => unwrap(api.POST('/api/notifications/telegram/test')) })
 }
+
+export type ApiTokenStatus = Schemas['ApiTokenStatus']
+
+/** Token pessoal da extensão do navegador: só o hash fica no servidor. */
+export function useApiToken() {
+  return useQuery({ queryKey: ['api-token'], queryFn: () => unwrap(api.GET('/api/auth/api-token')) })
+}
+
+export function useGenerateApiToken() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: () => unwrap(api.POST('/api/auth/api-token')),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['api-token'] }),
+  })
+}
+
+export function useRevokeApiToken() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: () => unwrap(api.DELETE('/api/auth/api-token')),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['api-token'] }),
+  })
+}
