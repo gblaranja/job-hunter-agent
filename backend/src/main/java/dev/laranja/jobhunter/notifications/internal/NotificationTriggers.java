@@ -104,11 +104,12 @@ class NotificationTriggers {
 				event.processed() + " empresas lidas, " + event.created() + " novas.", "/niches", null);
 	}
 
-	// Vaga aberta de empresa marcada como ALVO (leitura direta das tabelas de jobs e companies).
+	// Vaga aberta e canônica de empresa marcada como ALVO, sem sinal de golpe (leitura direta de jobs e companies).
 	private boolean isOpenAtTargetCompany(long jobId) {
 		return this.jdbc.sql("""
 				select count(*) from job j join company c on c.id = j.company_id
-				where j.id = :jobId and c.watch_status = 'ALVO' and j.closed_at is null
+				where j.id = :jobId and c.watch_status = 'ALVO' and j.closed_at is null and j.duplicate_of_job_id is null
+				  and coalesce(j.legitimacy, 'ALTA') <> 'SUSPEITA'
 				""")
 			.param("jobId", jobId)
 			.query(Long.class)

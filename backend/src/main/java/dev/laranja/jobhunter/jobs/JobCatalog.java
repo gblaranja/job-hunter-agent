@@ -5,13 +5,16 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import dev.laranja.jobhunter.companies.CompanyDirectory;
 import dev.laranja.jobhunter.jobs.internal.Job;
+import dev.laranja.jobhunter.jobs.internal.JobDuplicates;
 import dev.laranja.jobhunter.jobs.internal.JobFingerprint;
 import dev.laranja.jobhunter.jobs.internal.JobRepository;
 import dev.laranja.jobhunter.jobs.internal.JobScopeDetector;
+import dev.laranja.jobhunter.jobs.internal.LegitimacyAssessor;
 import dev.laranja.jobhunter.shared.ConflictException;
 import dev.laranja.jobhunter.shared.NotFoundException;
 import org.jspecify.annotations.Nullable;
@@ -34,14 +37,20 @@ public class JobCatalog {
 
 	private final ApplicationEventPublisher events;
 
+	private final JobDuplicates duplicates;
+
+	private final LegitimacyAssessor legitimacy;
+
 	private final Clock clock;
 
 	JobCatalog(JobRepository jobs, CompanyDirectory companies, JdbcClient jdbc, ApplicationEventPublisher events,
-			Clock clock) {
+			JobDuplicates duplicates, LegitimacyAssessor legitimacy, Clock clock) {
 		this.jobs = jobs;
 		this.companies = companies;
 		this.jdbc = jdbc;
 		this.events = events;
+		this.duplicates = duplicates;
+		this.legitimacy = legitimacy;
 		this.clock = clock;
 	}
 
@@ -59,13 +68,15 @@ public class JobCatalog {
 		Job job = this.jobs.save(Job.manual(command, fingerprint, companyId, this.clock.instant()));
 		this.jobs.flush();
 		linkRepost(job.getId(), companyId, command.title(), this.clock.instant());
+		this.legitimacy.assess(job.getId());
 		this.events.publishEvent(new JobCollected(job.getId(), job.getOrigin()));
 		return job.toView();
 	}
 
 	/**
 	 * Registra uma vaga coletada. É idempotente: a mesma vaga (pelo id na fonte ou pelo fingerprint) só
-	 * atualiza o "visto por último", e só uma vaga nova publica {@link JobCollected}.
+	 * atualiza o "visto por último", e só uma vaga nova publica {@link JobCollected}. A mesma vaga vinda de outra
+	 * fonte vira cópia da canônica (ver {@link JobDuplicates}); uma cópia nova não é analisada.
 	 */
 	@Transactional
 	public IngestResult ingest(RawJob raw) {
@@ -109,9 +120,67 @@ public class JobCatalog {
 			.single();
 		if (result.created()) {
 			linkRepost(result.jobId(), companyId, raw.title(), now);
-			this.events.publishEvent(new JobCollected(result.jobId(), raw.origin()));
+			boolean duplicate = deduplicate(result.jobId(), now);
+			this.legitimacy.assess(result.jobId());
+			if (!duplicate) {
+				this.events.publishEvent(new JobCollected(result.jobId(), raw.origin()));
+			}
 		}
 		return result;
+	}
+
+	/**
+	 * Liga a vaga recém-criada à mesma vaga de outra fonte. A canônica sem descrição herda a da cópia.
+	 * @return se a vaga nova ficou como cópia
+	 */
+	private boolean deduplicate(long jobId, Instant now) {
+		Optional<JobDuplicates.Match> match = this.duplicates.find(jobId, now);
+		if (match.isEmpty()) {
+			return false;
+		}
+		long canonical = match.get().canonicalId();
+		long duplicate = match.get().duplicateId();
+		this.duplicates.link(duplicate, canonical);
+		String description = this.jdbc.sql("select raw_description from job where id = :id")
+			.param("id", duplicate)
+			.query(String.class)
+			.optional()
+			.orElse(null);
+		if (description != null && !description.isBlank()) {
+			if (canonical == jobId) {
+				// a vaga nova ainda não foi analisada: a descrição entra antes do JobCollected, sem reanálise
+				this.jdbc.sql("update job set raw_description = :description where id = :id and raw_description is null")
+					.param("description", description)
+					.param("id", jobId)
+					.update();
+			}
+			else {
+				attachDescription(canonical, description);
+			}
+		}
+		if (canonical == jobId) {
+			this.legitimacy.assess(duplicate);
+		}
+		return canonical != jobId;
+	}
+
+	/**
+	 * Separa uma vaga marcada como cópia de outra: ela volta para a caixa e, se nunca foi analisada, é analisada agora.
+	 */
+	@Transactional
+	public void separateDuplicate(long jobId) {
+		JobView job = get(jobId);
+		if (!this.duplicates.unlink(jobId)) {
+			return;
+		}
+		this.legitimacy.assess(jobId);
+		boolean analyzed = this.jdbc.sql("select count(*) from job_analysis where job_id = :id")
+			.param("id", jobId)
+			.query(Long.class)
+			.single() > 0;
+		if (!analyzed) {
+			this.events.publishEvent(new JobCollected(jobId, job.origin()));
+		}
 	}
 
 	/**
@@ -120,16 +189,22 @@ public class JobCatalog {
 	 */
 	@Transactional
 	public int closeMissing(JobOrigin origin, long companyId, Collection<String> listedExternalIds) {
-		return this.jdbc.sql("""
+		Instant now = this.clock.instant();
+		List<Long> closed = this.jdbc.sql("""
 				update job set closed_at = :now
 				where source = :source and company_id = :companyId and closed_at is null
 				  and not (external_id = any(string_to_array(:listed, chr(31))))
+				returning id
 				""")
-			.param("now", Timestamp.from(this.clock.instant()))
+			.param("now", Timestamp.from(now))
 			.param("source", origin.name())
 			.param("companyId", companyId)
 			.param("listed", String.join(String.valueOf((char) 31), listedExternalIds))
-			.update();
+			.query(Long.class)
+			.list();
+		// a mesma vaga vinda de um alerta fecha junto
+		this.duplicates.closeLinked(closed, now);
+		return closed.size();
 	}
 
 	/**
@@ -173,6 +248,7 @@ public class JobCatalog {
 			.param("scope", JobScopeDetector.detect(current.get().title(), current.get().location(), description).name())
 			.param("id", jobId)
 			.update();
+		this.legitimacy.assess(jobId);
 		this.events.publishEvent(new JobDescriptionAdded(jobId));
 		return true;
 	}

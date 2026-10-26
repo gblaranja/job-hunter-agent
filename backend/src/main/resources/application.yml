@@ -76,6 +76,10 @@ jobhunter:
       interval: ${JOBHUNTER_LINKEDIN_DESCRIPTIONS_INTERVAL:PT1M}
   ai:
     api-key: ${JOBHUNTER_AI_API_KEY:}
+  inbox:
+    # bônus na ordenação da caixa para vagas recém-vistas: até 10 pontos, caindo a zero em 72 h
+    freshness-bonus: ${JOBHUNTER_INBOX_FRESHNESS_BONUS:10}
+    freshness-window: ${JOBHUNTER_INBOX_FRESHNESS_WINDOW:PT72H}
   notifications:
     # endereço do backoffice visto do celular: os links das mensagens do Telegram apontam para ele
     public-url: ${JOBHUNTER_PUBLIC_URL:http://localhost:5173}

@@ -246,3 +246,10 @@ export const nicheSourceLabels: Record<NicheSource, string> = {
   VAGA: 'Palavras-chave das vagas',
   MANUAL: 'Sua escolha',
 }
+
+export const legitimacyLabels: Record<string, string> = {
+  ALTA: 'Vaga confiável',
+  MEDIA: 'Atenção',
+  BAIXA: 'Possível vaga fantasma',
+  SUSPEITA: 'Suspeita de golpe',
+}
