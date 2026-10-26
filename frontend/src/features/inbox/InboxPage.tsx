@@ -263,6 +263,11 @@ function InboxCard({ job }: { job: JobListItem }) {
                 {job.failedKnockouts === 1 ? '1 eliminatório' : `${job.failedKnockouts} eliminatórios`}
               </Badge>
             )}
+            {job.origin === 'RECRUTADOR' && (
+              <Badge title="Um recrutador ou agência te procurou com esta oportunidade; o contato está em Contatos">
+                abordagem
+              </Badge>
+            )}
             {job.connections > 0 && (
               <Badge variant="secondary" title="Contatos e conexões do LinkedIn na empresa">
                 <Users aria-hidden /> {job.connections === 1 ? '1 conexão' : `${job.connections} conexões`}

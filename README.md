@@ -149,6 +149,7 @@ Cada fonte tem regras próprias. As que dependem de uma permissão sua ou têm r
 | Remotive (`REMOTIVE`) | API pública de vagas remotas | Pede crédito à fonte e poucas consultas por dia | Desligada (`JOBHUNTER_REMOTIVE_ENABLED`) |
 | GitHub backend-br/vagas (`GITHUB`) | Issues abertas do repositório, pela API do GitHub | Limite de requisições da API; um token aumenta o limite | Desligada (`JOBHUNTER_GITHUB_VAGAS_ENABLED`) |
 | Adzuna (`ADZUNA`) | API com `app_id` e `app_key` | Exige cadastro e segue os termos da Adzuna | Desligada até haver chave |
+| Abordagem de recrutador (`RECRUTADOR`) | E-mails da label `jobs` classificados como abordagem de recrutador ou agência (inclui as notificações de mensagem do LinkedIn que chegam por e-mail) viram vaga e contato | Só o seu e-mail; nada é respondido sozinho | Ligada ao conectar o Gmail |
 | Vaga manual (`MANUAL`) | Você cola o link e a descrição | — | — |
 | Descrição das vagas do LinkedIn | Busca a página pública da vaga (`jobs-guest`), uma por minuto | A cláusula 8.2 dos [termos do LinkedIn](https://www.linkedin.com/legal/user-agreement) proíbe robôs e scripts que copiam dados do site; ligar é um risco para a sua conta | Desligada (`JOBHUNTER_LINKEDIN_DESCRIPTIONS_ENABLED`) |
 

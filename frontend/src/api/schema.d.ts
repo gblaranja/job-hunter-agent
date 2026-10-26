@@ -1926,7 +1926,7 @@ export interface components {
             /** Format: int64 */
             id: number;
             /** @enum {string} */
-            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA" | "SMARTRECRUITERS" | "WORKABLE" | "TEAMTAILOR" | "RECRUITEE";
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA" | "SMARTRECRUITERS" | "WORKABLE" | "TEAMTAILOR" | "RECRUITEE" | "RECRUTADOR";
             title: string;
             company: string;
             location?: string | null;
@@ -2486,7 +2486,7 @@ export interface components {
             scope: "NACIONAL" | "INTERNACIONAL";
             url?: string | null;
             /** @enum {string} */
-            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA" | "SMARTRECRUITERS" | "WORKABLE" | "TEAMTAILOR" | "RECRUITEE";
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA" | "SMARTRECRUITERS" | "WORKABLE" | "TEAMTAILOR" | "RECRUITEE" | "RECRUTADOR";
             /** Format: date-time */
             collectedAt: string;
             preview?: string | null;
@@ -2588,7 +2588,7 @@ export interface components {
             /** Format: int64 */
             id: number;
             /** @enum {string} */
-            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA";
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA" | "SMARTRECRUITERS" | "WORKABLE" | "TEAMTAILOR" | "RECRUITEE" | "RECRUTADOR";
             url?: string | null;
             /** Format: date-time */
             closedAt?: string | null;

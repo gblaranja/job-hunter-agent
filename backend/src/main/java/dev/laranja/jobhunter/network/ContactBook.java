@@ -9,6 +9,10 @@ import java.util.Map;
 import java.util.Optional;
 
 import dev.laranja.jobhunter.companies.CompanyDirectory;
+import dev.laranja.jobhunter.jobs.IngestResult;
+import dev.laranja.jobhunter.jobs.JobCatalog;
+import dev.laranja.jobhunter.jobs.JobOrigin;
+import dev.laranja.jobhunter.jobs.RawJob;
 import dev.laranja.jobhunter.network.internal.Contact;
 import dev.laranja.jobhunter.network.internal.ContactInteraction;
 import dev.laranja.jobhunter.network.internal.ContactInteractionRepository;
@@ -49,15 +53,18 @@ public class ContactBook {
 
 	private final CompanyDirectory companies;
 
+	private final JobCatalog jobs;
+
 	private final JdbcClient jdbc;
 
 	private final Clock clock;
 
 	ContactBook(ContactRepository contacts, ContactInteractionRepository interactions, CompanyDirectory companies,
-			JdbcClient jdbc, Clock clock) {
+			JobCatalog jobs, JdbcClient jdbc, Clock clock) {
 		this.contacts = contacts;
 		this.interactions = interactions;
 		this.companies = companies;
+		this.jobs = jobs;
 		this.jdbc = jdbc;
 		this.clock = clock;
 	}
@@ -166,6 +173,58 @@ public class ContactBook {
 	 * @param matchedCompanies conexões em empresas que já estão no cadastro
 	 */
 	public record ConnectionsImport(int created, int updated, int matchedCompanies) {
+	}
+
+	/**
+	 * Um recrutador ou agência te procurou: registra a oportunidade como vaga (origem RECRUTADOR, empresa cliente ou,
+	 * sem ela, a agência), cria ou completa o contato pelo e-mail e guarda a conversa recebida. Idempotente por e-mail.
+	 * @return a vaga criada ou já existente; vazio quando o e-mail não cita empresa nem agência
+	 */
+	public Optional<Long> registerOutreach(Outreach outreach) {
+		if (this.interactions.existsByEmailMessageId(outreach.emailId())) {
+			return Optional.empty();
+		}
+		String company = firstNonBlank(outreach.company(), outreach.agency());
+		Long jobId = null;
+		if (company != null) {
+			String title = firstNonBlank(outreach.jobTitle(), outreach.subject());
+			IngestResult job = this.jobs.ingest(new RawJob(JobOrigin.RECRUTADOR, "email-" + outreach.emailId(),
+					(title != null) ? title : "Oportunidade de recrutador", company, null, null, null, null,
+					"Oportunidade recebida por e-mail de " + outreach.sender()
+							+ ((outreach.subject() != null) ? ": " + outreach.subject() : "")));
+			jobId = job.jobId();
+		}
+		ContactRole role = (outreach.agency() != null && !outreach.agency().isBlank()) ? ContactRole.HEADHUNTER
+				: ContactRole.RECRUTADOR;
+		String contactCompany = firstNonBlank(outreach.agency(), outreach.company());
+		Long companyId = companyIdOf(contactCompany);
+		Instant now = this.clock.instant();
+		Contact contact = this.contacts.findByEmail(outreach.sender())
+			.map(existing -> {
+				existing.completeFrom(companyId, contactCompany, outreach.sender(), now);
+				return existing;
+			})
+			.orElseGet(() -> this.contacts.save(Contact.create(outreach.name(), role, ContactSource.EMAIL, companyId,
+					contactCompany, null, null, outreach.sender(), null, null, now)));
+		this.interactions.save(ContactInteraction.record(contact.getId(), null, InteractionChannel.EMAIL,
+				InteractionDirection.RECEBIDA, InteractionKind.ABORDAGEM, outreach.subject(), outreach.emailId(),
+				outreach.receivedAt(), now));
+		return Optional.ofNullable(jobId);
+	}
+
+	/**
+	 * @param company empresa cliente citada
+	 * @param agency agência ou consultoria de recrutamento
+	 */
+	public record Outreach(long emailId, String sender, String name, @Nullable String company, @Nullable String agency,
+			@Nullable String jobTitle, @Nullable String subject, Instant receivedAt) {
+	}
+
+	private static @Nullable String firstNonBlank(@Nullable String first, @Nullable String second) {
+		if (first != null && !first.isBlank()) {
+			return first.strip();
+		}
+		return (second != null && !second.isBlank()) ? second.strip() : null;
 	}
 
 	/** Apaga o contato e todas as conversas registradas com ele (LGPD). */

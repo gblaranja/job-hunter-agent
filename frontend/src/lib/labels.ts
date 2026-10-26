@@ -129,6 +129,7 @@ export const originLabels: Record<JobListItem['origin'], string> = {
   WORKABLE: 'Workable',
   TEAMTAILOR: 'Teamtailor',
   RECRUITEE: 'Recruitee',
+  RECRUTADOR: 'Recrutador',
 }
 
 /** Fonte da coleta: as origens das vagas, mais os alertas do Gmail (que juntam LinkedIn e Gupy). */

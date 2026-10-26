@@ -49,18 +49,24 @@ describe('InboxPage', () => {
     expect(requests.at(-1)?.get('allLegitimacy')).toBe('true')
   })
 
-  it('mostra as conexões na empresa e filtra por "tenho conexão"', async () => {
+  it('mostra as conexões na empresa, o selo de abordagem e filtra por "tenho conexão"', async () => {
     const requests: URLSearchParams[] = []
     server.use(
       http.get('/api/jobs', ({ request }) => {
         const params = new URL(request.url).searchParams
         requests.push(params)
-        return HttpResponse.json({ items: [inboxJob({ connections: 3 })], page: 0, size: 20, total: 1 })
+        return HttpResponse.json({
+          items: [inboxJob({ connections: 3, origin: 'RECRUTADOR' })],
+          page: 0,
+          size: 20,
+          total: 1,
+        })
       }),
     )
     renderWithProviders(<InboxPage />)
 
     expect(await screen.findByText('3 conexões')).toBeInTheDocument()
+    expect(screen.getByText('abordagem')).toBeInTheDocument()
     await userEvent.click(screen.getByLabelText('Tenho conexão'))
 
     await vi.waitFor(() => expect(requests.at(-1)?.get('hasConnection')).toBe('true'))
