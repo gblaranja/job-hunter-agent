@@ -1288,6 +1288,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{id}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["separateDuplicate"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{companyId}/niches/{nicheId}": {
         parameters: {
             query?: never;
@@ -2106,6 +2122,11 @@ export interface components {
             scoreWithBonus?: number | null;
             /** Format: int32 */
             failedKnockouts: number;
+            /** Format: date-time */
+            firstSeenAt: string;
+            /** @enum {string|null} */
+            legitimacy?: "ALTA" | "MEDIA" | "BAIXA" | "SUSPEITA" | null;
+            legitimacyReasons: string[];
         };
         PageResponseJobListItem: {
             items: components["schemas"]["JobListItem"][];
@@ -2177,6 +2198,16 @@ export interface components {
             /** Format: int32 */
             followUpsSent: number;
         };
+        JobCopy: {
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA";
+            url?: string | null;
+            /** Format: date-time */
+            closedAt?: string | null;
+            canonical: boolean;
+        };
         JobDetail: {
             job: components["schemas"]["JobView"];
             application?: components["schemas"]["JobApplicationSummary"] | null;
@@ -2184,6 +2215,8 @@ export interface components {
             feedback?: components["schemas"]["JobFeedback"] | null;
             dismissal?: components["schemas"]["JobDismissal"] | null;
             analysis?: components["schemas"]["JobAnalysis"] | null;
+            legitimacy: components["schemas"]["JobLegitimacy"];
+            copies: components["schemas"]["JobCopy"][];
         };
         JobDismissal: {
             /** @enum {string} */
@@ -2204,6 +2237,13 @@ export interface components {
         JobRequirementEvidence: {
             requirement: string;
             quote: string;
+        };
+        JobLegitimacy: {
+            /** @enum {string|null} */
+            level?: "ALTA" | "MEDIA" | "BAIXA" | "SUSPEITA" | null;
+            reasons: string[];
+            /** Format: int64 */
+            duplicateOfJobId?: number | null;
         };
         TimelineEvent: {
             /** Format: int64 */
@@ -3180,6 +3220,7 @@ export interface operations {
                 q?: string;
                 scope?: "NACIONAL" | "INTERNACIONAL";
                 inbox?: boolean;
+                allLegitimacy?: boolean;
                 page?: number;
                 size?: number;
             };
@@ -4526,6 +4567,26 @@ export interface operations {
                 content: {
                     "*/*": components["schemas"]["CollectionRun"][];
                 };
+            };
+        };
+    };
+    separateDuplicate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

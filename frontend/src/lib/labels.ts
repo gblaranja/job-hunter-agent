@@ -312,3 +312,10 @@ export const knockoutStatusLabels: Record<string, string> = {
   NAO_ATENDE: 'Não atende',
   SEM_INFORMACAO: 'Sem informação',
 }
+
+export const legitimacyLabels: Record<string, string> = {
+  ALTA: 'Vaga confiável',
+  MEDIA: 'Atenção',
+  BAIXA: 'Possível vaga fantasma',
+  SUSPEITA: 'Suspeita de golpe',
+}

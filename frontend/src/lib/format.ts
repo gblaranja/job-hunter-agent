@@ -56,3 +56,13 @@ export function formatSalary(salary: {
   const range = min == null || max == null ? '—' : min === max ? money(min) : `${money(min)} a ${money(max)}`
   return [`${range} ${salaryPeriods[salary.period] ?? ''}`.trim(), salary.regime].filter(Boolean).join(' · ')
 }
+
+/** Há quanto tempo, curto: "há 5 h", "há 3 dias". */
+export function formatAge(value: string | null | undefined, now: Date = new Date()): string {
+  if (!value) return '—'
+  const hours = Math.max(0, Math.floor((now.getTime() - parseISO(value).getTime()) / 3_600_000))
+  if (hours < 1) return 'agora há pouco'
+  if (hours < 24) return `há ${hours} h`
+  const days = Math.floor(hours / 24)
+  return days === 1 ? 'há 1 dia' : `há ${days} dias`
+}

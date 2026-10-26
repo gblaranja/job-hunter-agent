@@ -268,11 +268,28 @@ export type FeedbackReason = Schemas['JobListItem']['reasons'][number]
 
 export type JobScope = Schemas['JobListItem']['scope']
 
-export function useInboxJobs({ q, scope, page, size }: { q?: string; scope: JobScope; page: number; size: number }) {
+export function useInboxJobs({
+  q,
+  scope,
+  page,
+  size,
+  allLegitimacy = false,
+}: {
+  q?: string
+  scope: JobScope
+  page: number
+  size: number
+  /** mostra também as vagas de legitimidade baixa e suspeitas */
+  allLegitimacy?: boolean
+}) {
   return useQuery({
-    queryKey: ['jobs', 'inbox', { q, scope, page, size }],
+    queryKey: ['jobs', 'inbox', { q, scope, page, size, allLegitimacy }],
     queryFn: () =>
-      unwrap(api.GET('/api/jobs', { params: { query: { inbox: true, q: q || undefined, scope, page, size } } })),
+      unwrap(
+        api.GET('/api/jobs', {
+          params: { query: { inbox: true, q: q || undefined, scope, page, size, allLegitimacy: allLegitimacy || undefined } },
+        }),
+      ),
     placeholderData: (previous) => previous,
   })
 }
@@ -285,6 +302,16 @@ export function useInboxCount({ q, scope }: { q?: string; scope: JobScope }) {
       unwrap(api.GET('/api/jobs', { params: { query: { inbox: true, q: q || undefined, scope, size: 1 } } })),
     select: (data) => data.total,
     placeholderData: (previous) => previous,
+  })
+}
+
+/** Separa a vaga da publicação canônica: ela volta para a caixa como uma vaga própria. */
+export function useSeparateDuplicate() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (jobId: number) => unwrap(api.DELETE('/api/jobs/{id}/duplicate', { params: { path: { id: jobId } } })),
+    onSuccess: () =>
+      Promise.all([client.invalidateQueries({ queryKey: ['jobs'] }), client.invalidateQueries({ queryKey: ['job'] })]),
   })
 }
 
