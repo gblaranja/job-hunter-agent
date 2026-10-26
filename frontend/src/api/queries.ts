@@ -1141,3 +1141,13 @@ export function useDraftMessage() {
       ),
   })
 }
+
+/** Cria a vaga e a candidatura em Aplicada a partir do e-mail "recebemos sua candidatura". */
+export function useRegisterFromEmail() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ emailId, ...body }: { emailId: number } & Schemas['ApplicationFromEmail']) =>
+      unwrap(api.POST('/api/applications/from-email/{emailId}', { params: { path: { emailId } }, body })),
+    onSuccess: () => Promise.all([client.invalidateQueries({ queryKey: ['emails'] }), invalidateTracking(client)]),
+  })
+}

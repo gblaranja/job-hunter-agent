@@ -38,6 +38,9 @@ class EmailResponseHandler {
 
 	@ApplicationModuleListener
 	void on(EmailClassified event) {
+		if (!event.classification().isResponse()) {
+			return;
+		}
 		List<Long> candidates = this.matcher.match(event.companyGuess(), event.sender());
 		if (candidates.size() != 1) {
 			log.info("Retorno {} sem candidatura única ({} encontradas); fica para revisão.", event.emailId(), candidates.size());

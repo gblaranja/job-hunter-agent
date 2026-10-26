@@ -171,6 +171,8 @@ export const classificationLabels: Record<EmailClassification, string> = {
   PEDIDO_INFORMACAO: 'Pedido de informação',
   OFERTA: 'Oferta',
   RECUSA: 'Recusa',
+  CONFIRMACAO_CANDIDATURA: 'Candidatura recebida',
+  CONTATO_RECRUTADOR: 'Abordagem de recrutador',
   OUTRO: 'Outro',
   IRRELEVANTE: 'Irrelevante',
 }

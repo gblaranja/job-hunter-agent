@@ -1353,6 +1353,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/applications/from-email/{emailId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["registerFromEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/board": {
         parameters: {
             query?: never;
@@ -1942,6 +1958,15 @@ export interface components {
             language: string;
             source: string;
         };
+        ApplicationFromEmail: {
+            /** Format: int64 */
+            resumeVersionId: number;
+            title?: string | null;
+            company?: string | null;
+            url?: string | null;
+            /** @enum {string|null} */
+            channel?: "EASY_APPLY" | "SITE_EMPRESA" | "INDICACAO" | "EMAIL" | "OUTRO" | null;
+        };
         StartApplication: {
             /** @enum {string} */
             status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
@@ -2193,7 +2218,7 @@ export interface components {
         };
         Review: {
             /** @enum {string} */
-            classification: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "OUTRO" | "IRRELEVANTE";
+            classification: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "CONFIRMACAO_CANDIDATURA" | "CONTATO_RECRUTADOR" | "OUTRO" | "IRRELEVANTE";
             /** Format: int64 */
             applicationId?: number | null;
         };
@@ -2688,11 +2713,11 @@ export interface components {
             /** Format: date-time */
             receivedAt: string;
             /** @enum {string|null} */
-            aiClassification?: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "OUTRO" | "IRRELEVANTE" | null;
+            aiClassification?: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "CONFIRMACAO_CANDIDATURA" | "CONTATO_RECRUTADOR" | "OUTRO" | "IRRELEVANTE" | null;
             /** Format: double */
             aiConfidence?: number | null;
             /** @enum {string|null} */
-            finalClassification?: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "OUTRO" | "IRRELEVANTE" | null;
+            finalClassification?: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "CONFIRMACAO_CANDIDATURA" | "CONTATO_RECRUTADOR" | "OUTRO" | "IRRELEVANTE" | null;
             classifiedBy?: string | null;
             companyGuess?: string | null;
             jobGuess?: string | null;
@@ -2702,6 +2727,7 @@ export interface components {
             applicationId?: number | null;
             applicationTitle?: string | null;
             applicationCompany?: string | null;
+            applicationStatus?: string | null;
         };
         Accuracy: {
             /** Format: int64 */
@@ -3808,6 +3834,32 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["MessageDraft"];
+                };
+            };
+        };
+    };
+    registerFromEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                emailId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationFromEmail"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CreatedApplication"];
                 };
             };
         };
@@ -4943,7 +4995,7 @@ export interface operations {
         parameters: {
             query?: {
                 pending?: boolean;
-                classification?: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "OUTRO" | "IRRELEVANTE";
+                classification?: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "CONFIRMACAO_CANDIDATURA" | "CONTATO_RECRUTADOR" | "OUTRO" | "IRRELEVANTE";
             };
             header?: never;
             path?: never;
