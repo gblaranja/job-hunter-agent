@@ -104,3 +104,8 @@ jobhunter:
       # pasta com os zips Empresas*.zip e Estabelecimentos*.zip da base de CNPJ da Receita
       directory: ${JOBHUNTER_CNPJ_DIRECTORY:}
       min-capital: ${JOBHUNTER_CNPJ_MIN_CAPITAL:100000}
+  salary:
+    # premissas da comparação CLT × PJ (equivalente anual): impostos e custos fixos do PJ e benefícios do CLT
+    pj-tax-rate: ${JOBHUNTER_SALARY_PJ_TAX_RATE:0.15}
+    pj-monthly-costs: ${JOBHUNTER_SALARY_PJ_MONTHLY_COSTS:400}
+    clt-benefits-monthly: ${JOBHUNTER_SALARY_CLT_BENEFITS_MONTHLY:1000}
