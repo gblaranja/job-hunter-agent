@@ -249,6 +249,7 @@ export const notificationTypeLabels: Record<string, string> = {
   FOLLOW_UP: 'Follow-up',
   PREPARACAO_PRONTA: 'Preparação pronta',
   RESUMO_DIARIO: 'Resumo do dia',
+  FINALISTA: 'Você foi finalista',
 }
 
 export function notificationTypeLabel(type: string): string {

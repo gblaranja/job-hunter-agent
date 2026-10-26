@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import {
   useApplicationContacts,
@@ -11,6 +11,7 @@ import {
   useTailoredResumes,
   type ApplicationStatus,
   type ContactView,
+  type DraftKind,
   type JobDetail,
 } from '@/api/queries'
 import { AppliedJobCard } from '@/components/AppliedJobCard'
@@ -40,6 +41,7 @@ import { ContactsCard } from '@/features/network/ContactsCard'
 import { MessageDrafts } from '@/features/network/MessageDrafts'
 import {
   closedJobNote,
+  draftKindLabels,
   legitimacyLabels,
   originLabels,
   sameAsWorkModel,
@@ -48,6 +50,8 @@ import {
   workModelLabels,
 } from '@/lib/labels'
 import { ExternalLink, ShieldAlert, Unlink } from 'lucide-react'
+
+const draftKinds = Object.keys(draftKindLabels) as DraftKind[]
 
 const movableStatuses = (Object.keys(statusLabels) as ApplicationStatus[]).filter((status) => status !== 'NOVA')
 
@@ -65,6 +69,9 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
   const { job, application, timeline } = detail
   const hasSnapshot = application != null && statusesRequiringResume.has(application.status as ApplicationStatus)
   const contacts = useApplicationContacts(application?.id)
+  // "?mensagem=PEDIDO_INDICACAO" (link da notificação de finalista) abre o rascunho direto nesse tipo.
+  const [params] = useSearchParams()
+  const initialKind = draftKinds.find((kind) => kind === params.get('mensagem'))
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -112,7 +119,7 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
             </Card>
           )}
           <TailoredResumeCard jobId={job.id} />
-          <MessageDrafts jobId={job.id} applicationId={application?.id} />
+          <MessageDrafts jobId={job.id} applicationId={application?.id} initialKind={initialKind} />
           <ScreeningQuestionsCard jobId={job.id} />
           {application && (
             <Card>

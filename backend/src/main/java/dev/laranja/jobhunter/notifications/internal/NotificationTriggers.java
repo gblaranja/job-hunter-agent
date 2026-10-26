@@ -11,6 +11,7 @@ import dev.laranja.jobhunter.notifications.Notifications;
 import dev.laranja.jobhunter.recognition.RecognitionReviewNeeded;
 import dev.laranja.jobhunter.shared.NotificationRequested;
 import dev.laranja.jobhunter.tailoring.TailoredResumeReady;
+import dev.laranja.jobhunter.tracking.FinalistJobOpened;
 import dev.laranja.jobhunter.tracking.FollowUpsDue;
 import dev.laranja.jobhunter.tracking.NextActionKind;
 
@@ -150,6 +151,14 @@ class NotificationTriggers {
 			.param("jobId", jobId)
 			.query(Long.class)
 			.single() > 0;
+	}
+
+	@ApplicationModuleListener
+	void on(FinalistJobOpened event) {
+		String who = event.contacts().isEmpty() ? "" : " Fale com " + String.join(", ", event.contacts()) + ".";
+		this.notifications.notify("FINALISTA", "Vaga parecida na " + event.company() + ", onde você foi finalista",
+				event.title() + ". Antes: " + event.previousTitle() + "." + who,
+				"/jobs/" + event.jobId() + "?mensagem=PEDIDO_INDICACAO", "finalista-" + event.jobId());
 	}
 
 }
