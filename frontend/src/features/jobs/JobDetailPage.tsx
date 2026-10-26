@@ -36,11 +36,7 @@ import { FollowUpStatus } from '@/features/applications/FollowUpStatus'
 import { ResponseDialog } from '@/features/applications/ResponseDialog'
 import { Timeline } from '@/features/applications/Timeline'
 import { useStatusMove } from '@/features/applications/useStatusMove'
-<<<<<<< HEAD
 import { ContactsCard } from '@/features/network/ContactsCard'
-import { closedJobNote, sameAsWorkModel, statusesRequiringResume, statusLabels, workModelLabels } from '@/lib/labels'
-import { ExternalLink } from 'lucide-react'
-=======
 import {
   closedJobNote,
   legitimacyLabels,
@@ -51,7 +47,6 @@ import {
   workModelLabels,
 } from '@/lib/labels'
 import { ExternalLink, ShieldAlert, Unlink } from 'lucide-react'
->>>>>>> feat/conversao-a-funil
 
 const movableStatuses = (Object.keys(statusLabels) as ApplicationStatus[]).filter((status) => status !== 'NOVA')
 

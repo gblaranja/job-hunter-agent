@@ -959,7 +959,6 @@ export function useMarkAllNotificationsRead() {
   })
 }
 
-<<<<<<< HEAD
 // Contatos e conexões
 
 export type ContactView = Schemas['ContactView']
@@ -1029,7 +1028,9 @@ export function useRecordInteraction() {
     mutationFn: ({ contactId, ...body }: { contactId: number } & Schemas['RecordInteraction']) =>
       unwrap(api.POST('/api/contacts/{id}/interactions', { params: { path: { id: contactId } }, body })),
     onSuccess: () => invalidateContacts(client),
-=======
+  })
+}
+
 // Telegram (alertas no celular)
 
 export type TelegramStatus = Schemas['TelegramStatus']
@@ -1082,6 +1083,5 @@ export function useApplyCheck(jobId: number | undefined) {
     queryFn: () => unwrap(api.GET('/api/jobs/{id}/apply-check', { params: { path: { id: jobId as number } } })),
     enabled: jobId !== undefined,
     staleTime: 60_000,
->>>>>>> feat/conversao-a-funil
   })
 }

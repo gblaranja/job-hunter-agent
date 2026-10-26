@@ -273,7 +273,6 @@ export const nicheSourceLabels: Record<NicheSource, string> = {
   MANUAL: 'Sua escolha',
 }
 
-<<<<<<< HEAD
 export const contactRoleLabels: Record<ContactRole, string> = {
   RECRUTADOR: 'Recrutador(a)',
   HEADHUNTER: 'Headhunter',
@@ -305,7 +304,8 @@ export const interactionKindLabels: Record<InteractionKind, string> = {
   ABORDAGEM: 'Abordagem de recrutador',
   CONVERSA: 'Conversa',
   OUTRO: 'Outro',
-=======
+}
+
 // Triagem: dados da pessoa e eliminatórios das vagas
 
 export const englishLevelLabels: Record<string, string> = {
@@ -359,5 +359,4 @@ export const legitimacyLabels: Record<string, string> = {
 
 export function nextActionKindLabel(kind: string | null | undefined): string {
   return kind ? (nextActionKindLabels[kind as NextActionKind] ?? kind) : 'Próxima ação'
->>>>>>> feat/conversao-a-funil
 }
