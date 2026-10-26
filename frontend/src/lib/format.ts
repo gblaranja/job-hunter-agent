@@ -66,3 +66,19 @@ export function formatAge(value: string | null | undefined, now: Date = new Date
   const days = Math.floor(hours / 24)
   return days === 1 ? 'há 1 dia' : `há ${days} dias`
 }
+
+/** Valor em reais sem centavos: "R$ 155.964". */
+export function formatBrl(value: number | null | undefined): string {
+  return value == null
+    ? '—'
+    : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(value)
+}
+
+/** Valor na moeda informada, com centavos só quando houver: "US$ 40", "R$ 15.000". */
+export function formatMoney(value: number, currency: string): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: Number.isInteger(value) ? 0 : 2,
+  }).format(value)
+}

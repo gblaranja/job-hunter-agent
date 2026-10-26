@@ -73,6 +73,11 @@ const router = createBrowserRouter([
         path: 'resumes',
         lazy: () => import('@/features/resumes/ResumesPage').then((module) => ({ Component: module.ResumesPage })),
       },
+      {
+        path: 'interviews',
+        lazy: () =>
+          import('@/features/interviews/InterviewsPage').then((module) => ({ Component: module.InterviewsPage })),
+      },
       { path: '*', element: <Navigate to="/today" replace /> },
     ],
   },

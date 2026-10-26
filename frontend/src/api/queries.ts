@@ -284,6 +284,7 @@ export function useInboxJobs({
   size,
   allLegitimacy = false,
   hasConnection = false,
+  salaryFloor = false,
 }: {
   q?: string
   scope: JobScope
@@ -293,9 +294,11 @@ export function useInboxJobs({
   allLegitimacy?: boolean
   /** só vagas de empresas onde você tem contato ou conexão do LinkedIn */
   hasConnection?: boolean
+  /** esconde as vagas que pagam menos que a sua pretensão (equivalente anual) */
+  salaryFloor?: boolean
 }) {
   return useQuery({
-    queryKey: ['jobs', 'inbox', { q, scope, page, size, allLegitimacy, hasConnection }],
+    queryKey: ['jobs', 'inbox', { q, scope, page, size, allLegitimacy, hasConnection, salaryFloor }],
     queryFn: () =>
       unwrap(
         api.GET('/api/jobs', {
@@ -308,6 +311,7 @@ export function useInboxJobs({
               size,
               allLegitimacy: allLegitimacy || undefined,
               hasConnection: hasConnection || undefined,
+              salaryFloor: salaryFloor || undefined,
             },
           },
         }),

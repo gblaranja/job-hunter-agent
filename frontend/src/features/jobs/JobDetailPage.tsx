@@ -38,7 +38,10 @@ import { ResponseDialog } from '@/features/applications/ResponseDialog'
 import { Timeline } from '@/features/applications/Timeline'
 import { useStatusMove } from '@/features/applications/useStatusMove'
 import { ContactsCard } from '@/features/network/ContactsCard'
+import { InterviewSection } from '@/features/interviews/InterviewSection'
 import { MessageDrafts } from '@/features/network/MessageDrafts'
+import { interviewStatuses } from '@/lib/interviewLabels'
+import type { InterviewStage } from '@/api/interviews'
 import {
   closedJobNote,
   draftKindLabels,
@@ -119,6 +122,20 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
             </Card>
           )}
           <TailoredResumeCard jobId={job.id} />
+          {application && interviewStatuses.has(application.status) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Entrevista</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <InterviewSection
+                  applicationId={application.id}
+                  jobId={job.id}
+                  status={application.status as InterviewStage}
+                />
+              </CardContent>
+            </Card>
+          )}
           <MessageDrafts jobId={job.id} applicationId={application?.id} initialKind={initialKind} />
           <ScreeningQuestionsCard jobId={job.id} />
           {application && (

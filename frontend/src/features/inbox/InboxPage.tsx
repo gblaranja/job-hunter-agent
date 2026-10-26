@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
-import { formatAge, formatDate } from '@/lib/format'
+import { formatAge, formatBrl, formatDate } from '@/lib/format'
 import { isPageSize } from '@/lib/pagination'
 import { closedJobNote, originLabels, sameAsWorkModel, workModelLabels } from '@/lib/labels'
 import { Ban, ExternalLink, Search, Users } from 'lucide-react'
@@ -56,7 +56,9 @@ export function InboxPage() {
   const allLegitimacy = params.get('todas') === '1'
   // "Tenho conexão": só empresas onde você conhece alguém (contato ou conexão do LinkedIn).
   const hasConnection = params.get('conexao') === '1'
-  const jobs = useInboxJobs({ q: query, scope, page, size, allLegitimacy, hasConnection })
+  // "No meu piso": esconde as vagas que informam salário abaixo da sua pretensão (equivalente anual CLT × PJ).
+  const salaryFloor = params.get('piso') === '1'
+  const jobs = useInboxJobs({ q: query, scope, page, size, allLegitimacy, hasConnection, salaryFloor })
   const otherTotal = useInboxCount({ q: query, scope: otherScope }).data
   const totals: Partial<Record<JobScope, number>> = { [scope]: jobs.data?.total, [otherScope]: otherTotal }
   const top = useRef<HTMLDivElement>(null)
@@ -190,6 +192,21 @@ export function InboxPage() {
             Tenho conexão
           </Label>
         </div>
+        <div
+          className="flex items-center gap-2"
+          title="Esconde as vagas que informam salário abaixo da sua pretensão (Configurações), no equivalente anual."
+        >
+          <input
+            id="salary-floor"
+            type="checkbox"
+            className="size-4 accent-primary"
+            checked={salaryFloor}
+            onChange={(event) => toggleAll(event.target.checked, 'piso')}
+          />
+          <Label htmlFor="salary-floor" className="text-sm font-normal">
+            No meu piso salarial
+          </Label>
+        </div>
       </div>
       {jobs.isLoading && <LoadingBlock />}
       {jobs.error && <ErrorBlock error={jobs.error} />}
@@ -261,6 +278,14 @@ function InboxCard({ job }: { job: JobListItem }) {
             {job.failedKnockouts > 0 && (
               <Badge variant="destructive" title="Requisitos eliminatórios que você não atende">
                 {job.failedKnockouts === 1 ? '1 eliminatório' : `${job.failedKnockouts} eliminatórios`}
+              </Badge>
+            )}
+            {job.salaryEquivalent != null && (
+              <Badge
+                variant={job.belowSalaryFloor ? 'destructive' : 'secondary'}
+                title="Equivalente anual: CLT com 13,33 salários, FGTS e benefícios; PJ líquido de impostos e custos"
+              >
+                ≈ {formatBrl(job.salaryEquivalent)}/ano{job.belowSalaryFloor ? ' · abaixo do piso' : ''}
               </Badge>
             )}
             {job.origin === 'RECRUTADOR' && (
