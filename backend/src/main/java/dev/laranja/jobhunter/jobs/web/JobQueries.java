@@ -10,6 +10,8 @@ import java.util.List;
 import dev.laranja.jobhunter.jobs.DismissReason;
 import dev.laranja.jobhunter.jobs.FeedbackRating;
 import dev.laranja.jobhunter.jobs.FeedbackReason;
+import dev.laranja.jobhunter.jobs.InternationalEligibility;
+import dev.laranja.jobhunter.jobs.JobFamily;
 import dev.laranja.jobhunter.jobs.JobOrigin;
 import dev.laranja.jobhunter.jobs.JobScope;
 import dev.laranja.jobhunter.jobs.JobView;
@@ -41,6 +43,9 @@ class JobQueries {
 			  and (cast(:rating as text) is null or f.rating = :rating)
 			  and (cast(:pattern as text) is null or j.title ilike :pattern or j.company ilike :pattern)
 			  and (cast(:scope as text) is null or coalesce(j.scope, 'NACIONAL') = :scope)
+			  and (cast(:family as text) is null or j.job_family = :family)
+			  -- elegíveis a partir do Brasil: tudo menos a vaga restrita a outro país (não informado conta como elegível)
+			  and (not :eligibleFromBrazil or coalesce(j.international_eligibility, 'NAO_INFORMADO') <> 'PAIS_ESPECIFICO')
 			  -- caixa de vagas: sem candidatura, sem "não gostei" e não descartada
 			  and (not :inbox or (a.id is null and coalesce(f.rating, '') <> 'NAO_GOSTEI' and d.job_id is null))
 			""";
@@ -61,7 +66,8 @@ class JobQueries {
 				       coalesce(j.scope, 'NACIONAL') as scope, j.url, j.source, j.collected_at,
 				       j.raw_description, a.id as application_id, coalesce(a.status, 'NOVA') as status,
 				       f.rating, f.reasons, an.match_score, an.summary, an.matched_skills::text as matched,
-				       an.gaps::text as gaps, g.level as gptw_level, an.match_score + coalesce(g.bonus, 0) as score_with_bonus
+				       an.gaps::text as gaps, g.level as gptw_level, an.match_score + coalesce(g.bonus, 0) as score_with_bonus,
+				       j.job_family, j.international_eligibility, j.required_timezone, j.contractor
 				""" + LIST_FROM + """
 				-- a caixa de vagas é ordenada por aderência com o bônus GPTW; as demais listas, pela data da coleta
 				order by case when :inbox then an.match_score + coalesce(g.bonus, 0) end desc nulls last,
@@ -72,6 +78,8 @@ class JobQueries {
 			.param("rating", (filter.rating() != null) ? filter.rating().name() : null, Types.VARCHAR)
 			.param("pattern", pattern, Types.VARCHAR)
 			.param("scope", (filter.scope() != null) ? filter.scope().name() : null, Types.VARCHAR)
+			.param("family", (filter.family() != null) ? filter.family().name() : null, Types.VARCHAR)
+			.param("eligibleFromBrazil", filter.eligibleFromBrazil())
 			.param("inbox", filter.inbox())
 			.param("size", size)
 			.param("offset", page * size)
@@ -83,13 +91,18 @@ class JobQueries {
 					preview(rs.getString("raw_description")), JdbcRows.nullableLong(rs, "application_id"),
 					rs.getString("status"), JdbcRows.nullableEnum(rs, "rating", FeedbackRating.class),
 					reasons(rs), integer(rs, "match_score"), rs.getString("summary"), list(rs.getString("matched")),
-					list(rs.getString("gaps")), rs.getString("gptw_level"), integer(rs, "score_with_bonus")))
+					list(rs.getString("gaps")), rs.getString("gptw_level"), integer(rs, "score_with_bonus"),
+					JdbcRows.nullableEnum(rs, "job_family", JobFamily.class),
+					JdbcRows.nullableEnum(rs, "international_eligibility", InternationalEligibility.class),
+					rs.getString("required_timezone"), rs.getBoolean("contractor")))
 			.list();
 		long total = this.jdbc.sql("select count(*) " + LIST_FROM)
 			.param("status", filter.status(), Types.VARCHAR)
 			.param("rating", (filter.rating() != null) ? filter.rating().name() : null, Types.VARCHAR)
 			.param("pattern", pattern, Types.VARCHAR)
 			.param("scope", (filter.scope() != null) ? filter.scope().name() : null, Types.VARCHAR)
+			.param("family", (filter.family() != null) ? filter.family().name() : null, Types.VARCHAR)
+			.param("eligibleFromBrazil", filter.eligibleFromBrazil())
 			.param("inbox", filter.inbox())
 			.query(Long.class)
 			.single();
@@ -128,10 +141,11 @@ class JobQueries {
 					rs.getString("comment")))
 			.optional()
 			.orElse(null);
-		JobDetail.Dismissal dismissal = this.jdbc.sql("select reason, created_at from job_dismissal where job_id = :jobId")
+		JobDetail.Dismissal dismissal = this.jdbc
+			.sql("select reason, detail, created_at from job_dismissal where job_id = :jobId")
 			.param("jobId", job.id())
 			.query((rs, row) -> new JobDetail.Dismissal(DismissReason.valueOf(rs.getString("reason")),
-					JdbcRows.instant(rs, "created_at")))
+					JdbcRows.instant(rs, "created_at"), rs.getString("detail")))
 			.optional()
 			.orElse(null);
 		JobDetail.Analysis analysis = this.jdbc.sql("""
@@ -150,7 +164,19 @@ class JobQueries {
 					rs.getString("last_error"), JdbcRows.instant(rs, "analyzed_at")))
 			.optional()
 			.orElse(null);
-		return new JobDetail(job, application, timeline, feedback, dismissal, analysis);
+		JobDetail.JobClassificationView classification = this.jdbc.sql("""
+				select job_family, international_eligibility, required_timezone, contractor from job where id = :jobId
+				""")
+			.param("jobId", job.id())
+			.query((rs, row) -> {
+				InternationalEligibility eligibility = JdbcRows.nullableEnum(rs, "international_eligibility",
+						InternationalEligibility.class);
+				return new JobDetail.JobClassificationView(JdbcRows.nullableEnum(rs, "job_family", JobFamily.class),
+						eligibility, eligibility == null || eligibility.eligibleFromBrazil(),
+						rs.getString("required_timezone"), rs.getBoolean("contractor"));
+			})
+			.single();
+		return new JobDetail(job, application, timeline, feedback, dismissal, analysis, classification);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -180,7 +206,8 @@ class JobQueries {
 		return (text.length() <= 280) ? text : text.substring(0, 280).strip() + "…";
 	}
 
-	record JobListFilter(String status, FeedbackRating rating, String query, JobScope scope, boolean inbox) {
+	record JobListFilter(String status, FeedbackRating rating, String query, JobScope scope, boolean inbox,
+			JobFamily family, boolean eligibleFromBrazil) {
 	}
 
 }

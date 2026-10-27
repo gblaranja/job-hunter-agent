@@ -3,6 +3,7 @@ package dev.laranja.jobhunter.profile.internal;
 import java.time.Instant;
 import java.util.List;
 
+import dev.laranja.jobhunter.jobs.JobFamily;
 import dev.laranja.jobhunter.profile.SearchProfileCommand;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -33,6 +34,9 @@ public class SearchProfile {
 
 	private boolean remoteOnly;
 
+	@JdbcTypeCode(SqlTypes.ARRAY)
+	private List<String> jobFamilies;
+
 	private boolean active;
 
 	private Instant createdAt;
@@ -53,6 +57,8 @@ public class SearchProfile {
 		this.excludedKeywords = clean(command.excludedKeywords());
 		this.locations = clean(command.locations());
 		this.remoteOnly = command.remoteOnly();
+		this.jobFamilies = (command.jobFamilies() == null) ? List.of()
+				: command.jobFamilies().stream().distinct().map(Enum::name).toList();
 		this.active = command.active();
 	}
 
@@ -83,6 +89,11 @@ public class SearchProfile {
 
 	public boolean isRemoteOnly() {
 		return this.remoteOnly;
+	}
+
+	/** Famílias de cargo de interesse; vazio aceita todas. */
+	public List<JobFamily> getJobFamilies() {
+		return (this.jobFamilies == null) ? List.of() : this.jobFamilies.stream().map(JobFamily::valueOf).toList();
 	}
 
 	public boolean isActive() {

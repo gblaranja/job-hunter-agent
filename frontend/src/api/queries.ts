@@ -256,22 +256,41 @@ export type FeedbackRating = NonNullable<Schemas['JobListItem']['rating']>
 export type FeedbackReason = Schemas['JobListItem']['reasons'][number]
 
 export type JobScope = Schemas['JobListItem']['scope']
+export type JobFamily = NonNullable<Schemas['JobListItem']['jobFamily']>
+export type InternationalEligibility = NonNullable<Schemas['JobListItem']['internationalEligibility']>
 
-export function useInboxJobs({ q, scope, page, size }: { q?: string; scope: JobScope; page: number; size: number }) {
+type InboxFilter = {
+  q?: string
+  scope: JobScope
+  /** Só as vagas desta família de cargo. */
+  family?: JobFamily
+  /** Esconde as vagas do exterior restritas a outro país. */
+  eligibleFromBrazil?: boolean
+}
+
+export function useInboxJobs({ q, scope, family, eligibleFromBrazil, page, size }: InboxFilter & { page: number; size: number }) {
   return useQuery({
-    queryKey: ['jobs', 'inbox', { q, scope, page, size }],
+    queryKey: ['jobs', 'inbox', { q, scope, family, eligibleFromBrazil, page, size }],
     queryFn: () =>
-      unwrap(api.GET('/api/jobs', { params: { query: { inbox: true, q: q || undefined, scope, page, size } } })),
+      unwrap(
+        api.GET('/api/jobs', {
+          params: { query: { inbox: true, q: q || undefined, scope, family, eligibleFromBrazil, page, size } },
+        }),
+      ),
     placeholderData: (previous) => previous,
   })
 }
 
 /** Só o total de cada seção da caixa, para o contador da aba que não está aberta. */
-export function useInboxCount({ q, scope }: { q?: string; scope: JobScope }) {
+export function useInboxCount({ q, scope, family, eligibleFromBrazil }: InboxFilter) {
   return useQuery({
-    queryKey: ['jobs', 'inbox', 'count', { q, scope }],
+    queryKey: ['jobs', 'inbox', 'count', { q, scope, family, eligibleFromBrazil }],
     queryFn: () =>
-      unwrap(api.GET('/api/jobs', { params: { query: { inbox: true, q: q || undefined, scope, size: 1 } } })),
+      unwrap(
+        api.GET('/api/jobs', {
+          params: { query: { inbox: true, q: q || undefined, scope, family, eligibleFromBrazil, size: 1 } },
+        }),
+      ),
     select: (data) => data.total,
     placeholderData: (previous) => previous,
   })

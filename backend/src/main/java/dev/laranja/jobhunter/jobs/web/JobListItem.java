@@ -5,6 +5,8 @@ import java.util.List;
 
 import dev.laranja.jobhunter.jobs.FeedbackRating;
 import dev.laranja.jobhunter.jobs.FeedbackReason;
+import dev.laranja.jobhunter.jobs.InternationalEligibility;
+import dev.laranja.jobhunter.jobs.JobFamily;
 import dev.laranja.jobhunter.jobs.JobOrigin;
 import dev.laranja.jobhunter.jobs.JobScope;
 import dev.laranja.jobhunter.jobs.WorkModel;
@@ -19,10 +21,16 @@ import org.jspecify.annotations.Nullable;
  * @param matchScore aderência ao currículo padrão (0 a 100); nulo antes da análise ou sem currículo
  * @param gptwLevel selo GPTW vigente da empresa (RANKING_TI, RANKING ou CERTIFICADA)
  * @param scoreWithBonus aderência mais o bônus GPTW (+10, +7 ou +4), usada na ordenação da caixa de vagas
+ * @param jobFamily família de cargo; nula quando não reconhecida
+ * @param internationalEligibility de onde a pessoa pode ser contratada (vagas do exterior)
+ * @param requiredTimezone fuso exigido, como aparece na vaga
+ * @param contractor contratação como contractor
  */
 record JobListItem(long id, String title, String company, @Nullable Long companyId, @Nullable String location,
 		WorkModel workModel, JobScope scope, @Nullable String url, JobOrigin origin, Instant collectedAt,
 		@Nullable String preview, @Nullable Long applicationId, String status, @Nullable FeedbackRating rating, List<FeedbackReason> reasons,
 		@Nullable Integer matchScore, @Nullable String summary, List<String> matchedSkills, List<String> gaps,
-		@Nullable String gptwLevel, @Nullable Integer scoreWithBonus) {
+		@Nullable String gptwLevel, @Nullable Integer scoreWithBonus, @Nullable JobFamily jobFamily,
+		@Nullable InternationalEligibility internationalEligibility, @Nullable String requiredTimezone,
+		boolean contractor) {
 }

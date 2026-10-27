@@ -1280,6 +1280,7 @@ export interface components {
             locations: string[];
             remoteOnly: boolean;
             active: boolean;
+            jobFamilies?: ("BACKEND" | "FRONTEND" | "FULLSTACK" | "MOBILE" | "DADOS" | "DEVOPS_SRE" | "QA" | "SEGURANCA" | "GESTAO" | "FORA_DE_TI" | "OUTRA")[] | null;
         };
         SearchProfileView: {
             /** Format: int64 */
@@ -1290,6 +1291,7 @@ export interface components {
             locations: string[];
             remoteOnly: boolean;
             active: boolean;
+            jobFamilies: ("BACKEND" | "FRONTEND" | "FULLSTACK" | "MOBILE" | "DADOS" | "DEVOPS_SRE" | "QA" | "SEGURANCA" | "GESTAO" | "FORA_DE_TI" | "OUTRA")[];
         };
         ScopeChange: {
             /** @enum {string} */
@@ -1897,6 +1899,12 @@ export interface components {
             gptwLevel?: string | null;
             /** Format: int32 */
             scoreWithBonus?: number | null;
+            /** @enum {string|null} */
+            jobFamily?: "BACKEND" | "FRONTEND" | "FULLSTACK" | "MOBILE" | "DADOS" | "DEVOPS_SRE" | "QA" | "SEGURANCA" | "GESTAO" | "FORA_DE_TI" | "OUTRA" | null;
+            /** @enum {string|null} */
+            internationalEligibility?: "BRASIL" | "LATAM" | "GLOBAL" | "PAIS_ESPECIFICO" | "NAO_INFORMADO" | null;
+            requiredTimezone?: string | null;
+            contractor: boolean;
         };
         PageResponseJobListItem: {
             items: components["schemas"]["JobListItem"][];
@@ -1943,6 +1951,15 @@ export interface components {
             /** Format: date-time */
             nextActionAt?: string | null;
         };
+        JobClassification: {
+            /** @enum {string|null} */
+            jobFamily?: "BACKEND" | "FRONTEND" | "FULLSTACK" | "MOBILE" | "DADOS" | "DEVOPS_SRE" | "QA" | "SEGURANCA" | "GESTAO" | "FORA_DE_TI" | "OUTRA" | null;
+            /** @enum {string|null} */
+            internationalEligibility?: "BRASIL" | "LATAM" | "GLOBAL" | "PAIS_ESPECIFICO" | "NAO_INFORMADO" | null;
+            eligibleFromBrazil: boolean;
+            requiredTimezone?: string | null;
+            contractor: boolean;
+        };
         JobDetail: {
             job: components["schemas"]["JobView"];
             application?: components["schemas"]["JobApplicationSummary"] | null;
@@ -1950,12 +1967,14 @@ export interface components {
             feedback?: components["schemas"]["JobFeedback"] | null;
             dismissal?: components["schemas"]["JobDismissal"] | null;
             analysis?: components["schemas"]["JobAnalysis"] | null;
+            classification: components["schemas"]["JobClassification"];
         };
         JobDismissal: {
             /** @enum {string} */
             reason: "SEM_INTERESSE" | "SEM_PERFIL_TECNICO";
             /** Format: date-time */
             dismissedAt: string;
+            detail?: string | null;
         };
         JobFeedback: {
             /** @enum {string} */
@@ -2874,6 +2893,8 @@ export interface operations {
                 q?: string;
                 scope?: "NACIONAL" | "INTERNACIONAL";
                 inbox?: boolean;
+                family?: "BACKEND" | "FRONTEND" | "FULLSTACK" | "MOBILE" | "DADOS" | "DEVOPS_SRE" | "QA" | "SEGURANCA" | "GESTAO" | "FORA_DE_TI" | "OUTRA";
+                eligibleFromBrazil?: boolean;
                 page?: number;
                 size?: number;
             };

@@ -30,6 +30,7 @@ export function DismissalActions({ jobId, dismissal }: Props) {
           <span className="font-medium">{dismissReasonLabels[dismissal.reason]}</span>
           <span className="text-muted-foreground"> · fora da caixa desde {formatDate(dismissal.dismissedAt)}</span>
         </p>
+        {dismissal.detail && <p className="text-muted-foreground">{dismissal.detail}</p>}
         <Button
           variant="outline"
           size="sm"

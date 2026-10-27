@@ -15,6 +15,7 @@ import {
   useSourceHealth,
   useVerifyLinks,
   type CollectionRun,
+  type JobFamily,
   type SearchProfile,
 } from '@/api/queries'
 import { PageHeader } from '@/components/PageHeader'
@@ -34,7 +35,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatDateTime } from '@/lib/format'
-import { sourceLabel } from '@/lib/labels'
+import { jobFamilies, jobFamilyLabels, sourceLabel } from '@/lib/labels'
 import { useTheme } from '@/lib/useTheme'
 import { Activity, Database, ExternalLink, Link2, Mail, Monitor, Moon, Pencil, Play, Plus, Sun, Trash2 } from 'lucide-react'
 
@@ -363,6 +364,9 @@ function ProfilesCard() {
               <p className="text-muted-foreground">Palavras-chave: {profile.keywords.join(', ') || '—'}</p>
               <p className="text-muted-foreground">Exclusões: {profile.excludedKeywords.join(', ') || '—'}</p>
               <p className="text-muted-foreground">Localidades: {profile.locations.join(', ') || '—'}</p>
+              <p className="text-muted-foreground">
+                Famílias de cargo: {(profile.jobFamilies ?? []).map((family) => jobFamilyLabels[family]).join(', ') || 'todas'}
+              </p>
             </div>
             <div className="flex gap-1">
               <Button variant="ghost" size="icon-sm" aria-label={`Editar ${profile.name}`} onClick={() => setEditing(profile)}>
@@ -399,6 +403,11 @@ function ProfileDialog({ profile, onClose }: { profile?: SearchProfile; onClose:
   const [locations, setLocations] = useState(profile?.locations.join(', ') ?? '')
   const [remoteOnly, setRemoteOnly] = useState(profile?.remoteOnly ?? false)
   const [active, setActive] = useState(profile?.active ?? true)
+  const [families, setFamilies] = useState<JobFamily[]>(profile?.jobFamilies ?? [])
+
+  function toggleFamily(family: JobFamily, checked: boolean) {
+    setFamilies((current) => (checked ? [...current, family] : current.filter((item) => item !== family)))
+  }
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -411,6 +420,7 @@ function ProfileDialog({ profile, onClose }: { profile?: SearchProfile; onClose:
         locations: split(locations),
         remoteOnly,
         active,
+        jobFamilies: families,
       },
       {
         onSuccess: () => {
@@ -445,6 +455,25 @@ function ProfileDialog({ profile, onClose }: { profile?: SearchProfile; onClose:
             <Label htmlFor="profile-locations">Localidades</Label>
             <Input id="profile-locations" value={locations} onChange={(e) => setLocations(e.target.value)} />
           </div>
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium">Famílias de cargo</legend>
+            <p className="text-xs text-muted-foreground">
+              Vagas de outra família saem da caixa como “sem perfil técnico” (dá para desfazer). Nenhuma marcada aceita
+              todas.
+            </p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3">
+              {jobFamilies.map((family) => (
+                <label key={family} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={families.includes(family)}
+                    onChange={(e) => toggleFamily(family, e.target.checked)}
+                  />
+                  {jobFamilyLabels[family]}
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <div className="flex gap-6 text-sm">
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={remoteOnly} onChange={(e) => setRemoteOnly(e.target.checked)} /> Só remoto

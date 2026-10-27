@@ -2,8 +2,11 @@ package dev.laranja.jobhunter.profile;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
+import dev.laranja.jobhunter.jobs.JobFamily;
 import dev.laranja.jobhunter.shared.TextNormalizer;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Filtro determinístico aplicado às vagas coletadas, montado a partir dos perfis de busca ativos. As
@@ -12,13 +15,27 @@ import dev.laranja.jobhunter.shared.TextNormalizer;
  * @param excludedKeywords termos que descartam a vaga quando aparecem no título ou na descrição
  * @param remoteOnly descarta vagas que claramente não são remotas
  * @param keywords palavras-chave dos perfis; exigidas só nas fontes amplas
+ * @param jobFamilies famílias de cargo de interesse; vazio aceita todas
  */
-public record JobFilter(List<String> excludedKeywords, boolean remoteOnly, List<String> keywords) {
+public record JobFilter(List<String> excludedKeywords, boolean remoteOnly, List<String> keywords,
+		Set<JobFamily> jobFamilies) {
 
 	public static final JobFilter ACCEPT_ALL = new JobFilter(List.of(), false, List.of());
 
 	public JobFilter(List<String> excludedKeywords, boolean remoteOnly) {
 		this(excludedKeywords, remoteOnly, List.of());
+	}
+
+	public JobFilter(List<String> excludedKeywords, boolean remoteOnly, List<String> keywords) {
+		this(excludedKeywords, remoteOnly, keywords, Set.of());
+	}
+
+	/**
+	 * Se a vaga de uma família reconhecida está fora das famílias escolhidas. Vaga sem família nunca está fora:
+	 * ela fica na caixa para você decidir.
+	 */
+	public boolean outsideFamilies(@Nullable JobFamily family) {
+		return family != null && !this.jobFamilies.isEmpty() && !this.jobFamilies.contains(family);
 	}
 
 	/** Motivo da exclusão, ou vazio se a vaga passa. */

@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import dev.laranja.jobhunter.companies.CompanyDirectory;
 import dev.laranja.jobhunter.jobs.internal.Job;
+import dev.laranja.jobhunter.jobs.internal.JobClassification;
 import dev.laranja.jobhunter.jobs.internal.JobFingerprint;
 import dev.laranja.jobhunter.jobs.internal.JobRepository;
 import dev.laranja.jobhunter.jobs.internal.JobScopeDetector;
@@ -82,13 +83,16 @@ public class JobCatalog {
 		}
 
 		long companyId = this.companies.resolveOrRegister(raw.company());
+		JobClassification classification = JobClassification.of(raw.title(), raw.location(), raw.description());
 		// xmax = 0 só na linha recém-inserida; no conflito, a linha existente é atualizada e devolvida.
 		IngestResult result = this.jdbc.sql("""
 				insert into job (source, external_id, fingerprint, title, company, location, work_model, scope,
 				                 salary_range, url, raw_description, collected_at, company_id, first_seen_at,
-				                 last_seen_at)
+				                 last_seen_at, job_family, international_eligibility, required_timezone, contractor,
+				                 classification_version)
 				values (:source, :externalId, :fingerprint, :title, :company, :location, :workModel, :scope,
-				        :salaryRange, :url, :description, :now, :companyId, :now, :now)
+				        :salaryRange, :url, :description, :now, :companyId, :now, :now, :family, :eligibility,
+				        :timezone, :contractor, :classificationVersion)
 				on conflict (fingerprint) do update set last_seen_at = excluded.last_seen_at, closed_at = null
 				returning id, (xmax = 0) as created
 				""")
@@ -105,6 +109,11 @@ public class JobCatalog {
 			.param("description", raw.description())
 			.param("now", Timestamp.from(now))
 			.param("companyId", companyId)
+			.param("family", classification.familyName())
+			.param("eligibility", classification.international().eligibility().name())
+			.param("timezone", classification.international().timezone())
+			.param("contractor", classification.international().contractor())
+			.param("classificationVersion", JobClassification.VERSION)
 			.query((rs, row) -> new IngestResult(rs.getLong("id"), rs.getBoolean("created")))
 			.single();
 		if (result.created()) {
@@ -149,7 +158,7 @@ public class JobCatalog {
 
 	/**
 	 * Completa a descrição de uma vaga que entrou sem ela. Com o texto em mãos, a classificação nacional/internacional
-	 * é refeita (se você não a corrigiu à mão) e {@link JobDescriptionAdded} dispara uma nova análise.
+	 * (se você não a corrigiu à mão) e as condições de contratação no exterior são refeitas, e {@link JobDescriptionAdded} dispara uma nova análise.
 	 * @return se a descrição foi gravada; falso quando a vaga já tinha descrição ou não existe
 	 */
 	@Transactional
@@ -164,11 +173,17 @@ public class JobCatalog {
 		if (current.isEmpty() || description.isBlank()) {
 			return false;
 		}
+		JobClassification classification = JobClassification.of(current.get().title(), current.get().location(),
+				description);
 		this.jdbc.sql("""
 				update job set raw_description = :description,
-				    scope = case when scope_locked then scope else :scope end
+				    scope = case when scope_locked then scope else :scope end,
+				    international_eligibility = :eligibility, required_timezone = :timezone, contractor = :contractor
 				where id = :id
 				""")
+			.param("eligibility", classification.international().eligibility().name())
+			.param("timezone", classification.international().timezone())
+			.param("contractor", classification.international().contractor())
 			.param("description", description.strip())
 			.param("scope", JobScopeDetector.detect(current.get().title(), current.get().location(), description).name())
 			.param("id", jobId)

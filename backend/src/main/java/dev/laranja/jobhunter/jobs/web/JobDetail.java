@@ -6,13 +6,20 @@ import java.util.List;
 import dev.laranja.jobhunter.jobs.DismissReason;
 import dev.laranja.jobhunter.jobs.FeedbackRating;
 import dev.laranja.jobhunter.jobs.FeedbackReason;
+import dev.laranja.jobhunter.jobs.InternationalEligibility;
+import dev.laranja.jobhunter.jobs.JobFamily;
 import dev.laranja.jobhunter.jobs.JobView;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.jspecify.annotations.Nullable;
 
-/** Detalhe da vaga com a candidatura (se houver) e a linha do tempo do funil. */
+/**
+ * Detalhe da vaga com a candidatura (se houver) e a linha do tempo do funil.
+ *
+ * @param classification família de cargo e condições de contratação no exterior
+ */
 record JobDetail(JobView job, @Nullable ApplicationSummary application, List<TimelineEvent> timeline,
-		@Nullable Feedback feedback, @Nullable Dismissal dismissal, @Nullable Analysis analysis) {
+		@Nullable Feedback feedback, @Nullable Dismissal dismissal, @Nullable Analysis analysis,
+		JobClassificationView classification) {
 
 	@Schema(name = "JobApplicationSummary")
 	record ApplicationSummary(long id, String status, @Nullable Instant appliedAt, @Nullable String channel,
@@ -24,9 +31,26 @@ record JobDetail(JobView job, @Nullable ApplicationSummary application, List<Tim
 	record Feedback(FeedbackRating rating, List<FeedbackReason> reasons, @Nullable String comment) {
 	}
 
-	/** A vaga foi descartada da caixa e por quê. */
+	/**
+	 * A vaga foi descartada da caixa e por quê.
+	 * @param detail explicação do descarte automático (família de cargo fora dos perfis de busca); nulo no manual
+	 */
 	@Schema(name = "JobDismissal")
-	record Dismissal(DismissReason reason, Instant dismissedAt) {
+	record Dismissal(DismissReason reason, Instant dismissedAt, @Nullable String detail) {
+	}
+
+	/**
+	 * Família de cargo e condições de contratação no exterior, pelas regras ou pela Claude.
+	 * @param jobFamily nula quando nem as regras nem a Claude reconheceram a família
+	 * @param internationalEligibility de onde a pessoa pode ser contratada; nula antes da classificação
+	 * @param eligibleFromBrazil se dá para se candidatar morando no Brasil (não informado conta como sim)
+	 * @param requiredTimezone fuso exigido, como aparece na vaga ("EST", "UTC-3")
+	 * @param contractor contratação como contractor, sem vínculo de emprego
+	 */
+	@Schema(name = "JobClassification")
+	record JobClassificationView(@Nullable JobFamily jobFamily,
+			@Nullable InternationalEligibility internationalEligibility, boolean eligibleFromBrazil,
+			@Nullable String requiredTimezone, boolean contractor) {
 	}
 
 	/**

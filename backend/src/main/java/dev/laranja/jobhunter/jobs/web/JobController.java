@@ -5,6 +5,7 @@ import java.net.URI;
 import dev.laranja.jobhunter.jobs.FeedbackRating;
 import dev.laranja.jobhunter.jobs.JobCatalog;
 import dev.laranja.jobhunter.jobs.JobDismissalService;
+import dev.laranja.jobhunter.jobs.JobFamily;
 import dev.laranja.jobhunter.jobs.JobFeedbackService;
 import dev.laranja.jobhunter.jobs.JobScope;
 import dev.laranja.jobhunter.jobs.JobView;
@@ -59,14 +60,19 @@ class JobController {
 	 * Lista paginada de vagas.
 	 * @param scope só as vagas nacionais ou só as internacionais
 	 * @param inbox só as vagas da caixa: sem candidatura, sem "não gostei" e não descartadas
+	 * @param family só as vagas desta família de cargo
+	 * @param eligibleFromBrazil esconde as vagas do exterior restritas a outro país ou região
 	 */
 	@GetMapping
 	PageResponse<JobListItem> list(@RequestParam(required = false) @Pattern(regexp = "[A-Z_]+") String status,
 			@RequestParam(required = false) FeedbackRating rating, @RequestParam(required = false) String q,
 			@RequestParam(required = false) JobScope scope, @RequestParam(defaultValue = "false") boolean inbox,
+			@RequestParam(required = false) JobFamily family,
+			@RequestParam(defaultValue = "false") boolean eligibleFromBrazil,
 			@RequestParam(defaultValue = "0") @Min(0) int page,
 			@RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-		return this.queries.list(new JobQueries.JobListFilter(status, rating, q, scope, inbox), page, size);
+		return this.queries.list(new JobQueries.JobListFilter(status, rating, q, scope, inbox, family, eligibleFromBrazil),
+				page, size);
 	}
 
 	/** Corrige a classificação automática de nacional ou internacional: a vaga muda de seção na caixa. */

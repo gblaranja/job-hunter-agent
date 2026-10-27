@@ -5,6 +5,8 @@ import type {
   EmailClassification,
   FitBand,
   FeedbackReason,
+  InternationalEligibility,
+  JobFamily,
   JobListItem,
   JobScope,
   LinkStatus,
@@ -237,4 +239,30 @@ export const nicheSourceLabels: Record<NicheSource, string> = {
   IA: 'Sugestão da IA',
   VAGA: 'Palavras-chave das vagas',
   MANUAL: 'Sua escolha',
+}
+
+/** Família de cargo, pelo título da vaga. */
+export const jobFamilyLabels: Record<JobFamily, string> = {
+  BACKEND: 'Backend',
+  FRONTEND: 'Frontend',
+  FULLSTACK: 'Full stack',
+  MOBILE: 'Mobile',
+  DADOS: 'Dados',
+  DEVOPS_SRE: 'SRE/DevOps',
+  QA: 'QA',
+  SEGURANCA: 'Segurança',
+  GESTAO: 'Gestão',
+  FORA_DE_TI: 'Fora de TI',
+  OUTRA: 'Outra',
+}
+
+export const jobFamilies = Object.keys(jobFamilyLabels) as JobFamily[]
+
+/** De onde dá para ser contratado numa vaga do exterior. */
+export const eligibilityLabels: Record<InternationalEligibility, string> = {
+  BRASIL: 'Aceita o Brasil',
+  LATAM: 'América Latina',
+  GLOBAL: 'Remoto global',
+  PAIS_ESPECIFICO: 'Só para outro país',
+  NAO_INFORMADO: 'Elegibilidade a confirmar',
 }

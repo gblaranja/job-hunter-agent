@@ -30,7 +30,15 @@ import { ApplicationDetailsForm } from '@/features/applications/ApplicationDetai
 import { ResponseDialog } from '@/features/applications/ResponseDialog'
 import { Timeline } from '@/features/applications/Timeline'
 import { useStatusMove } from '@/features/applications/useStatusMove'
-import { closedJobNote, sameAsWorkModel, statusesRequiringResume, statusLabels, workModelLabels } from '@/lib/labels'
+import {
+  closedJobNote,
+  eligibilityLabels,
+  jobFamilyLabels,
+  sameAsWorkModel,
+  statusesRequiringResume,
+  statusLabels,
+  workModelLabels,
+} from '@/lib/labels'
 import { ExternalLink } from 'lucide-react'
 
 const movableStatuses = (Object.keys(statusLabels) as ApplicationStatus[]).filter((status) => status !== 'NOVA')
@@ -61,6 +69,7 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
         {job.workModel !== 'NAO_INFORMADO' && <Badge variant="secondary">{workModelLabels[job.workModel]}</Badge>}
         {job.salaryRange && <Badge variant="secondary">{job.salaryRange}</Badge>}
         <ScopeSwitch jobId={job.id} scope={job.scope} />
+        <ClassificationBadges detail={detail} />
         <div className="ml-auto">
           <FeedbackButtons jobId={job.id} rating={detail.feedback?.rating} reasons={detail.feedback?.reasons} />
         </div>
@@ -257,5 +266,25 @@ function StartPanel({ jobId, dismissal }: { jobId: number; dismissal: JobDetail[
         />
       )}
     </Card>
+  )
+}
+
+/** Família de cargo e, nas vagas do exterior, de onde dá para ser contratado, o fuso e o tipo de contratação. */
+function ClassificationBadges({ detail }: { detail: JobDetail }) {
+  const { classification, job } = detail
+  const international = job.scope === 'INTERNACIONAL'
+  return (
+    <>
+      {classification.jobFamily && <Badge variant="outline">{jobFamilyLabels[classification.jobFamily]}</Badge>}
+      {international && classification.internationalEligibility && (
+        <Badge variant={classification.eligibleFromBrazil ? 'outline' : 'destructive'}>
+          {eligibilityLabels[classification.internationalEligibility]}
+        </Badge>
+      )}
+      {international && classification.requiredTimezone && (
+        <Badge variant="outline">Fuso {classification.requiredTimezone}</Badge>
+      )}
+      {international && classification.contractor && <Badge variant="outline">Contractor</Badge>}
+    </>
   )
 }
