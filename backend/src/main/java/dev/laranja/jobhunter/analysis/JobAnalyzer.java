@@ -6,7 +6,9 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import dev.laranja.jobhunter.analysis.internal.AnalysisEngine;
@@ -101,7 +103,41 @@ public class JobAnalyzer {
 				""")
 			.query(Long.class)
 			.list();
-		for (long jobId : open) {
+		rescore(open);
+		return open.size();
+	}
+
+	/**
+	 * Uma skill entrou no dicionário: repontua, só na parte determinística, as vagas abertas que já a pedem (por um
+	 * dos nomes) ou que têm só a análise determinística e citam um dos nomes no título ou na descrição.
+	 * @return quantas vagas foram repontuadas
+	 */
+	@Transactional
+	public int rescoreJobsMentioning(Collection<String> names) {
+		List<String> lower = names.stream().map(name -> name.strip().toLowerCase(Locale.ROOT)).distinct().toList();
+		if (lower.isEmpty()) {
+			return 0;
+		}
+		List<Long> affected = this.jdbc.sql("""
+				select ja.job_id from job_analysis ja
+				join job j on j.id = ja.job_id
+				left join application a on a.job_id = ja.job_id
+				where (a.id is null or a.status not in ('OFERTA', 'RECUSADA', 'DESISTI', 'ENCERRADA'))
+				  and (exists (select 1 from jsonb_array_elements_text(ja.required_skills || ja.nice_to_have) s
+				               where lower(s) = any(string_to_array(:names, chr(31))))
+				       or (ja.model_version = 'deterministico@v1'
+				           and lower(j.title || ' ' || coalesce(j.raw_description, '')) like any(string_to_array(:patterns, chr(31)))))
+				""")
+			.param("names", String.join(String.valueOf((char) 31), lower))
+			.param("patterns", String.join(String.valueOf((char) 31), lower.stream().map(name -> "%" + name + "%").toList()))
+			.query(Long.class)
+			.list();
+		rescore(affected);
+		return affected.size();
+	}
+
+	private void rescore(List<Long> jobIds) {
+		for (long jobId : jobIds) {
 			try {
 				JobView job = this.jobs.get(jobId);
 				Optional<ResumeProfile> resume = this.resumes.defaultResume();
@@ -113,7 +149,6 @@ public class JobAnalyzer {
 				log.warn("Não foi possível repontuar a vaga {}: {}", jobId, ex.getMessage());
 			}
 		}
-		return open.size();
 	}
 
 	private void save(long jobId, Long resumeId, Outcome outcome, int previousAttempts) {

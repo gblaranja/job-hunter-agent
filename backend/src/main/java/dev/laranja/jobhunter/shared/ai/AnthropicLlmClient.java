@@ -42,12 +42,15 @@ class AnthropicLlmClient implements LlmClient, DisposableBean {
 
 	private final MeterRegistry meters;
 
+	private final LlmBudget budget;
+
 	private final Clock clock;
 
 	private final @Nullable AnthropicClient client;
 
-	AnthropicLlmClient(AiProperties properties, JdbcClient jdbc, MeterRegistry meters, Clock clock) {
+	AnthropicLlmClient(AiProperties properties, JdbcClient jdbc, MeterRegistry meters, LlmBudget budget, Clock clock) {
 		this.properties = properties;
+		this.budget = budget;
 		this.jdbc = jdbc;
 		this.meters = meters;
 		this.clock = clock;
@@ -74,6 +77,10 @@ class AnthropicLlmClient implements LlmClient, DisposableBean {
 	public <T> T structured(LlmRequest request, Class<T> outputType) {
 		if (this.client == null) {
 			throw new LlmException("A Claude API não está configurada (JOBHUNTER_AI_API_KEY).");
+		}
+		if (!this.budget.allows(request.task())) {
+			this.meters.counter("jobhunter.ai.budget.exceeded", "task", request.task()).increment();
+			throw new LlmBudgetExceededException(request.task());
 		}
 		StructuredOutputConfig<T> output = StructuredOutputConfig.<T>builder()
 			.format(outputType)

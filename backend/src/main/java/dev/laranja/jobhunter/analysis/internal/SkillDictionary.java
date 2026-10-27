@@ -5,6 +5,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -19,26 +20,53 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 /**
- * Dicionário de skills ({@code analysis/skills.txt}): detecta tecnologias num texto e normaliza nomes vindos do
- * LLM para a mesma grafia, para que "springboot" e "Spring Boot" contem como a mesma skill.
+ * Dicionário de skills: detecta tecnologias num texto e normaliza nomes vindos do LLM para a mesma grafia, para que
+ * "springboot" e "Spring Boot" contem como a mesma skill. Junta duas fontes: o arquivo {@code analysis/skills.txt},
+ * versionado, e as skills aceitas na revisão das sugestões (tabela {@code skill_entry}), que complementam o arquivo
+ * sem sobrescrevê-lo.
  */
 @Component
 public class SkillDictionary {
 
-	private final Map<String, String> canonicalByAlias = new LinkedHashMap<>();
+	private final Map<String, List<String>> fileEntries;
+
+	private volatile Map<String, String> canonicalByAlias;
 
 	SkillDictionary() {
 		this(load());
 	}
 
 	SkillDictionary(Map<String, List<String>> entries) {
-		entries.forEach((canonical, aliases) -> {
+		this.fileEntries = Collections.unmodifiableMap(new LinkedHashMap<>(entries));
+		this.canonicalByAlias = index(entries, Map.of());
+	}
+
+	/** Troca as skills aceitas na revisão; as do arquivo continuam valendo e ganham num apelido repetido. */
+	public void replaceReviewed(Map<String, List<String>> reviewed) {
+		this.canonicalByAlias = index(this.fileEntries, reviewed);
+	}
+
+	/** Se o nome (ou um apelido) já está no dicionário. */
+	public boolean isKnown(String skill) {
+		return this.canonicalByAlias.containsKey(TextNormalizer.normalize(skill));
+	}
+
+	private static Map<String, String> index(Map<String, List<String>> file, Map<String, List<String>> reviewed) {
+		Map<String, String> index = new LinkedHashMap<>();
+		file.forEach((canonical, aliases) -> {
 			// Nomes curtos e ambíguos ("Go") só contam pelos apelidos explícitos ("golang").
 			if (canonical.length() > 2) {
-				this.canonicalByAlias.put(TextNormalizer.normalize(canonical), canonical);
+				index.put(TextNormalizer.normalize(canonical), canonical);
 			}
-			aliases.forEach(alias -> this.canonicalByAlias.putIfAbsent(TextNormalizer.normalize(alias), canonical));
+			aliases.forEach(alias -> index.putIfAbsent(TextNormalizer.normalize(alias), canonical));
 		});
+		reviewed.forEach((canonical, aliases) -> {
+			if (canonical.length() > 2) {
+				index.putIfAbsent(TextNormalizer.normalize(canonical), canonical);
+			}
+			aliases.forEach(alias -> index.putIfAbsent(TextNormalizer.normalize(alias), canonical));
+		});
+		return Collections.unmodifiableMap(index);
 	}
 
 	/**
@@ -50,7 +78,8 @@ public class SkillDictionary {
 			return List.of();
 		}
 		String normalized = " " + TextNormalizer.normalize(text) + " ";
-		List<String> aliases = new ArrayList<>(this.canonicalByAlias.keySet());
+		Map<String, String> aliasIndex = this.canonicalByAlias;
+		List<String> aliases = new ArrayList<>(aliasIndex.keySet());
 		aliases.sort((a, b) -> Integer.compare(b.length(), a.length()));
 		boolean[] covered = new boolean[normalized.length()];
 		TreeMap<Integer, String> found = new TreeMap<>();
@@ -68,7 +97,7 @@ public class SkillDictionary {
 					for (int i = start; i < end; i++) {
 						covered[i] = true;
 					}
-					found.putIfAbsent(start, this.canonicalByAlias.get(alias));
+					found.putIfAbsent(start, aliasIndex.get(alias));
 				}
 				from = index + 1;
 			}

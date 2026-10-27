@@ -76,6 +76,13 @@ jobhunter:
       interval: ${JOBHUNTER_LINKEDIN_DESCRIPTIONS_INTERVAL:PT1M}
   ai:
     api-key: ${JOBHUNTER_AI_API_KEY:}
+    # Orçamento mensal por tarefa, em US$, sobre o custo estimado do llm_usage. Ao atingir, a tarefa para de chamar a
+    # Claude API até o mês virar (a análise fica no determinístico). Tarefa sem valor não tem limite.
+    budget:
+      monthly-usd:
+        extract-requirements: ${JOBHUNTER_AI_BUDGET_EXTRACTION:3.00}
+        match-score: ${JOBHUNTER_AI_BUDGET_SCORING:3.00}
+        tailor-resume: ${JOBHUNTER_AI_BUDGET_TAILORING:5.00}
   tailoring:
     # gera o currículo adaptado ao marcar "Tenho interesse" numa vaga (precisa da Claude API)
     auto-generate: ${JOBHUNTER_TAILORING_AUTO:true}

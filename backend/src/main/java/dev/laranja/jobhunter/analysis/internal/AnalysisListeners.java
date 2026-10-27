@@ -6,6 +6,7 @@ import dev.laranja.jobhunter.jobs.JobDescriptionAdded;
 import dev.laranja.jobhunter.resumes.DefaultResumeChanged;
 import dev.laranja.jobhunter.resumes.ResumeCatalog;
 import dev.laranja.jobhunter.resumes.ResumeUploaded;
+import dev.laranja.jobhunter.shared.ai.LlmBudget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,8 +29,12 @@ class AnalysisListeners {
 
 	private final ResumeCatalog resumes;
 
-	AnalysisListeners(JobAnalyzer analyzer, ResumeSkillsAnalyzer resumeSkills, ResumeCatalog resumes) {
+	private final LlmBudget budget;
+
+	AnalysisListeners(JobAnalyzer analyzer, ResumeSkillsAnalyzer resumeSkills, ResumeCatalog resumes,
+			LlmBudget budget) {
 		this.analyzer = analyzer;
+		this.budget = budget;
 		this.resumeSkills = resumeSkills;
 		this.resumes = resumes;
 	}
@@ -61,9 +66,15 @@ class AnalysisListeners {
 		log.info("Currículo padrão trocado: {} vagas repontuadas.", this.analyzer.rescoreOpenJobs());
 	}
 
-	/** Completa a etapa do LLM das análises pendentes ou que falharam, aos poucos. */
+	/**
+	 * Completa a etapa do LLM das análises pendentes ou que falharam, aos poucos. Com o orçamento do mês das duas
+	 * tarefas esgotado, nem tenta.
+	 */
 	@Scheduled(fixedDelayString = "PT15M", initialDelayString = "PT1M")
 	void retryPending() {
+		if (!this.budget.allows("extract-requirements") && !this.budget.allows("match-score")) {
+			return;
+		}
 		for (long jobId : this.analyzer.dueForRetry(20)) {
 			try {
 				this.analyzer.analyze(jobId);

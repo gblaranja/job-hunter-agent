@@ -6,6 +6,7 @@ import dev.laranja.jobhunter.insights.FunnelBreakdown;
 import dev.laranja.jobhunter.insights.InsightReport;
 import dev.laranja.jobhunter.insights.Insights;
 import dev.laranja.jobhunter.insights.LlmUsage;
+import dev.laranja.jobhunter.shared.ai.LlmBudget;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,8 +20,11 @@ class InsightController {
 
 	private final Insights insights;
 
-	InsightController(Insights insights) {
+	private final LlmBudget budget;
+
+	InsightController(Insights insights, LlmBudget budget) {
 		this.insights = insights;
+		this.budget = budget;
 	}
 
 	/** Último relatório; 204 enquanto nenhum foi gerado. */
@@ -44,6 +48,12 @@ class InsightController {
 	@GetMapping("/usage")
 	List<LlmUsage> usage() {
 		return this.insights.monthUsage();
+	}
+
+	/** Gasto do mês por tarefa contra o orçamento ({@code jobhunter.ai.budget.monthly-usd}). */
+	@GetMapping("/budget")
+	List<LlmBudget.LlmBudgetStatus> budget() {
+		return this.budget.status();
 	}
 
 }

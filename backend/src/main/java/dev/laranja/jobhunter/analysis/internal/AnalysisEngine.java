@@ -12,6 +12,7 @@ import dev.laranja.jobhunter.resumes.ResumeCatalog.ResumeProfile;
 import dev.laranja.jobhunter.shared.ai.AiProperties;
 import dev.laranja.jobhunter.shared.ai.LlmClient;
 import dev.laranja.jobhunter.shared.ai.LlmClient.Effort;
+import dev.laranja.jobhunter.shared.ai.LlmBudgetExceededException;
 import dev.laranja.jobhunter.shared.ai.LlmClient.LlmRequest;
 import dev.laranja.jobhunter.shared.ai.LlmException;
 import org.jspecify.annotations.Nullable;
@@ -68,6 +69,13 @@ public class AnalysisEngine {
 				version = this.extractor.extractionVersion();
 				status = "COMPLETO";
 			}
+			catch (LlmBudgetExceededException ex) {
+				// Orçamento do mês acabou: fica no determinístico e o agendador completa quando houver orçamento.
+				requirements = this.extractor.deterministic(job);
+				version = DETERMINISTIC_VERSION;
+				status = "PENDENTE";
+				error = ex.getMessage();
+			}
 			catch (LlmException ex) {
 				requirements = this.extractor.deterministic(job);
 				version = DETERMINISTIC_VERSION;
@@ -95,6 +103,10 @@ public class AnalysisEngine {
 				justification = adjusted.justification();
 				version = version + "+" + this.ai.models().scoring() + "|" + Prompts.MATCH_SCORE.id();
 			}
+			catch (LlmBudgetExceededException ex) {
+				status = "PENDENTE";
+				error = ex.getMessage();
+			}
 			catch (LlmException ex) {
 				status = "FALHOU";
 				error = ex.getMessage();
@@ -108,7 +120,12 @@ public class AnalysisEngine {
 	/** Só a parte determinística, sobre os requisitos já salvos; o ajuste do LLM fica pendente para depois. */
 	public Outcome deterministicRescore(JobView job, Optional<ResumeProfile> resume,
 			Optional<StoredRequirements> previous) {
-		JobRequirements requirements = previous.map(StoredRequirements::toRequirements)
+		// Requisitos do LLM são reaproveitados com a grafia do dicionário atual; os determinísticos são extraídos de
+		// novo, que é barato e pega as skills aceitas na revisão desde a última análise.
+		JobRequirements requirements = previous
+			.filter(stored -> stored.modelVersion() != null && !stored.modelVersion().equals(DETERMINISTIC_VERSION))
+			.map(StoredRequirements::toRequirements)
+			.map(this::withDictionarySpelling)
 			.orElseGet(() -> this.extractor.deterministic(job));
 		String version = previous.map(StoredRequirements::modelVersion).orElse(DETERMINISTIC_VERSION);
 		boolean llmPending = this.llm.enabled() && version.contains(this.extractor.extractionVersion());
@@ -157,7 +174,22 @@ public class AnalysisEngine {
 	}
 
 	List<String> resumeSkills(ResumeProfile resume) {
-		return resume.skills().isEmpty() ? this.dictionary.detect(resume.text()) : resume.skills();
+		// As skills extraídas na subida do currículo mais as que o dicionário reconhece hoje no texto (inclusive as
+		// aceitas na revisão depois da subida).
+		List<String> skills = new java.util.ArrayList<>(resume.skills());
+		skills.addAll(this.dictionary.detect(resume.text()));
+		return this.dictionary.canonicalize(skills);
+	}
+
+	private JobRequirements withDictionarySpelling(JobRequirements requirements) {
+		List<String> required = this.dictionary.canonicalize(requirements.requiredSkills());
+		List<String> nice = this.dictionary.canonicalize(requirements.niceToHave())
+			.stream()
+			.filter(skill -> !required.contains(skill))
+			.toList();
+		return new JobRequirements(requirements.seniority(), required, nice, requirements.workModel(),
+				requirements.summary(), requirements.employerKind(), requirements.clientSectors(),
+				requirements.contractType());
 	}
 
 	private static Optional<Seniority> targetSeniority(ResumeProfile resume) {
