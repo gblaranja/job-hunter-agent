@@ -1,8 +1,15 @@
-import type { ApplicationStatus, ResponseChannel, ResponseType, Schemas } from '@/api/queries'
+import type { ApplicationStatus, ContactInteractionView, ResponseChannel, ResponseType, Schemas } from '@/api/queries'
 import { formatDateTime } from '@/lib/format'
-import { responseChannelLabels, responseTypeLabels, statusLabels } from '@/lib/labels'
+import {
+  contactRoleLabels,
+  interactionChannelLabels,
+  interactionKindLabels,
+  responseChannelLabels,
+  responseTypeLabels,
+  statusLabels,
+} from '@/lib/labels'
 import { cn } from '@/lib/utils'
-import { Bot, Mail, User } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, Bot, Mail, User } from 'lucide-react'
 
 const origins: Record<string, { label: string; Icon: typeof Mail }> = {
   MANUAL: { label: 'você', Icon: User },
@@ -14,12 +21,32 @@ function label(status: string | null | undefined) {
   return status ? (statusLabels[status as ApplicationStatus] ?? status) : null
 }
 
-/** Linha do tempo do funil, do evento mais antigo ao mais recente, com os retornos e por onde chegaram. */
-export function Timeline({ events }: { events: Schemas['TimelineEvent'][] }) {
-  if (events.length === 0) return <p className="text-sm text-muted-foreground">Nenhum evento ainda.</p>
+type Entry =
+  | { type: 'event'; at: string; event: Schemas['TimelineEvent']; index: number }
+  | { type: 'interaction'; at: string; interaction: ContactInteractionView }
+
+/**
+ * Linha do tempo do funil, do evento mais antigo ao mais recente, com os retornos, por onde chegaram e as conversas
+ * com contatos registradas na candidatura.
+ */
+export function Timeline({
+  events,
+  interactions = [],
+}: {
+  events: Schemas['TimelineEvent'][]
+  interactions?: ContactInteractionView[]
+}) {
+  if (events.length === 0 && interactions.length === 0)
+    return <p className="text-sm text-muted-foreground">Nenhum evento ainda.</p>
+  const entries: Entry[] = [
+    ...events.map((event, index) => ({ type: 'event' as const, at: event.createdAt, event, index })),
+    ...interactions.map((interaction) => ({ type: 'interaction' as const, at: interaction.occurredAt, interaction })),
+  ].sort((a, b) => a.at.localeCompare(b.at))
   return (
     <ol className="relative space-y-4 border-l pl-5">
-      {events.map((event, index) => {
+      {entries.map((entry) => {
+        if (entry.type === 'interaction') return <InteractionItem key={`i-${entry.interaction.id}`} interaction={entry.interaction} />
+        const { event, index } = entry
         const origin = origins[event.origin] ?? origins.SISTEMA
         const response = event.responseType ? responseTypeLabels[event.responseType as ResponseType] : null
         return (
@@ -57,5 +84,24 @@ export function Timeline({ events }: { events: Schemas['TimelineEvent'][] }) {
         )
       })}
     </ol>
+  )
+}
+
+function InteractionItem({ interaction }: { interaction: ContactInteractionView }) {
+  const sent = interaction.direction === 'ENVIADA'
+  const Icon = sent ? ArrowUpRight : ArrowDownLeft
+  return (
+    <li className="relative">
+      <span className="absolute -left-[1.6rem] top-1.5 size-2.5 rounded-full border-2 border-background bg-sky-500" />
+      <p className="text-sm">
+        <strong>{interactionKindLabels[interaction.kind]}</strong> {sent ? 'para' : 'de'} {interaction.contactName}
+        <span className="text-muted-foreground"> ({contactRoleLabels[interaction.contactRole]})</span>
+      </p>
+      <p className="flex items-center gap-1 text-xs text-muted-foreground">
+        <Icon className="size-3" aria-hidden />
+        {formatDateTime(interaction.occurredAt)} · {interactionChannelLabels[interaction.channel]}
+      </p>
+      {interaction.summary && <p className="mt-1 text-sm text-muted-foreground">“{interaction.summary}”</p>}
+    </li>
   )
 }

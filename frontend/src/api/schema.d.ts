@@ -87,6 +87,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/contacts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getContact"];
+        put: operations["updateContact"];
+        post?: never;
+        delete: operations["deleteContact"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}/watch-status": {
         parameters: {
             query?: never;
@@ -128,6 +144,22 @@ export interface paths {
         };
         get?: never;
         put: operations["assign"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/candidate-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["candidateProfile"];
+        put: operations["updateCandidateProfile"];
         post?: never;
         delete?: never;
         options?: never;
@@ -279,6 +311,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications/telegram/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["testTelegram"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notifications/read-all": {
         parameters: {
             query?: never;
@@ -375,6 +423,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{jobId}/drafts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["draftMessage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jobs/{jobId}/application": {
         parameters: {
             query?: never;
@@ -385,6 +449,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["start"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{id}/screening-answers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["screeningAnswers"];
         delete?: never;
         options?: never;
         head?: never;
@@ -407,6 +487,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/import/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["preview_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/insights/generate": {
         parameters: {
             query?: never;
@@ -417,6 +513,54 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["generate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listContacts"];
+        put?: never;
+        post: operations["createContact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/contacts/{id}/interactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["contactInteractions"];
+        put?: never;
+        post: operations["recordContactInteraction"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/contacts/import/linkedin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["importLinkedInConnections"];
         delete?: never;
         options?: never;
         head?: never;
@@ -449,6 +593,40 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["check"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/api-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["status_apiToken"];
+        put?: never;
+        /** @description Gera um token novo, que invalida o anterior. O texto só aparece nesta resposta. */
+        post: operations["generate_apiToken"];
+        delete: operations["revoke_apiToken"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies/ats-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Detecta o ATS e o slug pelo link da página de carreira (ou usa os informados) e confere no ATS se o job board existe, sem gravar nada. */
+        post: operations["checkAts"];
         delete?: never;
         options?: never;
         head?: never;
@@ -497,6 +675,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["recordResponse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/{id}/follow-ups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["registerFollowUp"];
         delete?: never;
         options?: never;
         head?: never;
@@ -695,6 +889,22 @@ export interface paths {
         patch: operations["changeResume"];
         trace?: never;
     };
+    "/api/today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["today"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/tailored-resumes/{id}": {
         parameters: {
             query?: never;
@@ -807,6 +1017,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications/telegram": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["telegram"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/niches/{id}/companies": {
         parameters: {
             query?: never;
@@ -823,6 +1049,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{jobId}/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["jobContacts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/jobs/{id}": {
         parameters: {
             query?: never;
@@ -831,6 +1073,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["detail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{id}/apply-check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["applyCheck"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1079,6 +1337,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/applications/{id}/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["applicationContacts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/from-email/{emailId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["registerFromEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/applications/board": {
         parameters: {
             query?: never;
@@ -1191,6 +1481,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{id}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["separateDuplicate"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{companyId}/niches/{nicheId}": {
         parameters: {
             query?: never;
@@ -1218,6 +1524,182 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["disconnect"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listStories"];
+        put?: never;
+        post: operations["createStory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getStory"];
+        put: operations["updateStory"];
+        post?: never;
+        delete: operations["deleteStory"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stories/polish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["polishStory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listOffers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/offers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateOffer"];
+        post?: never;
+        delete: operations["deleteOffer"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/offers/{id}/negotiation-draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["offerNegotiationDraft"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/{applicationId}/offers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["applicationOffers"];
+        put?: never;
+        post: operations["createOffer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/{id}/interview-prep": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["interviewPreps"];
+        put?: never;
+        post: operations["requestInterviewPrep"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/applications/{id}/debriefs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["interviewDebriefs"];
+        put?: never;
+        post: operations["createDebrief"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/debriefs/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateDebrief"];
+        post?: never;
+        delete: operations["deleteDebrief"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/interviews/recurring-questions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["recurringInterviewQuestions"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1272,6 +1754,7 @@ export interface components {
             createdAt: string;
             /** Format: date-time */
             updatedAt: string;
+            ats?: components["schemas"]["AtsCoverage"] | null;
         };
         SearchProfileCommand: {
             name: string;
@@ -1307,6 +1790,39 @@ export interface components {
             /** @enum {string} */
             reason: "SEM_INTERESSE" | "SEM_PERFIL_TECNICO";
         };
+        SaveContact: {
+            name: string;
+            /** @enum {string} */
+            role: "RECRUTADOR" | "HEADHUNTER" | "GESTOR" | "INDICACAO" | "CONEXAO" | "OUTRO";
+            company?: string | null;
+            position?: string | null;
+            linkedinUrl?: string | null;
+            /** Format: email */
+            email?: string | null;
+            notes?: string | null;
+        };
+        ContactView: {
+            /** Format: int64 */
+            id: number;
+            name: string;
+            /** @enum {string} */
+            role: "RECRUTADOR" | "HEADHUNTER" | "GESTOR" | "INDICACAO" | "CONEXAO" | "OUTRO";
+            /** Format: int64 */
+            companyId?: number | null;
+            companyName?: string | null;
+            position?: string | null;
+            linkedinUrl?: string | null;
+            email?: string | null;
+            notes?: string | null;
+            /** @enum {string} */
+            source: "MANUAL" | "LINKEDIN_EXPORT" | "EMAIL";
+            /** Format: date */
+            connectedOn?: string | null;
+            /** Format: date-time */
+            lastInteractionAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
         WatchChange: {
             /** @enum {string} */
             watchStatus: "DESCOBERTA" | "MONITORADA" | "ALVO" | "IGNORADA";
@@ -1338,6 +1854,53 @@ export interface components {
             /** @enum {string|null} */
             fitBand?: "ALTO" | "MEDIO" | "BAIXO" | null;
             reasons: string[];
+        };
+        CandidateProfileCommand: {
+            /** Format: int32 */
+            yearsOfExperience?: number | null;
+            /** @enum {string|null} */
+            englishLevel?: "NENHUM" | "BASICO" | "INTERMEDIARIO" | "AVANCADO" | "FLUENTE" | null;
+            city?: string | null;
+            state?: string | null;
+            /** Format: int32 */
+            maxOnsiteDays?: number | null;
+            acceptedContracts?: string[] | null;
+            workAuthorizations?: string[] | null;
+            /** @enum {string|null} */
+            educationLevel?: "MEDIO" | "TECNICO" | "SUPERIOR_INCOMPLETO" | "SUPERIOR" | "POS" | "MESTRADO" | "DOUTORADO" | null;
+            education?: string | null;
+            certifications?: string[] | null;
+            desiredSalaryClt?: number | null;
+            desiredSalaryPj?: number | null;
+            /** Format: int32 */
+            weeklyGoal?: number | null;
+        };
+        CandidateProfileView: {
+            /** Format: int32 */
+            yearsOfExperience?: number | null;
+            /** @enum {string|null} */
+            englishLevel?: "NENHUM" | "BASICO" | "INTERMEDIARIO" | "AVANCADO" | "FLUENTE" | null;
+            city?: string | null;
+            state?: string | null;
+            /** Format: int32 */
+            maxOnsiteDays?: number | null;
+            acceptedContracts: string[];
+            workAuthorizations: string[];
+            /** @enum {string|null} */
+            educationLevel?: "MEDIO" | "TECNICO" | "SUPERIOR_INCOMPLETO" | "SUPERIOR" | "POS" | "MESTRADO" | "DOUTORADO" | null;
+            education?: string | null;
+            certifications: string[];
+            desiredSalaryClt?: number | null;
+            desiredSalaryPj?: number | null;
+            /** Format: int32 */
+            weeklyGoal: number;
+            /** Format: int32 */
+            suggestedYearsOfExperience?: number | null;
+            /** @enum {string|null} */
+            suggestedEnglishLevel?: "NENHUM" | "BASICO" | "INTERMEDIARIO" | "AVANCADO" | "FLUENTE" | null;
+            suggestedFrom?: string | null;
+            /** Format: date-time */
+            updatedAt?: string | null;
         };
         SaveJobSnapshot: {
             url?: string | null;
@@ -1375,6 +1938,11 @@ export interface components {
             tailoredForJobId?: number | null;
             tailoredForTitle?: string | null;
             tailoredForCompany?: string | null;
+            lint: components["schemas"]["ResumeLintWarning"][];
+        };
+        ResumeLintWarning: {
+            code: string;
+            message: string;
         };
         RecognitionView: {
             /** Format: int64 */
@@ -1536,7 +2104,7 @@ export interface components {
             /** Format: int64 */
             id: number;
             /** @enum {string} */
-            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA";
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA" | "SMARTRECRUITERS" | "WORKABLE" | "TEAMTAILOR" | "RECRUITEE" | "RECRUTADOR";
             title: string;
             company: string;
             location?: string | null;
@@ -1554,6 +2122,29 @@ export interface components {
             /** Format: int64 */
             baseResumeId?: number | null;
         };
+        DraftRequest: {
+            /** @enum {string} */
+            kind: "PEDIDO_INDICACAO" | "FOLLOW_UP" | "AGRADECIMENTO" | "RESPOSTA_RECRUTADOR";
+            /** Format: int64 */
+            contactId?: number | null;
+        };
+        MessageDraft: {
+            /** @enum {string} */
+            kind: "PEDIDO_INDICACAO" | "FOLLOW_UP" | "AGRADECIMENTO" | "RESPOSTA_RECRUTADOR";
+            text: string;
+            linkedinNote?: string | null;
+            language: string;
+            source: string;
+        };
+        ApplicationFromEmail: {
+            /** Format: int64 */
+            resumeVersionId: number;
+            title?: string | null;
+            company?: string | null;
+            url?: string | null;
+            /** @enum {string|null} */
+            channel?: "EASY_APPLY" | "SITE_EMPRESA" | "INDICACAO" | "EMAIL" | "OUTRO" | null;
+        };
         StartApplication: {
             /** @enum {string} */
             status: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
@@ -1568,6 +2159,42 @@ export interface components {
         CreatedApplication: {
             /** Format: int64 */
             id: number;
+        };
+        ScreeningQuestions: {
+            questions?: string[] | null;
+            coverLetter: boolean;
+        };
+        ScreeningAnswer: {
+            question: string;
+            answer: string;
+            basis?: string | null;
+            needsInput: boolean;
+        };
+        ScreeningAnswersView: {
+            answers: components["schemas"]["ScreeningAnswer"][];
+            coverLetter?: string | null;
+            source: string;
+        };
+        JobImportRequest: {
+            url: string;
+            jsonLd?: string | null;
+            text?: string | null;
+        };
+        JobImportPreview: {
+            title?: string | null;
+            company?: string | null;
+            location?: string | null;
+            /** @enum {string|null} */
+            workModel?: "REMOTO" | "HIBRIDO" | "PRESENCIAL" | "NAO_INFORMADO" | null;
+            /** @enum {string|null} */
+            scope?: "NACIONAL" | "INTERNACIONAL" | null;
+            salaryRange?: string | null;
+            url: string;
+            description?: string | null;
+            method: string;
+            warnings: string[];
+            /** Format: int64 */
+            existingJobId?: number | null;
         };
         BulletRewrite: {
             original: string;
@@ -1596,6 +2223,7 @@ export interface components {
             scoreByRating: {
                 [key: string]: number;
             };
+            recurringQuestions?: components["schemas"]["RecurringInterviewQuestion"][] | null;
         };
         Gap: {
             skill: string;
@@ -1608,6 +2236,15 @@ export interface components {
             skill: string;
             evidence: string;
             suggestion: string;
+        };
+        GupyExperience: {
+            role: string;
+            company: string;
+            description: string;
+        };
+        GupyProfile: {
+            skills: string;
+            experiences: components["schemas"]["GupyExperience"][];
         };
         InsightReport: {
             /** Format: int64 */
@@ -1628,6 +2265,11 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        LinkedinProfile: {
+            headline: string;
+            about?: string | null;
+            skills: string[];
+        };
         Recommendations: {
             gaps: components["schemas"]["GapAdvice"][];
             bullets: components["schemas"]["BulletRewrite"][];
@@ -1635,6 +2277,9 @@ export interface components {
             diagnosis: string;
             diagnosisExplanation: string;
             source: string;
+            gupyProfile?: components["schemas"]["GupyProfile"] | null;
+            linkedinProfile?: components["schemas"]["LinkedinProfile"] | null;
+            profileChanges?: string[] | null;
         };
         ResumePerformance: {
             /** Format: int64 */
@@ -1658,6 +2303,31 @@ export interface components {
             title: string;
             detail: string;
             keyword?: string | null;
+        };
+        RecordInteraction: {
+            /** @enum {string} */
+            channel: "LINKEDIN" | "EMAIL" | "WHATSAPP" | "TELEFONE" | "PRESENCIAL" | "OUTRO";
+            /** @enum {string} */
+            direction: "ENVIADA" | "RECEBIDA";
+            /** @enum {string} */
+            kind: "PEDIDO_INDICACAO" | "FOLLOW_UP" | "AGRADECIMENTO" | "RESPOSTA_RECRUTADOR" | "ABORDAGEM" | "CONVERSA" | "OUTRO";
+            summary?: string | null;
+            /** Format: int64 */
+            applicationId?: number | null;
+            /** Format: date-time */
+            occurredAt?: string | null;
+        };
+        CreatedContactInteraction: {
+            /** Format: int64 */
+            id: number;
+        };
+        ConnectionsImport: {
+            /** Format: int32 */
+            created: number;
+            /** Format: int32 */
+            updated: number;
+            /** Format: int32 */
+            matchedCompanies: number;
         };
         MergeCompany: {
             /** Format: int64 */
@@ -1727,7 +2397,7 @@ export interface components {
         };
         Review: {
             /** @enum {string} */
-            classification: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "OUTRO" | "IRRELEVANTE";
+            classification: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "CONFIRMACAO_CANDIDATURA" | "CONTATO_RECRUTADOR" | "OUTRO" | "IRRELEVANTE";
             /** Format: int64 */
             applicationId?: number | null;
         };
@@ -1738,6 +2408,8 @@ export interface components {
             atsType?: string | null;
             atsSlug?: string | null;
             notes?: string | null;
+            /** @description página de carreira; sem valor, fica a que já estava, e texto em branco apaga. Com ATS e slug em branco, os dois são detectados por ela (Greenhouse, Lever, Ashby, SmartRecruiters, Workable, Teamtailor, Recruitee) */
+            careersUrl?: string | null;
         };
         CompanyItem: {
             /** Format: int64 */
@@ -1774,11 +2446,43 @@ export interface components {
             avgDaysOpen?: number | null;
             /** Format: int64 */
             applications: number;
+            /** @description página de carreira, de onde o ATS e o slug são detectados */
+            careersUrl?: string | null;
+        };
+        ApiTokenStatus: {
+            exists: boolean;
+            /** @description os 4 últimos caracteres do token */
+            hint?: string | null;
+            /** Format: date-time */
+            createdAt?: string | null;
+            /** Format: date-time */
+            lastUsedAt?: string | null;
+        };
+        GeneratedApiToken: {
+            /** @description mostrado só agora; cole na extensão */
+            token: string;
+        };
+        /** @description Link da página de carreira, ou o ATS e o slug, para conferir antes de salvar. */
+        CompanyAtsCheckRequest: {
+            careersUrl?: string | null;
+            atsType?: string | null;
+            atsSlug?: string | null;
+        };
+        /** @description ATS e slug detectados e conferidos. */
+        CompanyAtsCheck: {
+            atsType: string;
+            atsSlug: string;
+            /** @description se o ATS tem coleta automática */
+            supported: boolean;
+            /** @enum {string} */
+            status: "ENCONTRADO" | "NAO_ENCONTRADO" | "NAO_CONFIRMADO";
         };
         UpdateApplicationDetails: {
             notes?: string | null;
             /** Format: date-time */
             nextActionAt?: string | null;
+            /** @enum {string|null} */
+            nextActionKind?: "FOLLOW_UP" | "RESPONDER" | "ENTREVISTA" | "OUTRO" | null;
         };
         ChangeApplicationStatus: {
             /** @enum {string} */
@@ -1790,6 +2494,82 @@ export interface components {
         ChangeApplicationResume: {
             /** Format: int64 */
             resumeVersionId: number;
+        };
+        TodayAgenda: {
+            /** Format: date */
+            day: string;
+            jobs: components["schemas"]["TodayJob"][];
+            followUps: components["schemas"]["TodayFollowUp"][];
+            emails: components["schemas"]["TodayEmail"][];
+            interviews: components["schemas"]["TodayInterview"][];
+            tailoredResumes: components["schemas"]["TodayTailoredResume"][];
+            weeklyGoal: components["schemas"]["TodayWeeklyGoal"];
+        };
+        TodayEmail: {
+            /** Format: int64 */
+            id: number;
+            sender: string;
+            subject?: string | null;
+            /** Format: date-time */
+            receivedAt: string;
+            classification?: string | null;
+        };
+        TodayFollowUp: {
+            /** Format: int64 */
+            applicationId: number;
+            /** Format: int64 */
+            jobId: number;
+            title: string;
+            company: string;
+            status: string;
+            /** Format: date-time */
+            nextActionAt: string;
+            nextActionKind?: string | null;
+            /** Format: int32 */
+            followUpsSent: number;
+        };
+        TodayInterview: {
+            /** Format: int64 */
+            applicationId: number;
+            /** Format: int64 */
+            jobId: number;
+            title: string;
+            company: string;
+            status: string;
+            /** Format: date-time */
+            nextActionAt?: string | null;
+        };
+        TodayJob: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+            company: string;
+            /** Format: int32 */
+            matchScore: number;
+            /** Format: date-time */
+            firstSeenAt: string;
+            legitimacy?: string | null;
+            url?: string | null;
+        };
+        TodayTailoredResume: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            jobId: number;
+            title: string;
+            company: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        TodayWeeklyGoal: {
+            /** Format: date */
+            weekStart: string;
+            /** Format: int32 */
+            applied: number;
+            /** Format: int32 */
+            aligned: number;
+            /** Format: int32 */
+            goal: number;
         };
         Availability: {
             enabled: boolean;
@@ -1823,6 +2603,10 @@ export interface components {
             readAt?: string | null;
             /** Format: date-time */
             createdAt: string;
+        };
+        TelegramStatus: {
+            configured: boolean;
+            types: string[];
         };
         NicheCompany: {
             /** Format: int64 */
@@ -1881,7 +2665,7 @@ export interface components {
             scope: "NACIONAL" | "INTERNACIONAL";
             url?: string | null;
             /** @enum {string} */
-            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA";
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA" | "SMARTRECRUITERS" | "WORKABLE" | "TEAMTAILOR" | "RECRUITEE" | "RECRUTADOR";
             /** Format: date-time */
             collectedAt: string;
             preview?: string | null;
@@ -1899,6 +2683,19 @@ export interface components {
             gptwLevel?: string | null;
             /** Format: int32 */
             scoreWithBonus?: number | null;
+            /** Format: int32 */
+            failedKnockouts: number;
+            /** Format: date-time */
+            firstSeenAt: string;
+            /** @enum {string|null} */
+            legitimacy?: "ALTA" | "MEDIA" | "BAIXA" | "SUSPEITA" | null;
+            legitimacyReasons: string[];
+            /** Format: int32 */
+            connections: number;
+            /** @description equivalente anual em reais do salário da vaga; nulo sem salário ou sem câmbio */
+            salaryEquivalent?: number | null;
+            /** @description a vaga paga menos que a sua pretensão no regime dela */
+            belowSalaryFloor?: boolean | null;
             /** @enum {string|null} */
             jobFamily?: "BACKEND" | "FRONTEND" | "FULLSTACK" | "MOBILE" | "DADOS" | "DEVOPS_SRE" | "QA" | "SEGURANCA" | "GESTAO" | "FORA_DE_TI" | "OUTRA" | null;
             /** @enum {string|null} */
@@ -1936,6 +2733,27 @@ export interface components {
             lastError?: string | null;
             /** Format: date-time */
             analyzedAt: string;
+            partialSkills: components["schemas"]["JobPartialSkill"][];
+            knockouts: components["schemas"]["JobAnalysisKnockout"][];
+            salary?: components["schemas"]["JobAnalysisSalary"] | null;
+            jobFamily?: string | null;
+            internationalEligibility?: string | null;
+            evidence: components["schemas"]["JobRequirementEvidence"][];
+        };
+        JobAnalysisKnockout: {
+            type: string;
+            text: string;
+            value: string;
+            status: string;
+            reason?: string | null;
+        };
+        JobAnalysisSalary: {
+            min?: number | null;
+            max?: number | null;
+            currency: string;
+            period: string;
+            regime?: string | null;
+            text?: string | null;
         };
         JobApplicationSummary: {
             /** Format: int64 */
@@ -1950,6 +2768,20 @@ export interface components {
             notes?: string | null;
             /** Format: date-time */
             nextActionAt?: string | null;
+            nextActionKind?: string | null;
+            nextActionAuto: boolean;
+            /** Format: int32 */
+            followUpsSent: number;
+        };
+        JobCopy: {
+            /** Format: int64 */
+            id: number;
+            /** @enum {string} */
+            origin: "MANUAL" | "LINKEDIN_ALERTA" | "GUPY_ALERTA" | "GREENHOUSE" | "LEVER" | "ASHBY" | "REMOTIVE" | "GITHUB" | "ADZUNA" | "SMARTRECRUITERS" | "WORKABLE" | "TEAMTAILOR" | "RECRUITEE" | "RECRUTADOR";
+            url?: string | null;
+            /** Format: date-time */
+            closedAt?: string | null;
+            canonical: boolean;
         };
         JobClassification: {
             /** @enum {string|null} */
@@ -1967,6 +2799,8 @@ export interface components {
             feedback?: components["schemas"]["JobFeedback"] | null;
             dismissal?: components["schemas"]["JobDismissal"] | null;
             analysis?: components["schemas"]["JobAnalysis"] | null;
+            legitimacy: components["schemas"]["JobLegitimacy"];
+            copies: components["schemas"]["JobCopy"][];
             classification: components["schemas"]["JobClassification"];
         };
         JobDismissal: {
@@ -1982,6 +2816,21 @@ export interface components {
             reasons: ("SALARIO" | "STACK" | "SENIORIDADE" | "MODELO_TRABALHO" | "EMPRESA" | "LOCALIZACAO")[];
             comment?: string | null;
         };
+        JobPartialSkill: {
+            skill: string;
+            via: string;
+        };
+        JobRequirementEvidence: {
+            requirement: string;
+            quote: string;
+        };
+        JobLegitimacy: {
+            /** @enum {string|null} */
+            level?: "ALTA" | "MEDIA" | "BAIXA" | "SUSPEITA" | null;
+            reasons: string[];
+            /** Format: int64 */
+            duplicateOfJobId?: number | null;
+        };
         TimelineEvent: {
             /** Format: int64 */
             id: number;
@@ -1993,6 +2842,16 @@ export interface components {
             note?: string | null;
             /** Format: date-time */
             createdAt: string;
+        };
+        ApplyCheck: {
+            /** Format: int64 */
+            jobId: number;
+            linkStatus: string;
+            warnings: components["schemas"]["Warning"][];
+        };
+        Warning: {
+            code: string;
+            message: string;
         };
         LlmUsage: {
             task: string;
@@ -2021,6 +2880,11 @@ export interface components {
             /** Format: double */
             medianDaysToFirstResponse?: number | null;
             rankingQuality: components["schemas"]["RankingQuality"];
+            /**
+             * Format: int32
+             * @description candidaturas com uma proposta aceita (efetivação)
+             */
+            accepted: number;
         };
         FunnelGroup: {
             group: string;
@@ -2054,11 +2918,11 @@ export interface components {
             /** Format: date-time */
             receivedAt: string;
             /** @enum {string|null} */
-            aiClassification?: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "OUTRO" | "IRRELEVANTE" | null;
+            aiClassification?: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "CONFIRMACAO_CANDIDATURA" | "CONTATO_RECRUTADOR" | "OUTRO" | "IRRELEVANTE" | null;
             /** Format: double */
             aiConfidence?: number | null;
             /** @enum {string|null} */
-            finalClassification?: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "OUTRO" | "IRRELEVANTE" | null;
+            finalClassification?: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "CONFIRMACAO_CANDIDATURA" | "CONTATO_RECRUTADOR" | "OUTRO" | "IRRELEVANTE" | null;
             classifiedBy?: string | null;
             companyGuess?: string | null;
             jobGuess?: string | null;
@@ -2068,6 +2932,7 @@ export interface components {
             applicationId?: number | null;
             applicationTitle?: string | null;
             applicationCompany?: string | null;
+            applicationStatus?: string | null;
         };
         Accuracy: {
             /** Format: int64 */
@@ -2078,6 +2943,35 @@ export interface components {
             pending: number;
             /** Format: double */
             rate?: number | null;
+        };
+        PageResponseContactView: {
+            items: components["schemas"]["ContactView"][];
+            /** Format: int32 */
+            page: number;
+            /** Format: int32 */
+            size: number;
+            /** Format: int64 */
+            total: number;
+        };
+        ContactInteractionView: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            contactId: number;
+            contactName: string;
+            /** @enum {string} */
+            contactRole: "RECRUTADOR" | "HEADHUNTER" | "GESTOR" | "INDICACAO" | "CONEXAO" | "OUTRO";
+            /** Format: int64 */
+            applicationId?: number | null;
+            /** @enum {string} */
+            channel: "LINKEDIN" | "EMAIL" | "WHATSAPP" | "TELEFONE" | "PRESENCIAL" | "OUTRO";
+            /** @enum {string} */
+            direction: "ENVIADA" | "RECEBIDA";
+            /** @enum {string} */
+            kind: "PEDIDO_INDICACAO" | "FOLLOW_UP" | "AGRADECIMENTO" | "RESPOSTA_RECRUTADOR" | "ABORDAGEM" | "CONVERSA" | "OUTRO";
+            summary?: string | null;
+            /** Format: date-time */
+            occurredAt: string;
         };
         CompanyJob: {
             /** Format: int64 */
@@ -2189,6 +3083,10 @@ export interface components {
             /** Format: date-time */
             capturedAt: string;
         };
+        ApplicationContacts: {
+            contacts: components["schemas"]["ContactView"][];
+            interactions: components["schemas"]["ContactInteractionView"][];
+        };
         Board: {
             columns: components["schemas"]["BoardColumn"][];
         };
@@ -2208,6 +3106,8 @@ export interface components {
             resumeLabel?: string | null;
             /** Format: date-time */
             nextActionAt?: string | null;
+            /** @enum {string|null} */
+            nextActionKind?: "FOLLOW_UP" | "RESPONDER" | "ENTREVISTA" | "OUTRO" | null;
             /** @enum {string|null} */
             linkStatus?: "ATIVO" | "REMOVIDO" | "NAO_VERIFICADO" | null;
         };
@@ -2257,6 +3157,178 @@ export interface components {
             label: string;
             /** Format: date-time */
             lastSyncAt?: string | null;
+        };
+        StarStoryCommand: {
+            title: string;
+            situation?: string | null;
+            task?: string | null;
+            action?: string | null;
+            result?: string | null;
+            reflection?: string | null;
+            skills?: string[] | null;
+        };
+        StarStoryView: {
+            /** Format: int64 */
+            id: number;
+            title: string;
+            situation: string;
+            task: string;
+            action: string;
+            result: string;
+            reflection?: string | null;
+            skills: string[];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        StarStoryPolish: {
+            situation: string;
+            task: string;
+            action: string;
+            result: string;
+            reflection?: string | null;
+            notes: string;
+            warnings: string[];
+        };
+        OfferCommand: {
+            /** @enum {string} */
+            regime: "CLT" | "PJ" | "CONTRACTOR";
+            baseSalary: number;
+            currency?: string | null;
+            /** @enum {string|null} */
+            period?: "MENSAL" | "ANUAL" | "HORA" | null;
+            annualBonus?: number | null;
+            monthlyBenefits?: number | null;
+            benefitsNotes?: string | null;
+            equity?: string | null;
+            /** @enum {string|null} */
+            workModel?: "REMOTO" | "HIBRIDO" | "PRESENCIAL" | "NAO_INFORMADO" | null;
+            /** Format: date */
+            startDate?: string | null;
+            /** Format: date */
+            respondBy?: string | null;
+            /** @enum {string|null} */
+            decision?: "PENDENTE" | "NEGOCIANDO" | "ACEITA" | "RECUSADA" | null;
+            notes?: string | null;
+        };
+        OfferView: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            applicationId: number;
+            /** Format: int64 */
+            jobId: number;
+            title: string;
+            company: string;
+            /** @enum {string} */
+            regime: "CLT" | "PJ" | "CONTRACTOR";
+            baseSalary: number;
+            currency: string;
+            /** @enum {string} */
+            period: "MENSAL" | "ANUAL" | "HORA";
+            annualBonus?: number | null;
+            monthlyBenefits?: number | null;
+            benefitsNotes?: string | null;
+            equity?: string | null;
+            /** @enum {string|null} */
+            workModel?: "REMOTO" | "HIBRIDO" | "PRESENCIAL" | "NAO_INFORMADO" | null;
+            /** Format: date */
+            startDate?: string | null;
+            /** Format: date */
+            respondBy?: string | null;
+            /** @enum {string} */
+            decision: "PENDENTE" | "NEGOCIANDO" | "ACEITA" | "RECUSADA";
+            /** Format: date-time */
+            decidedAt?: string | null;
+            notes?: string | null;
+            annualEquivalent?: number | null;
+            monthlyEquivalent?: number | null;
+            exchangeRate?: number | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        NegotiationDraft: {
+            text: string;
+            source: string;
+        };
+        NegotiationRequest: {
+            targetSalary?: number | null;
+            arguments?: string | null;
+        };
+        InterviewPrepView: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            applicationId: number;
+            /** Format: int64 */
+            jobId: number;
+            /** @enum {string} */
+            stage: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
+            status: string;
+            content?: components["schemas"]["InterviewPrepContent"] | null;
+            source?: string | null;
+            modelVersion?: string | null;
+            lastError?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        InterviewPrepContent: {
+            questions: components["schemas"]["InterviewPrepQuestion"][];
+            technicalTopics: string[];
+            companyFacts: string[];
+            questionsToAsk: string[];
+            pointsToClarify: string[];
+        };
+        InterviewPrepQuestion: {
+            question: string;
+            reason: string;
+            /** Format: int64 */
+            storyId?: number | null;
+            storyTitle?: string | null;
+            answerOutline: string;
+        };
+        InterviewDebriefCommand: {
+            /** @enum {string} */
+            stage: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
+            /** Format: date */
+            interviewedOn: string;
+            questions?: string[] | null;
+            wentWell?: string | null;
+            toImprove?: string | null;
+            /** Format: int32 */
+            rating?: number | null;
+            nextSteps?: string | null;
+        };
+        InterviewDebriefView: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            applicationId: number;
+            /** @enum {string} */
+            stage: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
+            /** Format: date */
+            interviewedOn: string;
+            questions: string[];
+            wentWell?: string | null;
+            toImprove?: string | null;
+            /** Format: int32 */
+            rating?: number | null;
+            nextSteps?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        InterviewDebriefSaved: {
+            debrief: components["schemas"]["InterviewDebriefView"];
+            /** Format: date-time */
+            followUpAt?: string | null;
+        };
+        RecurringInterviewQuestion: {
+            question: string;
+            /** Format: int32 */
+            count: number;
         };
     };
     responses: never;
@@ -2431,6 +3503,74 @@ export interface operations {
             };
         };
     };
+    getContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ContactView"];
+                };
+            };
+        };
+    };
+    updateContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveContact"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ContactView"];
+                };
+            };
+        };
+    };
+    deleteContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     watchStatus: {
         parameters: {
             query?: never;
@@ -2501,6 +3641,50 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["CompanyNiche"][];
+                };
+            };
+        };
+    };
+    candidateProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CandidateProfileView"];
+                };
+            };
+        };
+    };
+    updateCandidateProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CandidateProfileCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CandidateProfileView"];
                 };
             };
         };
@@ -2777,6 +3961,24 @@ export interface operations {
             };
         };
     };
+    testTelegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     readAll: {
         parameters: {
             query?: never;
@@ -2893,6 +4095,9 @@ export interface operations {
                 q?: string;
                 scope?: "NACIONAL" | "INTERNACIONAL";
                 inbox?: boolean;
+                allLegitimacy?: boolean;
+                hasConnection?: boolean;
+                salaryFloor?: boolean;
                 family?: "BACKEND" | "FRONTEND" | "FULLSTACK" | "MOBILE" | "DADOS" | "DEVOPS_SRE" | "QA" | "SEGURANCA" | "GESTAO" | "FORA_DE_TI" | "OUTRA";
                 eligibleFromBrazil?: boolean;
                 page?: number;
@@ -2987,6 +4192,58 @@ export interface operations {
             };
         };
     };
+    draftMessage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["MessageDraft"];
+                };
+            };
+        };
+    };
+    registerFromEmail: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                emailId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationFromEmail"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CreatedApplication"];
+                };
+            };
+        };
+    };
     start: {
         parameters: {
             query?: never;
@@ -3013,6 +4270,32 @@ export interface operations {
             };
         };
     };
+    screeningAnswers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScreeningQuestions"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ScreeningAnswersView"];
+                };
+            };
+        };
+    };
     reanalyze: {
         parameters: {
             query?: never;
@@ -3033,6 +4316,30 @@ export interface operations {
             };
         };
     };
+    preview_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobImportRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JobImportPreview"];
+                };
+            };
+        };
+    };
     generate: {
         parameters: {
             query?: never;
@@ -3049,6 +4356,131 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["InsightReport"];
+                };
+            };
+        };
+    };
+    listContacts: {
+        parameters: {
+            query?: {
+                q?: string;
+                companyId?: number;
+                role?: "RECRUTADOR" | "HEADHUNTER" | "GESTOR" | "INDICACAO" | "CONEXAO" | "OUTRO";
+                page?: number;
+                size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PageResponseContactView"];
+                };
+            };
+        };
+    };
+    createContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveContact"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ContactView"];
+                };
+            };
+        };
+    };
+    contactInteractions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ContactInteractionView"][];
+                };
+            };
+        };
+    };
+    recordContactInteraction: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordInteraction"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CreatedContactInteraction"];
+                };
+            };
+        };
+    };
+    importLinkedInConnections: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ConnectionsImport"];
                 };
             };
         };
@@ -3095,6 +4527,88 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["RecognitionView"];
+                };
+            };
+        };
+    };
+    status_apiToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiTokenStatus"];
+                };
+            };
+        };
+    };
+    generate_apiToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["GeneratedApiToken"];
+                };
+            };
+        };
+    };
+    revoke_apiToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    checkAts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompanyAtsCheckRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyAtsCheck"];
                 };
             };
         };
@@ -3180,6 +4694,26 @@ export interface operations {
                 "application/json": components["schemas"]["RecordResponse"];
             };
         };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    registerFollowUp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description No Content */
             204: {
@@ -3493,6 +5027,26 @@ export interface operations {
             };
         };
     };
+    today: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TodayAgenda"];
+                };
+            };
+        };
+    };
     tailoredResume: {
         parameters: {
             query?: never;
@@ -3639,6 +5193,26 @@ export interface operations {
             };
         };
     };
+    telegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TelegramStatus"];
+                };
+            };
+        };
+    };
     companies: {
         parameters: {
             query?: {
@@ -3671,6 +5245,28 @@ export interface operations {
             };
         };
     };
+    jobContacts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ContactView"][];
+                };
+            };
+        };
+    };
     detail: {
         parameters: {
             query?: never;
@@ -3689,6 +5285,28 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["JobDetail"];
+                };
+            };
+        };
+    };
+    applyCheck: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApplyCheck"];
                 };
             };
         };
@@ -3757,7 +5375,7 @@ export interface operations {
         parameters: {
             query?: {
                 pending?: boolean;
-                classification?: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "OUTRO" | "IRRELEVANTE";
+                classification?: "ALERTA_VAGA" | "CONVITE_ENTREVISTA" | "TESTE_TECNICO" | "PEDIDO_INFORMACAO" | "OFERTA" | "RECUSA" | "CONFIRMACAO_CANDIDATURA" | "CONTATO_RECRUTADOR" | "OUTRO" | "IRRELEVANTE";
             };
             header?: never;
             path?: never;
@@ -4014,6 +5632,28 @@ export interface operations {
             };
         };
     };
+    applicationContacts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApplicationContacts"];
+                };
+            };
+        };
+    };
     board: {
         parameters: {
             query?: never;
@@ -4154,6 +5794,26 @@ export interface operations {
             };
         };
     };
+    separateDuplicate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     clear: {
         parameters: {
             query?: never;
@@ -4192,6 +5852,442 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    listStories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StarStoryView"][];
+                };
+            };
+        };
+    };
+    getStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StarStoryView"];
+                };
+            };
+        };
+    };
+    createStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StarStoryCommand"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StarStoryView"];
+                };
+            };
+        };
+    };
+    updateStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StarStoryCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StarStoryView"];
+                };
+            };
+        };
+    };
+    deleteStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    polishStory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StarStoryCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StarStoryPolish"];
+                };
+            };
+        };
+    };
+    listOffers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OfferView"][];
+                };
+            };
+        };
+    };
+    applicationOffers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                applicationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OfferView"][];
+                };
+            };
+        };
+    };
+    createOffer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                applicationId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferCommand"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OfferView"];
+                };
+            };
+        };
+    };
+    updateOffer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OfferCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OfferView"];
+                };
+            };
+        };
+    };
+    deleteOffer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    offerNegotiationDraft: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NegotiationRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["NegotiationDraft"];
+                };
+            };
+        };
+    };
+    interviewPreps: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InterviewPrepView"][];
+                };
+            };
+        };
+    };
+    requestInterviewPrep: {
+        parameters: {
+            query?: {
+                stage?: "NOVA" | "INTERESSE" | "APLICADA" | "TRIAGEM" | "ENTREVISTA" | "TESTE_TECNICO" | "OFERTA" | "RECUSADA" | "DESISTI" | "ENCERRADA";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Accepted */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InterviewPrepView"];
+                };
+            };
+        };
+    };
+    interviewDebriefs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InterviewDebriefView"][];
+                };
+            };
+        };
+    };
+    createDebrief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InterviewDebriefCommand"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InterviewDebriefSaved"];
+                };
+            };
+        };
+    };
+    updateDebrief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InterviewDebriefCommand"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["InterviewDebriefView"];
+                };
+            };
+        };
+    };
+    deleteDebrief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    recurringInterviewQuestions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RecurringInterviewQuestion"][];
+                };
             };
         };
     };

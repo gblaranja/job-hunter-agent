@@ -17,10 +17,14 @@ function serve(versions: TailoredResume[], enabled = true) {
 
 describe('TailoredResumeCard', () => {
   it('mostra o ganho em score e palavras-chave e alerta sobre skills que o currículo não comprova', async () => {
-    serve([tailoredResume()])
+    serve([tailoredResume({ ats: { weightedCoverage: 89, titleInHeadline: false, overusedKeywords: ['Java'], cliches: ['proativo'] } })])
     renderWithProviders(<TailoredResumeCard jobId={20} />)
 
     expect(await screen.findByLabelText('Aderência 68')).toBeInTheDocument()
+    expect(screen.getByText('89%')).toBeInTheDocument()
+    expect(screen.getByText(/O título da vaga não aparece no headline/)).toBeInTheDocument()
+    expect(screen.getByText('Repetidas mais de 4 vezes: Java.')).toBeInTheDocument()
+    expect(screen.getByText(/Clichês para trocar por um fato: proativo/)).toBeInTheDocument()
     expect(screen.getByLabelText('Aderência 85')).toBeInTheDocument()
     expect(screen.getByText('3/5')).toBeInTheDocument()
     expect(screen.getByText('4/5')).toBeInTheDocument()

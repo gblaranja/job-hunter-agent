@@ -6,9 +6,7 @@ import {
   useCompanyMetrics,
   useCompanyOverview,
   useSaveHeadcount,
-  useUpdateCompany,
   type ApplicationStatus,
-  type CompanyItem,
 } from '@/api/queries'
 import { BarList } from '@/components/charts/BarList'
 import { CompanyBadge } from '@/components/CompanyBadge'
@@ -22,17 +20,15 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Textarea } from '@/components/ui/textarea'
 import { formatDate } from '@/lib/format'
 import { atsLabels, companyKindLabels, seniorityLabels, watchStatusLabels, workModelLabels } from '@/lib/labels'
 import { ArrowLeft, Repeat2 } from 'lucide-react'
+import { CompanyAtsForm } from './CompanyAtsForm'
+import { CompanyContactsCard } from '@/features/network/CompanyContactsCard'
 import { CompanyNicheCard } from './CompanyNicheCard'
 import { GptwHistoryCard } from './GptwHistoryCard'
 import { WeeklyJobsChart } from './WeeklyJobsChart'
-
-const NO_ATS = 'NENHUM'
 
 /** Volume e frequência de vagas da empresa, as distribuições recentes e as suas candidaturas nela. */
 export function CompanyDetailPage() {
@@ -181,10 +177,11 @@ export function CompanyDetailPage() {
         <div className="grid gap-6 lg:grid-cols-2">
           <CompanyNicheCard companyId={data.id} />
           <GptwHistoryCard companyId={data.id} />
+          <CompanyContactsCard companyId={data.id} company={data.name} />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <AtsForm company={data} />
+          <CompanyAtsForm company={data} />
           <HeadcountForm companyId={data.id} />
         </div>
       </div>
@@ -198,79 +195,6 @@ function Distribution({ counts, labels }: { counts: Record<string, number>; labe
     .map(([key, value]) => ({ label: labels[key] ?? key, value }))
   if (items.length === 0) return <p className="text-sm text-muted-foreground">Sem vagas no período.</p>
   return <BarList items={items} ariaLabel="Distribuição" />
-}
-
-/** ATS e slug do job board: com eles, as empresas monitoradas e alvo são consultadas todo dia. */
-function AtsForm({ company }: { company: CompanyItem }) {
-  const update = useUpdateCompany()
-  const [atsType, setAtsType] = useState(company.atsType ?? NO_ATS)
-  const [atsSlug, setAtsSlug] = useState(company.atsSlug ?? '')
-  const [website, setWebsite] = useState(company.website ?? '')
-  const [notes, setNotes] = useState(company.notes ?? '')
-
-  function save(event: FormEvent) {
-    event.preventDefault()
-    update.mutate(
-      {
-        id: company.id,
-        watchStatus: company.watchStatus,
-        atsType: atsType === NO_ATS ? null : atsType,
-        atsSlug: atsSlug.trim() || null,
-        website: website.trim() || null,
-        notes: notes.trim() || null,
-      },
-      { onSuccess: () => toast.success('Empresa atualizada.'), onError: (error) => toast.error(error.message) },
-    )
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Job board e notas</CardTitle>
-        <CardDescription>
-          Greenhouse, Lever e Ashby são consultados todo dia para empresas monitoradas ou alvo. O slug é o trecho da URL do
-          job board (boards.greenhouse.io/<strong>slug</strong>).
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form className="space-y-4" onSubmit={save}>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="ats-type">ATS</Label>
-              <Select value={atsType} onValueChange={setAtsType}>
-                <SelectTrigger id="ats-type" className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NO_ATS}>Não informado</SelectItem>
-                  {Object.entries(atsLabels).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ats-slug">Slug</Label>
-              <Input id="ats-slug" value={atsSlug} onChange={(event) => setAtsSlug(event.target.value)} placeholder="nubank" />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="website">Site</Label>
-            <Input id="website" value={website} onChange={(event) => setWebsite(event.target.value)} placeholder="https://" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notas</Label>
-            <Textarea id="notes" value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} />
-          </div>
-          <Button type="submit" disabled={update.isPending}>
-            Salvar
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  )
 }
 
 function HeadcountForm({ companyId }: { companyId: number }) {

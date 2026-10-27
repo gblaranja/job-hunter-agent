@@ -114,6 +114,18 @@ O login com Google reaproveita a credencial OAuth do Gmail. Como cada instalaç�
 2. Defina `JOBHUNTER_ALLOWED_EMAIL` com o e-mail da sua conta Google (e, fora do padrão, `JOBHUNTER_GOOGLE_REDIRECT_URI`).
 3. Reinicie o backend: o botão **Entrar com Google** aparece na tela de login.
 
+### Alertas no Telegram
+
+As notificações importantes também chegam ao celular por um bot do Telegram: vaga aderente de empresa-alvo (`VAGA_ALVO`, score a partir de 60), follow-up vencido (`FOLLOW_UP`), preparação de entrevista pronta (`PREPARACAO_PRONTA`) e o resumo do dia às 7h30 (`RESUMO_DIARIO`). O envio acontece depois que a notificação é gravada; se o Telegram não responder, ela é reenviada na próxima subida do backend. Nada é enviado a outras pessoas: o bot só fala com você.
+
+1. No Telegram, abra uma conversa com o [@BotFather](https://t.me/BotFather), mande `/newbot` e escolha um nome e um usuário para o bot. Ele responde com o token (algo como `123456789:AA...`).
+2. Abra a conversa com o seu bot e mande `/start` (o bot só pode escrever para quem falou com ele antes).
+3. Descubra o chat id: acesse `https://api.telegram.org/bot<token>/getUpdates` no navegador e copie o número em `"chat":{"id":...}`.
+4. Defina `JOBHUNTER_TELEGRAM_BOT_TOKEN` e `JOBHUNTER_TELEGRAM_CHAT_ID` e, para os links abrirem no celular, `JOBHUNTER_PUBLIC_URL` com o endereço do backoffice. Reinicie o backend.
+5. Em **Configurações → Telegram**, use **Enviar teste**.
+
+O token fica só no servidor e nunca vai para o log. Para mudar o que vai ao celular, liste os tipos em `JOBHUNTER_TELEGRAM_TYPES`, separados por vírgula; os demais ficam só no sino.
+
 ### Nichos e selo GPTW
 
 A tela **Nichos** lista as empresas do Financeiro e das Consultorias pelo fit (subsegmento 35%, stack das vagas 30%, domínio 20%, sinais 15%; os pesos são editáveis), com a justificativa de cada uma. As empresas importadas entram como descobertas e sobem para monitoradas quando o fit é alto ou quando publicam vaga.
@@ -130,13 +142,30 @@ Cada fonte tem regras próprias. As que dependem de uma permissão sua ou têm r
 | --- | --- | --- | --- |
 | Alertas do LinkedIn e da Gupy (`LINKEDIN_ALERTA`, `GUPY_ALERTA`) | Lê os e-mails de alerta na label `jobs` do seu Gmail | Só o seu e-mail; nenhum acesso aos sites | Ligada ao conectar o Gmail |
 | Greenhouse, Lever e Ashby (`GREENHOUSE`, `LEVER`, `ASHBY`) | APIs públicas de job board, por empresa monitorada ou alvo com ATS e slug cadastrados | APIs feitas para publicar as vagas; uma consulta por empresa por dia | Ligada |
+| SmartRecruiters (`SMARTRECRUITERS`) | [Posting API](https://developers.smartrecruiters.com/docs/posting-api) pública (`/v1/companies/{id}/postings`), paginada; a descrição vem do detalhe de cada vaga, só para as vagas novas (até 50 por empresa por coleta) | API documentada para publicar as vagas da empresa; empresa inexistente e empresa sem vagas devolvem a mesma lista vazia, então o slug só é confirmado com uma vaga | Ligada |
+| Workable (`WORKABLE`) | `apply.workable.com/api/v1/widget/accounts/{conta}?details=true`, para onde redireciona o endpoint público citado na [central de ajuda](https://help.workable.com/hc/en-us/articles/115012771647) (`www.workable.com/api/accounts/{conta}`) | Endpoint sem autenticação e sem termos próprios publicados; não é a API oficial (`/spi/v3`, que exige token da empresa) e pode mudar | Ligada |
+| Teamtailor (`TEAMTAILOR`) | JSON Feed do site de carreira (`{empresa}.teamtailor.com/jobs.json`), com a descrição e o JSON-LD de cada vaga | Feed público do site de carreira, sem documentação oficial nem termos próprios; sites em domínio próprio não são detectados pelo link | Ligada |
+| Recruitee (`RECRUITEE`) | [Careers Site API](https://docs.recruitee.com/reference/intro-to-careers-site-api) (`{empresa}.recruitee.com/api/offers/`) | API pública feita para mostrar as vagas no site da empresa; documentação ainda incompleta | Ligada |
 | Remotive (`REMOTIVE`) | API pública de vagas remotas | Pede crédito à fonte e poucas consultas por dia | Desligada (`JOBHUNTER_REMOTIVE_ENABLED`) |
 | GitHub backend-br/vagas (`GITHUB`) | Issues abertas do repositório, pela API do GitHub | Limite de requisições da API; um token aumenta o limite | Desligada (`JOBHUNTER_GITHUB_VAGAS_ENABLED`) |
 | Adzuna (`ADZUNA`) | API com `app_id` e `app_key` | Exige cadastro e segue os termos da Adzuna | Desligada até haver chave |
+| Abordagem de recrutador (`RECRUTADOR`) | E-mails da label `jobs` classificados como abordagem de recrutador ou agência (inclui as notificações de mensagem do LinkedIn que chegam por e-mail) viram vaga e contato | Só o seu e-mail; nada é respondido sozinho | Ligada ao conectar o Gmail |
 | Vaga manual (`MANUAL`) | Você cola o link e a descrição | — | — |
 | Descrição das vagas do LinkedIn | Busca a página pública da vaga (`jobs-guest`), uma por minuto | A cláusula 8.2 dos [termos do LinkedIn](https://www.linkedin.com/legal/user-agreement) proíbe robôs e scripts que copiam dados do site; ligar é um risco para a sua conta | Desligada (`JOBHUNTER_LINKEDIN_DESCRIPTIONS_ENABLED`) |
 
+Para acompanhar uma empresa por ATS, cole o link da página de carreira na tela da empresa (por exemplo `jobs.lever.co/empresa` ou `empresa.teamtailor.com`): o ATS e o slug são detectados pelo link e conferidos no próprio ATS antes de salvar.
+
 Sem a busca do LinkedIn, as vagas dos alertas chegam só com título, empresa e local; cole a descrição na vaga ou acompanhe a empresa pelo ATS dela. A saúde de cada fonte (última vaga nova, erros e alertas que não viraram vaga) fica em **Configurações → Saúde das fontes**.
+
+### Extensão "Salvar vaga"
+
+A pasta `extension/` tem uma extensão MV3 (Chrome, Edge, Brave) que salva a vaga da página aberta: lê o JSON-LD da página ou o texto que você selecionou, mostra a prévia da importação por link e salva com o seu clique. Ela só age quando você clica, só na aba aberta e nunca em lote (D-03).
+
+1. Em **Configurações → Extensão do navegador**, gere o token pessoal (aparece uma vez; só o hash fica no banco). Ele só vale para `POST /api/jobs/import/preview` e `POST /api/jobs`.
+2. Em `chrome://extensions`, ligue o modo de desenvolvedor e carregue a pasta `extension/` ("Carregar sem compactação").
+3. Nas opções da extensão, informe o endereço da API (por exemplo `http://localhost:8080`), o do app e o token. A extensão pede permissão só para o endereço da API.
+
+Os testes da extensão rodam com `cd extension && npm test` (Node 20+, sem dependências).
 
 ## Roadmap
 

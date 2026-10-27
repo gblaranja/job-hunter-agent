@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-import type { SourceHealth } from '@/api/queries'
+import type { CandidateProfile, SourceHealth } from '@/api/queries'
 import { ThemeProvider } from '@/lib/theme'
 import { renderWithProviders } from '@/test/render'
 import { server } from '@/test/server'
@@ -25,15 +25,27 @@ function renderSettingsPage() {
   )
 }
 
+const emptyCandidateProfile: CandidateProfile = {
+  acceptedContracts: ['CLT', 'PJ'],
+  workAuthorizations: ['BR'],
+  certifications: [],
+  weeklyGoal: 12,
+}
+
 const emptyHealth: SourceHealth = { sources: [], unrecognizedAlerts: [] }
 
 function serveSettings(runs: unknown[] = [], health: SourceHealth = emptyHealth) {
   server.use(
     http.get('/api/admin/sources/health', () => HttpResponse.json(health)),
+    http.get('/api/auth/api-token', () => HttpResponse.json({ exists: false })),
+    http.get('/api/notifications/telegram', () =>
+      HttpResponse.json({ configured: true, types: ['VAGA_ALVO', 'FOLLOW_UP'] }),
+    ),
     http.get('/api/admin/gmail/status', () =>
       HttpResponse.json({ configured: true, connected: true, accountEmail: 'eu@example.com', label: 'jobs', lastSyncAt: null }),
     ),
     http.get('/api/admin/collection-runs', () => HttpResponse.json(runs)),
+    http.get('/api/candidate-profile', () => HttpResponse.json(emptyCandidateProfile)),
     http.get('/api/search-profiles', () =>
       HttpResponse.json([
         {
@@ -112,6 +124,22 @@ describe('SettingsPage', () => {
     )
   })
 
+  it('mostra o Telegram configurado e envia a mensagem de teste', async () => {
+    serveSettings()
+    let tested = false
+    server.use(
+      http.post('/api/notifications/telegram/test', () => {
+        tested = true
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+    renderSettingsPage()
+
+    expect(await screen.findByText(/Vaga de empresa-alvo, Follow-up/)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /enviar teste/i }))
+    await vi.waitFor(() => expect(tested).toBe(true))
+  })
+
   it('permite escolher e salva o tema escuro', async () => {
     serveSettings()
     const user = userEvent.setup()
@@ -124,5 +152,26 @@ describe('SettingsPage', () => {
 
     expect(window.localStorage.getItem('job-hunter-theme')).toBe('dark')
     expect(document.documentElement).toHaveClass('dark')
+  })
+})
+
+describe('token da extensão', () => {
+  it('gera o token, mostra uma vez e depois só o final', async () => {
+    let exists = false
+    serveSettings()
+    server.use(
+      http.get('/api/auth/api-token', () =>
+        HttpResponse.json(exists ? { exists: true, hint: 'wxyz', createdAt: '2026-10-24T10:00:00Z', lastUsedAt: null } : { exists: false }),
+      ),
+      http.post('/api/auth/api-token', () => {
+        exists = true
+        return HttpResponse.json({ token: 'jh_abcwxyz' }, { status: 201 })
+      }),
+    )
+    renderSettingsPage()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Gerar token' }))
+    expect(await screen.findByLabelText('Token gerado')).toHaveValue('jh_abcwxyz')
+    expect(await screen.findByText('wxyz')).toBeInTheDocument()
   })
 })

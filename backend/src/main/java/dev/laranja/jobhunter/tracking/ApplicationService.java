@@ -7,9 +7,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import dev.laranja.jobhunter.inbox.Mailbox;
 import dev.laranja.jobhunter.jobs.JobCatalog;
 import dev.laranja.jobhunter.jobs.JobOrigin;
 import dev.laranja.jobhunter.jobs.JobView;
+import dev.laranja.jobhunter.jobs.ManualJobCommand;
 import dev.laranja.jobhunter.resumes.ResumeCatalog;
 import dev.laranja.jobhunter.shared.BusinessRuleException;
 import dev.laranja.jobhunter.shared.ConflictException;
@@ -24,6 +26,7 @@ import dev.laranja.jobhunter.tracking.internal.JobSnapshotRepository;
 
 import org.jspecify.annotations.Nullable;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
@@ -35,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Transactional
+@EnableConfigurationProperties(TrackingProperties.class)
 public class ApplicationService {
 
 	private static final Duration PDF_LINK_TTL = Duration.ofMinutes(5);
@@ -57,11 +61,16 @@ public class ApplicationService {
 
 	private final JdbcClient jdbc;
 
+	private final TrackingProperties.FollowUp followUp;
+
+	private final Mailbox mailbox;
+
 	private final Clock clock;
 
 	ApplicationService(ApplicationRepository applications, ApplicationEventRepository history,
 			JobSnapshotRepository snapshots, JobCatalog jobs, ResumeCatalog resumes, ObjectStorage storage,
-			ApplicationEventPublisher events, JdbcClient jdbc, Clock clock) {
+			ApplicationEventPublisher events, JdbcClient jdbc, TrackingProperties properties, Mailbox mailbox,
+			Clock clock) {
 		this.applications = applications;
 		this.history = history;
 		this.snapshots = snapshots;
@@ -70,6 +79,8 @@ public class ApplicationService {
 		this.storage = storage;
 		this.events = events;
 		this.jdbc = jdbc;
+		this.followUp = properties.followUp();
+		this.mailbox = mailbox;
 		this.clock = clock;
 	}
 
@@ -83,7 +94,7 @@ public class ApplicationService {
 		}
 		Instant now = this.clock.instant();
 		Application application = this.applications.save(Application.start(jobId, command.status(),
-				command.resumeVersionId(), command.channel(), command.appliedAt(), command.notes(), now));
+				command.resumeVersionId(), command.channel(), command.appliedAt(), command.notes(), this.followUp, now));
 		this.history.save(application.creationEvent());
 		captureSnapshotIfApplied(application, job, now);
 		closeJobIfEnded(application);
@@ -100,7 +111,7 @@ public class ApplicationService {
 		ApplicationStatus from = application.getStatus();
 		Instant now = this.clock.instant();
 		this.history.save(application.moveTo(command.status(), command.resumeVersionId(), command.note(),
-				EventOrigin.MANUAL, now));
+				EventOrigin.MANUAL, this.followUp, now));
 		captureSnapshotIfApplied(application, null, now);
 		closeJobIfEnded(application);
 		this.events.publishEvent(new ApplicationStatusChanged(applicationId, application.getJobId(), from,
@@ -147,7 +158,8 @@ public class ApplicationService {
 				ApplicationStatus back = Objects.equals(applicationId, move.applicationId()) && newTarget != null ? newTarget
 						: move.from();
 				ApplicationStatus from = moved.getStatus();
-				this.history.save(moved.moveTo(back, null, "Correção da classificação de um e-mail", EventOrigin.MANUAL, now));
+				this.history.save(moved.moveTo(back, null, "Correção da classificação de um e-mail", EventOrigin.MANUAL,
+						this.followUp, now));
 				publishChange(moved, from, now);
 			}
 			if (sameTarget || Objects.equals(applicationId, move.applicationId())) {
@@ -194,7 +206,67 @@ public class ApplicationService {
 	}
 
 	public void updateDetails(long applicationId, ApplicationCommands.UpdateDetails command) {
-		require(applicationId).updateDetails(command.notes(), command.nextActionAt(), this.clock.instant());
+		require(applicationId).updateDetails(command.notes(), command.nextActionAt(), command.nextActionKind(),
+				this.clock.instant());
+	}
+
+	/**
+	 * Confirmação de candidatura lida de um e-mail: completa a data da aplicação.
+	 * @return falso quando a candidatura ainda está em Interesse e precisa da sua revisão para ir a Aplicada
+	 */
+	public boolean confirmFromEmail(long applicationId, Instant receivedAt) {
+		return require(applicationId).confirmApplied(receivedAt, this.clock.instant());
+	}
+
+	/**
+	 * Registra a candidatura a partir do e-mail de confirmação de uma vaga que não estava no agente: cadastra a vaga
+	 * (ou usa a já cadastrada), cria a candidatura em Aplicada na data do e-mail e liga o e-mail a ela.
+	 */
+	public long registerFromEmail(long emailId, ApplicationCommands.FromEmail command) {
+		Mailbox.ClassifiedEmail email = this.mailbox.find(emailId).orElseThrow(() -> NotFoundException.of("E-mail", emailId));
+		if (email.applicationId() != null && this.applications.existsById(email.applicationId())) {
+			throw new ConflictException("Esse e-mail já está ligado a uma candidatura.", email.applicationId());
+		}
+		String title = firstNonBlank(command.title(), email.jobGuess(), email.subject());
+		String company = firstNonBlank(command.company(), email.companyGuess(), null);
+		if (title == null || company == null) {
+			throw new BusinessRuleException("Informe o cargo e a empresa da vaga.");
+		}
+		long jobId;
+		try {
+			jobId = this.jobs.registerManual(new ManualJobCommand(title, company, null, null, null, null,
+					blankToNull(command.url()), null)).id();
+		}
+		catch (ConflictException ex) {
+			jobId = ex.existingId();
+		}
+		long applicationId = start(jobId, new ApplicationCommands.Start(ApplicationStatus.APLICADA,
+				command.resumeVersionId(), command.channel(), email.receivedAt(),
+				"Registrada pelo e-mail de confirmação"));
+		this.mailbox.markHandled(emailId, applicationId);
+		return applicationId;
+	}
+
+	private static String firstNonBlank(String first, String second, String third) {
+		for (String value : new String[] { first, second, third }) {
+			if (value != null && !value.isBlank()) {
+				return value.strip();
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Agenda a próxima ação da candidatura como uma ação sua (um retorno da empresa não a cancela). Usado, por exemplo,
+	 * para o próximo contato depois de uma entrevista.
+	 */
+	public void scheduleNextAction(long applicationId, Instant at, NextActionKind kind) {
+		require(applicationId).scheduleNextAction(at, kind, this.clock.instant());
+	}
+
+	/** Você mandou um follow-up (por e-mail, LinkedIn ou WhatsApp): conta o envio e agenda o próximo. */
+	public void registerFollowUp(long applicationId) {
+		require(applicationId).registerFollowUp(this.followUp, this.clock.instant());
 	}
 
 	public void saveSnapshot(long applicationId, ApplicationCommands.SaveSnapshot command) {

@@ -42,7 +42,8 @@ public class EmailReview {
 		return this.jdbc.sql("""
 				select e.id, e.sender, e.subject, e.snippet, e.received_at, e.ai_classification, e.ai_confidence,
 				       e.final_classification, e.classified_by, e.company_guess, e.job_guess, e.ai_rationale,
-				       e.needs_review, e.application_id, j.title as application_title, j.company as application_company
+				       e.needs_review, e.application_id, j.title as application_title, j.company as application_company,
+				       a.status as application_status
 				from email_message e
 				left join application a on a.id = e.application_id
 				left join job j on j.id = a.job_id
@@ -64,7 +65,7 @@ public class EmailReview {
 					rs.getString("classified_by"), rs.getString("company_guess"), rs.getString("job_guess"),
 					rs.getString("ai_rationale"), rs.getBoolean("needs_review"),
 					JdbcRows.nullableLong(rs, "application_id"), rs.getString("application_title"),
-					rs.getString("application_company")))
+					rs.getString("application_company"), rs.getString("application_status")))
 			.list();
 	}
 
@@ -110,11 +111,13 @@ public class EmailReview {
 	public record Review(@NotNull EmailClassification classification, @Nullable Long applicationId) {
 	}
 
+	/** @param applicationStatus etapa da candidatura ligada (uma confirmação em INTERESSE sugere mover para APLICADA) */
 	public record EmailItem(long id, String sender, @Nullable String subject, @Nullable String snippet,
 			Instant receivedAt, @Nullable EmailClassification aiClassification, @Nullable Double aiConfidence,
 			@Nullable EmailClassification finalClassification, @Nullable String classifiedBy,
 			@Nullable String companyGuess, @Nullable String jobGuess, @Nullable String rationale, boolean needsReview,
-			@Nullable Long applicationId, @Nullable String applicationTitle, @Nullable String applicationCompany) {
+			@Nullable Long applicationId, @Nullable String applicationTitle, @Nullable String applicationCompany,
+			@Nullable String applicationStatus) {
 	}
 
 	/** @param rate acertos sobre revisados; nulo antes da primeira revisão */

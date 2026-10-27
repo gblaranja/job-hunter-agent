@@ -38,3 +38,47 @@ export function toDateInput(value: string | null | undefined): string {
 export function fromDateInput(value: string): string | null {
   return value ? new Date(`${value}T12:00:00`).toISOString() : null
 }
+
+const salaryPeriods: Record<string, string> = { MENSAL: 'por mês', ANUAL: 'por ano', HORA: 'por hora' }
+
+/** Faixa salarial como veio da vaga: "R$ 12.000 a R$ 15.000 por mês · PJ". */
+export function formatSalary(salary: {
+  min?: number | null
+  max?: number | null
+  currency: string
+  period: string
+  regime?: string | null
+}): string {
+  const money = (value: number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: salary.currency, maximumFractionDigits: 0 }).format(value)
+  const min = salary.min ?? salary.max
+  const max = salary.max ?? salary.min
+  const range = min == null || max == null ? '—' : min === max ? money(min) : `${money(min)} a ${money(max)}`
+  return [`${range} ${salaryPeriods[salary.period] ?? ''}`.trim(), salary.regime].filter(Boolean).join(' · ')
+}
+
+/** Há quanto tempo, curto: "há 5 h", "há 3 dias". */
+export function formatAge(value: string | null | undefined, now: Date = new Date()): string {
+  if (!value) return '—'
+  const hours = Math.max(0, Math.floor((now.getTime() - parseISO(value).getTime()) / 3_600_000))
+  if (hours < 1) return 'agora há pouco'
+  if (hours < 24) return `há ${hours} h`
+  const days = Math.floor(hours / 24)
+  return days === 1 ? 'há 1 dia' : `há ${days} dias`
+}
+
+/** Valor em reais sem centavos: "R$ 155.964". */
+export function formatBrl(value: number | null | undefined): string {
+  return value == null
+    ? '—'
+    : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(value)
+}
+
+/** Valor na moeda informada, com centavos só quando houver: "US$ 40", "R$ 15.000". */
+export function formatMoney(value: number, currency: string): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: Number.isInteger(value) ? 0 : 2,
+  }).format(value)
+}

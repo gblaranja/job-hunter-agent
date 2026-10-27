@@ -1,19 +1,26 @@
 import { Link } from 'react-router'
-import { useJob, type BoardCard } from '@/api/queries'
+import { useApplicationContacts, useJob, type BoardCard } from '@/api/queries'
 import { AppliedJobCard } from '@/components/AppliedJobCard'
 import { ErrorBlock, LoadingBlock } from '@/components/QueryState'
 import { StatusBadge } from '@/components/StatusBadge'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { ApplicationDetailsForm } from '@/features/applications/ApplicationDetailsForm'
+import { FollowUpStatus } from '@/features/applications/FollowUpStatus'
 import { ResponseDialog } from '@/features/applications/ResponseDialog'
 import { Timeline } from '@/features/applications/Timeline'
+import { ContactsCard } from '@/features/network/ContactsCard'
+import { InterviewSection } from '@/features/interviews/InterviewSection'
+import { MessageDrafts } from '@/features/network/MessageDrafts'
+import { interviewStatuses } from '@/lib/interviewLabels'
+import type { InterviewStage } from '@/api/interviews'
 import { ArrowUpRight } from 'lucide-react'
 
 /** Painel lateral do kanban: a vaga aplicada, anotações e o histórico da candidatura. */
 export function ApplicationSheet({ card, onClose }: { card: BoardCard; onClose: () => void }) {
   const job = useJob(card.jobId)
   const application = job.data?.application
+  const contacts = useApplicationContacts(card.applicationId)
   // O board só traz status de link quando a vaga já foi congelada na aplicação.
   const hasSnapshot = card.linkStatus != null
 
@@ -38,16 +45,30 @@ export function ApplicationSheet({ card, onClose }: { card: BoardCard; onClose: 
           {job.error && <ErrorBlock error={job.error} />}
           {application && (
             <>
+              <FollowUpStatus application={application} />
               <ApplicationDetailsForm
-                key={application.id}
+                key={`${application.id}-${application.nextActionAt ?? ''}`}
                 applicationId={application.id}
                 notes={application.notes}
                 nextActionAt={application.nextActionAt}
+                nextActionKind={application.nextActionKind}
               />
-              <ResponseDialog applicationId={application.id} />
+              <ResponseDialog applicationId={application.id} contacts={contacts.data?.contacts} />
+              <ContactsCard jobId={card.jobId} company={card.company} applicationId={application.id} />
+              {interviewStatuses.has(application.status) && (
+                <section>
+                  <h3 className="mb-3 text-sm font-semibold">Entrevista</h3>
+                  <InterviewSection
+                    applicationId={application.id}
+                    jobId={card.jobId}
+                    status={application.status as InterviewStage}
+                  />
+                </section>
+              )}
+              <MessageDrafts jobId={card.jobId} applicationId={application.id} />
               <section>
                 <h3 className="mb-3 text-sm font-semibold">Histórico</h3>
-                <Timeline events={job.data?.timeline ?? []} />
+                <Timeline events={job.data?.timeline ?? []} interactions={contacts.data?.interactions} />
               </section>
             </>
           )}

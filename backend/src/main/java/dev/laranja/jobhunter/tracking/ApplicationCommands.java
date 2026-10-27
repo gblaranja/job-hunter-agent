@@ -43,9 +43,13 @@ public final class ApplicationCommands {
 	public record ChangeResume(@NotNull Long resumeVersionId) {
 	}
 
-	/** Substitui as notas e a próxima ação (nulo limpa o campo). */
+	/**
+	 * Substitui as notas e a próxima ação (nulo limpa o campo).
+	 * @param nextActionKind tipo da próxima ação; sem valor, mantém o atual
+	 */
 	@Schema(name = "UpdateApplicationDetails")
-	public record UpdateDetails(@Nullable String notes, @Nullable Instant nextActionAt) {
+	public record UpdateDetails(@Nullable String notes, @Nullable Instant nextActionAt,
+			@Nullable NextActionKind nextActionKind) {
 	}
 
 	/** Cola ou corrige o link e a descrição salvos da vaga aplicada. */
@@ -54,6 +58,17 @@ public final class ApplicationCommands {
 			@Size(max = 2000) @Pattern(regexp = "https?://\\S+", message = "deve ser um link http(s)") @Nullable String url,
 			@NotBlank @Size(max = 300) String title, @NotBlank @Size(max = 200) String company,
 			@Nullable String descriptionMd) {
+	}
+
+	/**
+	 * Candidatura registrada a partir de um e-mail de confirmação; cargo e empresa vêm do e-mail quando não informados.
+	 * @param resumeVersionId currículo enviado (obrigatório em Aplicada)
+	 */
+	@Schema(name = "ApplicationFromEmail")
+	public record FromEmail(@NotNull Long resumeVersionId, @Size(max = 300) @Nullable String title,
+			@Size(max = 200) @Nullable String company,
+			@Size(max = 2000) @Pattern(regexp = "https?://\\S+", message = "deve ser um link http(s)") @Nullable String url,
+			@Nullable ApplicationChannel channel) {
 	}
 
 }

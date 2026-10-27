@@ -3,6 +3,7 @@ package dev.laranja.jobhunter.analysis.internal;
 import dev.laranja.jobhunter.analysis.JobAnalyzer;
 import dev.laranja.jobhunter.jobs.JobCollected;
 import dev.laranja.jobhunter.jobs.JobDescriptionAdded;
+import dev.laranja.jobhunter.profile.CandidateProfileChanged;
 import dev.laranja.jobhunter.resumes.DefaultResumeChanged;
 import dev.laranja.jobhunter.resumes.ResumeCatalog;
 import dev.laranja.jobhunter.resumes.ResumeUploaded;
@@ -64,6 +65,12 @@ class AnalysisListeners {
 	void on(DefaultResumeChanged event) {
 		this.resumeSkills.ensureSkills(event.resumeVersionId());
 		log.info("Currículo padrão trocado: {} vagas repontuadas.", this.analyzer.rescoreOpenJobs());
+	}
+
+	/** Os dados da triagem mudaram: reavalia os eliminatórios e o score das vagas abertas. */
+	@ApplicationModuleListener
+	void on(CandidateProfileChanged event) {
+		log.info("Dados da triagem alterados: {} vagas repontuadas.", this.analyzer.rescoreOpenJobs());
 	}
 
 	/**

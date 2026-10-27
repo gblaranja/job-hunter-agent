@@ -18,7 +18,7 @@ import { ErrorBlock, LoadingBlock } from '@/components/QueryState'
 import { Button } from '@/components/ui/button'
 import { useStatusMove } from '@/features/applications/useStatusMove'
 import { formatDate, formatDays } from '@/lib/format'
-import { statusAccent, statusLabels } from '@/lib/labels'
+import { nextActionKindLabels, statusAccent, statusLabels } from '@/lib/labels'
 import { cn } from '@/lib/utils'
 import { CalendarClock, CircleX, FileText, PanelRightOpen, PlusCircle } from 'lucide-react'
 import { ApplicationSheet } from './ApplicationSheet'
@@ -174,7 +174,10 @@ function BoardCardView({ card, overlay = false, onOpen }: { card: Card; overlay?
             <dt>
               <CalendarClock className="size-3" aria-label="Próxima ação" />
             </dt>
-            <dd>{formatDate(card.nextActionAt)}</dd>
+            <dd>
+              {card.nextActionKind ? `${nextActionKindLabels[card.nextActionKind]} · ` : ''}
+              {formatDate(card.nextActionAt)}
+            </dd>
           </div>
         )}
         {card.linkStatus === 'REMOVIDO' && (

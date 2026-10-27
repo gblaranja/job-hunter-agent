@@ -113,7 +113,8 @@ public class CompanyMonitoring {
 				    select generate_series(date_trunc('week', min(first_seen_at)), date_trunc('week', now()),
 				                           interval '1 week')::date as week_start
 				    from job where company_id = c.id) w
-				left join job j on j.company_id = c.id
+				-- a mesma vaga publicada em duas fontes conta uma vez
+				left join job j on j.company_id = c.id and j.duplicate_of_job_id is null
 				-- vagas de agência não distorcem os números de quem contrata
 				where c.kind <> 'RECRUTAMENTO' and w.week_start is not null
 				group by c.id, w.week_start
@@ -155,7 +156,7 @@ public class CompanyMonitoring {
 		for (NewJob job : this.jdbc.sql("""
 				select c.id as company_id, c.name as company, j.id as job_id, j.title from job j
 				join company c on c.id = j.company_id
-				where c.watch_status = 'ALVO' and j.first_seen_at >= :since
+				where c.watch_status = 'ALVO' and j.first_seen_at >= :since and j.duplicate_of_job_id is null
 				""").param("since", Timestamp.from(this.clock.instant().minusSeconds(7 * 86400))).query(NewJob.class).list()) {
 			raise(new CompanyAlertRaised(job.companyId(), "EMPRESA_ALVO_VAGA", job.company() + " abriu uma vaga",
 					job.title(), "alvo-vaga-" + job.jobId()));

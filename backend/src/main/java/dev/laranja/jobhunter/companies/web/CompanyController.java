@@ -11,17 +11,23 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import dev.laranja.jobhunter.companies.AtsBoard;
+import dev.laranja.jobhunter.companies.AtsBoards;
+import dev.laranja.jobhunter.companies.AtsSlugStatus;
 import dev.laranja.jobhunter.companies.CompanyDirectory;
 import dev.laranja.jobhunter.companies.CompanyKind;
 import dev.laranja.jobhunter.companies.CompanyMonitoring;
 import dev.laranja.jobhunter.companies.UpdateCompanyCommand;
 import dev.laranja.jobhunter.companies.WatchStatus;
+import dev.laranja.jobhunter.shared.BusinessRuleException;
 import dev.laranja.jobhunter.shared.NotFoundException;
 import dev.laranja.jobhunter.shared.jdbc.JdbcRows;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
@@ -49,7 +55,7 @@ class CompanyController {
 
 	private static final String SELECT = """
 			select c.id, c.name, c.website, c.ats_type, c.ats_slug, c.kind, c.watch_status, c.notes, c.first_seen_at,
-			       c.client_sectors, c.contract_types, c.cnpj, c.authorization_type,
+			       c.client_sectors, c.contract_types, c.cnpj, c.authorization_type, c.careers_url,
 			       g.level as gptw_level, g.year as gptw_year,
 			       count(j.id) as jobs_total,
 			       count(j.id) filter (where j.closed_at is null) as jobs_active,
@@ -74,11 +80,15 @@ class CompanyController {
 
 	private final JsonMapper json;
 
-	CompanyController(CompanyDirectory directory, CompanyMonitoring monitoring, JdbcClient jdbc, JsonMapper json) {
+	private final AtsBoards atsBoards;
+
+	CompanyController(CompanyDirectory directory, CompanyMonitoring monitoring, JdbcClient jdbc, JsonMapper json,
+			AtsBoards atsBoards) {
 		this.directory = directory;
 		this.monitoring = monitoring;
 		this.jdbc = jdbc;
 		this.json = json;
+		this.atsBoards = atsBoards;
 	}
 
 	/**
@@ -206,6 +216,30 @@ class CompanyController {
 		this.directory.merge(id, command.targetId());
 	}
 
+	/**
+	 * Detecta o ATS e o slug pelo link da página de carreira (ou usa os informados) e confere no ATS se o job board
+	 * existe, sem gravar nada.
+	 */
+	@PostMapping("/ats-check")
+	CompanyAtsCheck checkAts(@Valid @RequestBody CompanyAtsCheckRequest request) {
+		String atsType = blankToNull(request.atsType());
+		String atsSlug = blankToNull(request.atsSlug());
+		if ((atsType == null || atsSlug == null) && request.careersUrl() != null && !request.careersUrl().isBlank()) {
+			AtsBoard board = this.atsBoards.detect(request.careersUrl())
+				.orElseThrow(() -> new BusinessRuleException(
+						"Não reconheci o ATS nesse link. Os suportados são Greenhouse, Lever, Ashby, SmartRecruiters, "
+								+ "Workable, Teamtailor e Recruitee; para outro, informe o ATS e o slug à mão."));
+			atsType = board.atsType();
+			atsSlug = board.slug();
+		}
+		if (atsType == null || atsSlug == null) {
+			throw new BusinessRuleException("Informe o link da página de carreira ou o ATS e o slug.");
+		}
+		boolean supported = this.atsBoards.supports(atsType);
+		AtsSlugStatus status = supported ? this.atsBoards.verify(atsType, atsSlug) : AtsSlugStatus.NAO_CONFIRMADO;
+		return new CompanyAtsCheck(atsType, atsSlug, supported, status);
+	}
+
 	/** Recalcula as métricas semanais e os alertas agora (normalmente roda domingo à noite). */
 	@PostMapping("/refresh-metrics")
 	@ResponseStatus(HttpStatus.NO_CONTENT)
@@ -230,7 +264,11 @@ class CompanyController {
 				rs.getString("gptw_level"), (Integer) rs.getObject("gptw_year"), rs.getLong("jobs_total"), rs.getLong("jobs_active"),
 				rs.getLong("jobs_last_90_days"), rs.getLong("reposts"), JdbcRows.instant(rs, "last_job_at"),
 				(rs.getBigDecimal("avg_days_open") != null) ? rs.getBigDecimal("avg_days_open").doubleValue() : null,
-				rs.getLong("applications"));
+				rs.getLong("applications"), rs.getString("careers_url"));
+	}
+
+	private static @Nullable String blankToNull(@Nullable String value) {
+		return (value == null || value.isBlank()) ? null : value.strip();
 	}
 
 	private static List<String> strings(Array array) throws SQLException {
@@ -243,6 +281,7 @@ class CompanyController {
 	 * @param authorizationType tipo de autorização no Banco Central ou CNAE principal
 	 * @param gptwLevel selo GPTW vigente (RANKING_TI, RANKING ou CERTIFICADA), verificado ou confirmado por você
 	 * @param avgDaysOpen tempo médio no ar das vagas já fechadas, em dias
+	 * @param careersUrl página de carreira, de onde o ATS e o slug são detectados
 	 */
 	record CompanyItem(long id, String name, @Nullable String website, @Nullable String atsType,
 			@Nullable String atsSlug, CompanyKind kind, WatchStatus watchStatus, @Nullable String notes,
@@ -250,7 +289,7 @@ class CompanyController {
 			@Nullable String authorizationType, @Nullable String gptwLevel, @Nullable Integer gptwYear,
 			long jobsTotal, long jobsActive,
 			long jobsLast90Days, long reposts, @Nullable Instant lastJobAt, @Nullable Double avgDaysOpen,
-			long applications) {
+			long applications, @Nullable String careersUrl) {
 	}
 
 	record CompanyOverview(Map<String, Integer> bySeniority, Map<String, Integer> byWorkModel, List<SkillCount> topSkills,
@@ -273,6 +312,19 @@ class CompanyController {
 	}
 
 	record WatchChange(@NotNull WatchStatus watchStatus) {
+	}
+
+	/** Link da página de carreira, ou o ATS e o slug, para conferir antes de salvar. */
+	record CompanyAtsCheckRequest(
+			@Size(max = 500) @Pattern(regexp = "(https?://\\S+)?", message = "deve ser um link http(s)") @Nullable String careersUrl,
+			@Size(max = 30) @Nullable String atsType, @Size(max = 200) @Nullable String atsSlug) {
+	}
+
+	/**
+	 * ATS e slug detectados e conferidos.
+	 * @param supported se o ATS tem coleta automática
+	 */
+	record CompanyAtsCheck(String atsType, String atsSlug, boolean supported, AtsSlugStatus status) {
 	}
 
 	/** Mescla esta empresa (origem) na empresa de destino. */

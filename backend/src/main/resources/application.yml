@@ -39,7 +39,7 @@ jobhunter:
       client-secret: ${JOBHUNTER_GOOGLE_CLIENT_SECRET:${JOBHUNTER_GMAIL_CLIENT_SECRET:}}
       redirect-uri: ${JOBHUNTER_GOOGLE_REDIRECT_URI:http://localhost:8080/api/auth/google/callback}
       allowed-email: ${JOBHUNTER_ALLOWED_EMAIL:}
-      after-login-url: ${JOBHUNTER_AFTER_LOGIN_URL:/board}
+      after-login-url: ${JOBHUNTER_AFTER_LOGIN_URL:/today}
       login-url: ${JOBHUNTER_LOGIN_URL:/login}
   storage:
     endpoint: ${JOBHUNTER_STORAGE_ENDPOINT}
@@ -83,6 +83,21 @@ jobhunter:
         extract-requirements: ${JOBHUNTER_AI_BUDGET_EXTRACTION:3.00}
         match-score: ${JOBHUNTER_AI_BUDGET_SCORING:3.00}
         tailor-resume: ${JOBHUNTER_AI_BUDGET_TAILORING:5.00}
+  inbox:
+    # bônus na ordenação da caixa para vagas recém-vistas: até 10 pontos, caindo a zero em 72 h
+    freshness-bonus: ${JOBHUNTER_INBOX_FRESHNESS_BONUS:10}
+    freshness-window: ${JOBHUNTER_INBOX_FRESHNESS_WINDOW:PT72H}
+  notifications:
+    # endereço do backoffice visto do celular: os links das mensagens do Telegram apontam para ele
+    public-url: ${JOBHUNTER_PUBLIC_URL:http://localhost:5173}
+    # alertas no celular (D-02); sem o token e o chat id, as notificações ficam só no sino
+    telegram:
+      bot-token: ${JOBHUNTER_TELEGRAM_BOT_TOKEN:}
+      chat-id: ${JOBHUNTER_TELEGRAM_CHAT_ID:}
+      types: ${JOBHUNTER_TELEGRAM_TYPES:VAGA_ALVO,FOLLOW_UP,PREPARACAO_PRONTA,RESUMO_DIARIO}
+  analysis:
+    # teto do score quando a vaga tem um eliminatório que você não atende
+    knockout-cap: ${JOBHUNTER_KNOCKOUT_CAP:40}
   tailoring:
     # gera o currículo adaptado ao marcar "Tenho interesse" numa vaga (precisa da Claude API)
     auto-generate: ${JOBHUNTER_TAILORING_AUTO:true}
@@ -96,3 +111,8 @@ jobhunter:
       # pasta com os zips Empresas*.zip e Estabelecimentos*.zip da base de CNPJ da Receita
       directory: ${JOBHUNTER_CNPJ_DIRECTORY:}
       min-capital: ${JOBHUNTER_CNPJ_MIN_CAPITAL:100000}
+  salary:
+    # premissas da comparação CLT × PJ (equivalente anual): impostos e custos fixos do PJ e benefícios do CLT
+    pj-tax-rate: ${JOBHUNTER_SALARY_PJ_TAX_RATE:0.15}
+    pj-monthly-costs: ${JOBHUNTER_SALARY_PJ_MONTHLY_COSTS:400}
+    clt-benefits-monthly: ${JOBHUNTER_SALARY_CLT_BENEFITS_MONTHLY:1000}

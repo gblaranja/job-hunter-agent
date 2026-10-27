@@ -19,6 +19,7 @@ import { formatDateTime, formatPercent } from '@/lib/format'
 import { classificationLabels } from '@/lib/labels'
 import { cn } from '@/lib/utils'
 import { Check, EyeOff } from 'lucide-react'
+import { ConfirmationActions } from './ConfirmationActions'
 
 const classifications = Object.keys(classificationLabels) as EmailClassification[]
 const NONE = 'NENHUMA'
@@ -119,6 +120,11 @@ function EmailCard({ email, applications }: { email: EmailItem; applications: { 
         </div>
         {email.snippet && <p className="line-clamp-2 text-sm text-muted-foreground">{email.snippet}</p>}
         {email.rationale && <p className="text-xs text-muted-foreground">Por quê: {email.rationale}</p>}
+        {current === 'CONFIRMACAO_CANDIDATURA' && email.needsReview && (
+          <div className="flex flex-wrap items-center gap-3 rounded-md bg-muted/60 p-3">
+            <ConfirmationActions email={email} />
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-2 border-t pt-3">
           <Select value={classification} onValueChange={(value) => setClassification(value as EmailClassification)}>
             <SelectTrigger className="h-8 w-52" aria-label="Classificação">

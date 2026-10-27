@@ -57,6 +57,14 @@ class ApplicationController {
 		return ResponseEntity.created(URI.create("/api/applications/" + id + "/snapshot")).body(new Created(id));
 	}
 
+	/** Cria a vaga e a candidatura em Aplicada a partir do e-mail de confirmação, com a data do e-mail. */
+	@PostMapping("/api/applications/from-email/{emailId}")
+	ResponseEntity<Created> registerFromEmail(@PathVariable long emailId,
+			@Valid @RequestBody ApplicationCommands.FromEmail command) {
+		long id = this.service.registerFromEmail(emailId, command);
+		return ResponseEntity.created(URI.create("/api/applications/" + id + "/snapshot")).body(new Created(id));
+	}
+
 	@GetMapping("/api/applications/board")
 	Board board() {
 		return this.queries.board();
@@ -78,6 +86,13 @@ class ApplicationController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	void recordResponse(@PathVariable long id, @Valid @RequestBody ApplicationCommands.RecordResponse command) {
 		this.service.recordManualResponse(id, command);
+	}
+
+	/** Você mandou um follow-up: conta o envio e agenda o próximo (até o máximo configurado). */
+	@PostMapping("/api/applications/{id}/follow-ups")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	void registerFollowUp(@PathVariable long id) {
+		this.service.registerFollowUp(id);
 	}
 
 	@PatchMapping("/api/applications/{id}/resume")

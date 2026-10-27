@@ -17,6 +17,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import dev.laranja.jobhunter.insights.FunnelBreakdown;
+import dev.laranja.jobhunter.interviews.InterviewDebriefs;
 import dev.laranja.jobhunter.insights.InsightReport.Conversion;
 import dev.laranja.jobhunter.insights.InsightReport.Funnel;
 import dev.laranja.jobhunter.insights.InsightReport.Gap;
@@ -45,8 +46,11 @@ class InsightAggregator {
 
 	private final JdbcClient jdbc;
 
-	InsightAggregator(JdbcClient jdbc) {
+	private final InterviewDebriefs debriefs;
+
+	InsightAggregator(JdbcClient jdbc, InterviewDebriefs debriefs) {
 		this.jdbc = jdbc;
+		this.debriefs = debriefs;
 	}
 
 	List<SkillDemand> topSkills(Instant since, Set<String> resumeSkills) {
@@ -116,7 +120,7 @@ class InsightAggregator {
 		return new Funnel(applied.size(), count(applied, Reached::screening), count(applied, Reached::interview),
 				count(applied, Reached::offer),
 				scores.isEmpty() ? null : (int) Math.round(scores.stream().mapToInt(Integer::intValue).average().orElse(0)),
-				conversions, scoreByRating);
+				conversions, scoreByRating, this.debriefs.recurringQuestions());
 	}
 
 	List<ResumePerformance> resumePerformance() {
@@ -138,7 +142,8 @@ class InsightAggregator {
 				       exists (select 1 from tailored_resume t where t.resume_version_id = a.resume_version_id) as tailored,
 				       bool_or(e.to_status in ('ENTREVISTA', 'TESTE_TECNICO', 'OFERTA')) as interview,
 				       bool_or(e.to_status = 'OFERTA') as offer,
-				       min(e.created_at) filter (where e.response_type is not null) as first_response_at
+				       min(e.created_at) filter (where e.response_type is not null) as first_response_at,
+				       exists (select 1 from offer o where o.application_id = a.id and o.decision = 'ACEITA') as accepted
 				from application a
 				join job j on j.id = a.job_id
 				join application_event e on e.application_id = a.id
@@ -147,7 +152,8 @@ class InsightAggregator {
 				""")
 			.query((rs, row) -> new Applied(rs.getString("source"), rs.getString("channel"),
 					JdbcRows.instant(rs, "applied_at"), JdbcRows.instant(rs, "first_seen_at"), rs.getBoolean("tailored"),
-					rs.getBoolean("interview"), rs.getBoolean("offer"), JdbcRows.instant(rs, "first_response_at")))
+					rs.getBoolean("interview"), rs.getBoolean("offer"), JdbcRows.instant(rs, "first_response_at"),
+					rs.getBoolean("accepted")))
 			.list();
 		List<Double> responseDays = rows.stream()
 			.filter(row -> row.appliedAt() != null && row.firstResponseAt() != null
@@ -159,7 +165,8 @@ class InsightAggregator {
 				(int) rows.stream().filter(Applied::offer).count(), groups(rows, Applied::source),
 				groups(rows, row -> (row.channel() != null) ? row.channel() : "NAO_INFORMADO"),
 				groups(rows, row -> timeToApplyBucket(row.source(), row.firstSeenAt(), row.appliedAt())),
-				groups(rows, row -> row.tailored() ? "ADAPTADO" : "PADRAO"), median(responseDays), rankingQuality());
+				groups(rows, row -> row.tailored() ? "ADAPTADO" : "PADRAO"), median(responseDays), rankingQuality(),
+				(int) rows.stream().filter(Applied::accepted).count());
 	}
 
 	/**
@@ -388,7 +395,7 @@ class InsightAggregator {
 
 	private record Applied(String source, @Nullable String channel, @Nullable Instant appliedAt,
 			@Nullable Instant firstSeenAt, boolean tailored, boolean interview, boolean offer,
-			@Nullable Instant firstResponseAt) {
+			@Nullable Instant firstResponseAt, boolean accepted) {
 	}
 
 	private record Reached(@Nullable Long resumeVersionId, @Nullable String resumeLabel, @Nullable String seniority,

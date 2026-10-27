@@ -14,6 +14,7 @@ export type AppliedListItem = Schemas['AppliedListItem']
 export type JobDetail = Schemas['JobDetail']
 export type ResumeItem = Schemas['ResumeItem']
 export type DownloadLink = Schemas['DownloadLink']
+export type NextActionKind = NonNullable<Schemas['BoardCard']['nextActionKind']>
 
 export const queryKeys = {
   me: ['me'] as const,
@@ -124,6 +125,15 @@ export function useCreateJob() {
   })
 }
 
+export type JobImportPreview = Schemas['JobImportPreview']
+
+/** Lê a página da vaga pelo link e devolve os campos do cadastro, sem criar nada. */
+export function useJobImportPreview() {
+  return useMutation({
+    mutationFn: (url: string) => unwrap(api.POST('/api/jobs/import/preview', { body: { url } })),
+  })
+}
+
 export function useStartApplication() {
   const client = useQueryClient()
   return useMutation({
@@ -186,6 +196,16 @@ export function useUpdateApplicationDetails() {
   return useMutation({
     mutationFn: ({ applicationId, ...body }: { applicationId: number } & Schemas['UpdateApplicationDetails']) =>
       unwrap(api.PATCH('/api/applications/{id}', { params: { path: { id: applicationId } }, body })),
+    onSuccess: () => invalidateTracking(client),
+  })
+}
+
+/** Você mandou um follow-up: conta o envio e o backend agenda o próximo (até o máximo). */
+export function useRegisterFollowUp() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (applicationId: number) =>
+      unwrap(api.POST('/api/applications/{id}/follow-ups', { params: { path: { id: applicationId } } })),
     onSuccess: () => invalidateTracking(client),
   })
 }
@@ -268,13 +288,45 @@ type InboxFilter = {
   eligibleFromBrazil?: boolean
 }
 
-export function useInboxJobs({ q, scope, family, eligibleFromBrazil, page, size }: InboxFilter & { page: number; size: number }) {
+export function useInboxJobs({
+  q,
+  scope,
+  page,
+  size,
+  family,
+  eligibleFromBrazil,
+  allLegitimacy = false,
+  hasConnection = false,
+  salaryFloor = false,
+}: InboxFilter & {
+  page: number
+  size: number
+  /** mostra também as vagas de legitimidade baixa e suspeitas */
+  allLegitimacy?: boolean
+  /** só vagas de empresas onde você tem contato ou conexão do LinkedIn */
+  hasConnection?: boolean
+  /** esconde as vagas que pagam menos que a sua pretensão (equivalente anual) */
+  salaryFloor?: boolean
+}) {
   return useQuery({
-    queryKey: ['jobs', 'inbox', { q, scope, family, eligibleFromBrazil, page, size }],
+    queryKey: ['jobs', 'inbox', { q, scope, page, size, family, eligibleFromBrazil, allLegitimacy, hasConnection, salaryFloor }],
     queryFn: () =>
       unwrap(
         api.GET('/api/jobs', {
-          params: { query: { inbox: true, q: q || undefined, scope, family, eligibleFromBrazil, page, size } },
+          params: {
+            query: {
+              inbox: true,
+              q: q || undefined,
+              scope,
+              page,
+              size,
+              family,
+              eligibleFromBrazil,
+              allLegitimacy: allLegitimacy || undefined,
+              hasConnection: hasConnection || undefined,
+              salaryFloor: salaryFloor || undefined,
+            },
+          },
         }),
       ),
     placeholderData: (previous) => previous,
@@ -293,6 +345,16 @@ export function useInboxCount({ q, scope, family, eligibleFromBrazil }: InboxFil
       ),
     select: (data) => data.total,
     placeholderData: (previous) => previous,
+  })
+}
+
+/** Separa a vaga da publicação canônica: ela volta para a caixa como uma vaga própria. */
+export function useSeparateDuplicate() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (jobId: number) => unwrap(api.DELETE('/api/jobs/{id}/duplicate', { params: { path: { id: jobId } } })),
+    onSuccess: () =>
+      Promise.all([client.invalidateQueries({ queryKey: ['jobs'] }), client.invalidateQueries({ queryKey: ['job'] })]),
   })
 }
 
@@ -371,6 +433,15 @@ export function useUpdateCompany() {
     mutationFn: ({ id, ...body }: { id: number } & Schemas['UpdateCompanyCommand']) =>
       unwrap(api.PATCH('/api/companies/{id}', { params: { path: { id } }, body })),
     onSuccess: () => client.invalidateQueries({ queryKey: ['companies'] }),
+  })
+}
+
+export type CompanyAtsCheck = Schemas['CompanyAtsCheck']
+
+/** Detecta o ATS pelo link da página de carreira e confere o slug, sem gravar. */
+export function useCheckCompanyAts() {
+  return useMutation({
+    mutationFn: (body: Schemas['CompanyAtsCheckRequest']) => unwrap(api.POST('/api/companies/ats-check', { body })),
   })
 }
 
@@ -696,6 +767,27 @@ export function useDeleteSearchProfile() {
   })
 }
 
+// Dados da triagem (eliminatórios, pretensão e meta semanal)
+
+export type CandidateProfile = Schemas['CandidateProfileView']
+export type CandidateProfileCommand = Schemas['CandidateProfileCommand']
+
+export function useCandidateProfile() {
+  return useQuery({ queryKey: ['candidate-profile'], queryFn: () => unwrap(api.GET('/api/candidate-profile')) })
+}
+
+/** Salva e recarrega as vagas: os eliminatórios e o score são recalculados no backend. */
+export function useSaveCandidateProfile() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (body: CandidateProfileCommand) => unwrap(api.PUT('/api/candidate-profile', { body })),
+    onSuccess: (profile) => {
+      client.setQueryData(['candidate-profile'], profile)
+      return Promise.all(['jobs', 'job'].map((key) => client.invalidateQueries({ queryKey: [key] })))
+    },
+  })
+}
+
 // Análise
 
 export type JobAnalysis = Schemas['JobAnalysis']
@@ -706,6 +798,17 @@ export function useReanalyze() {
     mutationFn: (jobId: number) => unwrap(api.POST('/api/jobs/{id}/analysis', { params: { path: { id: jobId } } })),
     onSuccess: () =>
       Promise.all([client.invalidateQueries({ queryKey: ['job'] }), client.invalidateQueries({ queryKey: ['jobs'] })]),
+  })
+}
+
+// Respostas do formulário de candidatura (rascunhos; nada é enviado)
+
+export type ScreeningAnswers = Schemas['ScreeningAnswersView']
+
+export function useScreeningAnswers(jobId: number) {
+  return useMutation({
+    mutationFn: (body: { questions: string[]; coverLetter: boolean }) =>
+      unwrap(api.POST('/api/jobs/{id}/screening-answers', { params: { path: { id: jobId } }, body })),
   })
 }
 
@@ -887,5 +990,185 @@ export function useMarkAllNotificationsRead() {
   return useMutation({
     mutationFn: () => unwrap(api.POST('/api/notifications/read-all')),
     onSuccess: () => client.invalidateQueries({ queryKey: ['notifications'] }),
+  })
+}
+
+// Contatos e conexões
+
+export type ContactView = Schemas['ContactView']
+export type ContactRole = ContactView['role']
+export type ContactInteractionView = Schemas['ContactInteractionView']
+export type InteractionChannel = ContactInteractionView['channel']
+export type InteractionDirection = ContactInteractionView['direction']
+export type InteractionKind = ContactInteractionView['kind']
+export type ApplicationContacts = Schemas['ApplicationContacts']
+
+/** Tudo o que mostra contatos ou conversas é recarregado depois de qualquer mudança neles. */
+function invalidateContacts(client: QueryClient) {
+  return Promise.all(['contacts', 'jobs'].map((key) => client.invalidateQueries({ queryKey: [key] })))
+}
+
+export function useContacts({
+  q,
+  role,
+  companyId,
+  page,
+  size,
+}: {
+  q?: string
+  role?: ContactRole
+  companyId?: number
+  page: number
+  size: number
+}) {
+  return useQuery({
+    queryKey: ['contacts', 'list', { q, role, companyId, page, size }],
+    queryFn: () =>
+      unwrap(api.GET('/api/contacts', { params: { query: { q: q || undefined, role, companyId, page, size } } })),
+    placeholderData: (previous) => previous,
+  })
+}
+
+/** Quem você conhece na empresa da vaga. */
+export function useJobContacts(jobId: number, enabled = true) {
+  return useQuery({
+    queryKey: ['contacts', 'job', jobId],
+    queryFn: () => unwrap(api.GET('/api/jobs/{jobId}/contacts', { params: { path: { jobId } } })),
+    enabled,
+  })
+}
+
+/** Contatos da candidatura e as conversas registradas nela. */
+export function useApplicationContacts(applicationId: number | undefined) {
+  return useQuery({
+    queryKey: ['contacts', 'application', applicationId ?? -1],
+    queryFn: () =>
+      unwrap(api.GET('/api/applications/{id}/contacts', { params: { path: { id: applicationId! } } })),
+    enabled: applicationId !== undefined,
+  })
+}
+
+export function useSaveContact() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id?: number } & Schemas['SaveContact']) =>
+      id === undefined
+        ? unwrap(api.POST('/api/contacts', { body }))
+        : unwrap(api.PUT('/api/contacts/{id}', { params: { path: { id } }, body })),
+    onSuccess: () => invalidateContacts(client),
+  })
+}
+
+export type ConnectionsImport = Schemas['ConnectionsImport']
+
+/** Importa o Connections.csv do export de dados do LinkedIn. */
+export function useImportConnections() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const form = new FormData()
+      form.append('file', file)
+      const response = await send('/api/contacts/import/linkedin', { method: 'POST', body: form })
+      return (await response.json()) as ConnectionsImport
+    },
+    onSuccess: () => invalidateContacts(client),
+  })
+}
+
+/** Apaga o contato e as conversas registradas com ele. */
+export function useDeleteContact() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => unwrap(api.DELETE('/api/contacts/{id}', { params: { path: { id } } })),
+    onSuccess: () => invalidateContacts(client),
+  })
+}
+
+export function useRecordInteraction() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ contactId, ...body }: { contactId: number } & Schemas['RecordInteraction']) =>
+      unwrap(api.POST('/api/contacts/{id}/interactions', { params: { path: { id: contactId } }, body })),
+    onSuccess: () => invalidateContacts(client),
+  })
+}
+
+// Telegram (alertas no celular)
+
+export type TelegramStatus = Schemas['TelegramStatus']
+
+/** Se o bot do Telegram está configurado no backend e quais tipos de notificação vão ao celular. */
+export function useTelegramStatus() {
+  return useQuery({ queryKey: ['telegram'], queryFn: () => unwrap(api.GET('/api/notifications/telegram')) })
+}
+
+export function useSendTelegramTest() {
+  return useMutation({ mutationFn: () => unwrap(api.POST('/api/notifications/telegram/test')) })
+}
+
+export type ApiTokenStatus = Schemas['ApiTokenStatus']
+
+/** Token pessoal da extensão do navegador: só o hash fica no servidor. */
+export function useApiToken() {
+  return useQuery({ queryKey: ['api-token'], queryFn: () => unwrap(api.GET('/api/auth/api-token')) })
+}
+
+export function useGenerateApiToken() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: () => unwrap(api.POST('/api/auth/api-token')),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['api-token'] }),
+  })
+}
+
+export function useRevokeApiToken() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: () => unwrap(api.DELETE('/api/auth/api-token')),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['api-token'] }),
+  })
+}
+
+// Fila do dia e checagem antes de aplicar
+
+export type TodayAgenda = Schemas['TodayAgenda']
+export type ApplyCheck = Schemas['ApplyCheck']
+
+export function useToday() {
+  return useQuery({ queryKey: ['today'], queryFn: () => unwrap(api.GET('/api/today')), refetchInterval: 5 * 60_000 })
+}
+
+/** Avisos antes de aplicar (link no ar, eliminatórios, legitimidade, score e candidaturas na empresa). */
+export function useApplyCheck(jobId: number | undefined) {
+  return useQuery({
+    queryKey: ['apply-check', jobId],
+    queryFn: () => unwrap(api.GET('/api/jobs/{id}/apply-check', { params: { path: { id: jobId as number } } })),
+    enabled: jobId !== undefined,
+    staleTime: 60_000,
+  })
+}
+
+// Rascunhos de mensagem
+
+export type MessageDraft = Schemas['MessageDraft']
+export type DraftKind = MessageDraft['kind']
+
+/** Gera o rascunho (nada é guardado nem enviado). */
+export function useDraftMessage() {
+  return useMutation({
+    mutationFn: ({ jobId, kind, contactId }: { jobId: number; kind: DraftKind; contactId?: number | null }) =>
+      unwrap(
+        api.POST('/api/jobs/{jobId}/drafts', { params: { path: { jobId } }, body: { kind, contactId: contactId ?? null } }),
+      ),
+  })
+}
+
+/** Cria a vaga e a candidatura em Aplicada a partir do e-mail "recebemos sua candidatura". */
+export function useRegisterFromEmail() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: ({ emailId, ...body }: { emailId: number } & Schemas['ApplicationFromEmail']) =>
+      unwrap(api.POST('/api/applications/from-email/{emailId}', { params: { path: { emailId } }, body })),
+    onSuccess: () => Promise.all([client.invalidateQueries({ queryKey: ['emails'] }), invalidateTracking(client)]),
   })
 }

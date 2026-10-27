@@ -1,6 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
-import { useRecordResponse, type ResponseChannel, type ResponseType } from '@/api/queries'
+import {
+  useRecordInteraction,
+  useRecordResponse,
+  type ContactView,
+  type InteractionChannel,
+  type ResponseChannel,
+  type ResponseType,
+} from '@/api/queries'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -14,16 +21,29 @@ import {
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { responseChannelLabels, responseTypeLabels } from '@/lib/labels'
+import { contactRoleLabels, responseChannelLabels, responseTypeLabels } from '@/lib/labels'
 import { MessageSquarePlus } from 'lucide-react'
 
 const types = Object.keys(responseTypeLabels) as ResponseType[]
 const channels = (Object.keys(responseChannelLabels) as ResponseChannel[]).filter((channel) => channel !== 'EMAIL')
 const moving = new Set<ResponseType>(['CONVITE_ENTREVISTA', 'TESTE_TECNICO', 'OFERTA', 'RECUSA'])
+const NO_CONTACT = 'NENHUM'
+const interactionChannel: Record<ResponseChannel, InteractionChannel> = {
+  EMAIL: 'EMAIL',
+  WHATSAPP: 'WHATSAPP',
+  LINKEDIN: 'LINKEDIN',
+  TELEFONE: 'TELEFONE',
+  OUTRO: 'OUTRO',
+}
 
-/** Retorno que não chegou por e-mail (WhatsApp, mensagem no LinkedIn, ligação), para o funil contar todos. */
-export function ResponseDialog({ applicationId }: { applicationId: number }) {
+/**
+ * Retorno que não chegou por e-mail (WhatsApp, mensagem no LinkedIn, ligação), para o funil contar todos. Com um
+ * contato escolhido, a conversa também fica no histórico dele.
+ */
+export function ResponseDialog({ applicationId, contacts = [] }: { applicationId: number; contacts?: ContactView[] }) {
   const record = useRecordResponse()
+  const recordInteraction = useRecordInteraction()
+  const [contactId, setContactId] = useState(NO_CONTACT)
   const [open, setOpen] = useState(false)
   const [type, setType] = useState<ResponseType>('CONVITE_ENTREVISTA')
   const [channel, setChannel] = useState<ResponseChannel>('WHATSAPP')
@@ -36,6 +56,16 @@ export function ResponseDialog({ applicationId }: { applicationId: number }) {
       { applicationId, responseType: type, channel, note: note || null, moveStatus: moving.has(type) && moveStatus },
       {
         onSuccess: () => {
+          if (contactId !== NO_CONTACT) {
+            recordInteraction.mutate({
+              contactId: Number(contactId),
+              applicationId,
+              channel: interactionChannel[channel],
+              direction: 'RECEBIDA',
+              kind: 'CONVERSA',
+              summary: note || responseTypeLabels[type],
+            })
+          }
           toast.success('Retorno registrado.')
           setOpen(false)
           setNote('')
@@ -90,6 +120,24 @@ export function ResponseDialog({ applicationId }: { applicationId: number }) {
               </Select>
             </div>
           </div>
+          {contacts.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="response-contact">Quem falou com você</Label>
+              <Select value={contactId} onValueChange={setContactId}>
+                <SelectTrigger id="response-contact" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_CONTACT}>Não registrar contato</SelectItem>
+                  {contacts.map((contact) => (
+                    <SelectItem key={contact.id} value={String(contact.id)}>
+                      {contact.name} · {contactRoleLabels[contact.role]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="response-note">Nota</Label>
             <Textarea id="response-note" value={note} onChange={(event) => setNote(event.target.value)} />

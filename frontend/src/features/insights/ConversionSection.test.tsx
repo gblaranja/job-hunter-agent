@@ -9,6 +9,7 @@ const funnel: FunnelBreakdown = {
   applied: 8,
   interview: 3,
   offer: 1,
+  accepted: 1,
   bySource: [
     { group: 'GREENHOUSE', applied: 5, interview: 2, offer: 1 },
     { group: 'LINKEDIN_ALERTA', applied: 3, interview: 1, offer: 0 },
@@ -30,6 +31,7 @@ describe('ConversionSection', () => {
 
     expect(await screen.findByText('38%')).toBeInTheDocument() // 3 de 8 candidaturas
     expect(screen.getByText('2,5 dias')).toBeInTheDocument()
+    expect(screen.getByText('1 de 3 entrevistas · 1 aceita')).toBeInTheDocument()
     expect(screen.getByText('55%')).toBeInTheDocument() // 11 das 20 de maior score
 
     expect(within(screen.getByRole('row', { name: /Até 1 dia/ })).getByText('50%')).toBeInTheDocument()

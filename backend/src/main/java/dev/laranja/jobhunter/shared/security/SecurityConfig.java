@@ -1,6 +1,7 @@
 package dev.laranja.jobhunter.shared.security;
 
 import java.io.IOException;
+import java.util.List;
 
 import jakarta.servlet.http.HttpServletResponse;
 import tools.jackson.databind.json.JsonMapper;
@@ -8,10 +9,12 @@ import tools.jackson.databind.json.JsonMapper;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
@@ -19,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
@@ -34,7 +38,33 @@ import org.springframework.security.web.csrf.CsrfFilter;
 		SecretCipher.EncryptionProperties.class })
 class SecurityConfig {
 
+	/** Endpoints que aceitam o token pessoal da extensão: só importar e salvar uma vaga. */
+	static final List<String> API_TOKEN_PATHS = List.of("/api/jobs/import/preview", "/api/jobs");
+
+	/**
+	 * Cadeia da extensão do navegador: só {@code POST} nos endpoints de {@link #API_TOKEN_PATHS} com
+	 * {@code Authorization: Bearer}. Sem sessão e sem CSRF (o token não vai em cookie). Com o Bearer em qualquer
+	 * outro endpoint, a requisição cai na cadeia normal e recebe 401.
+	 */
 	@Bean
+	@Order(1)
+	SecurityFilterChain apiTokenFilterChain(HttpSecurity http, PersonalApiTokens tokens, SecurityProperties properties)
+			throws Exception {
+		http.securityMatcher(request -> "POST".equals(request.getMethod())
+				&& API_TOKEN_PATHS.contains(request.getRequestURI().substring(request.getContextPath().length()))
+				&& PersonalApiTokenFilter.bearer(request) != null)
+			.authorizeHttpRequests(auth -> auth.anyRequest().hasAuthority("API_TOKEN"))
+			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+			.csrf(csrf -> csrf.disable())
+			.exceptionHandling(exceptions -> exceptions
+				.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+			.addFilterBefore(new PersonalApiTokenFilter(tokens, properties.username()),
+					UsernamePasswordAuthenticationFilter.class);
+		return http.build();
+	}
+
+	@Bean
+	@Order(2)
 	SecurityFilterChain securityFilterChain(HttpSecurity http, JsonMapper jsonMapper,
 			SecurityContextRepository securityContextRepository) throws Exception {
 		http.authorizeHttpRequests(auth -> auth
