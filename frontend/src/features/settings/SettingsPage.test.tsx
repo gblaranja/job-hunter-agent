@@ -37,6 +37,10 @@ const emptyHealth: SourceHealth = { sources: [], unrecognizedAlerts: [] }
 function serveSettings(runs: unknown[] = [], health: SourceHealth = emptyHealth) {
   server.use(
     http.get('/api/admin/sources/health', () => HttpResponse.json(health)),
+    http.get('/api/skills/suggestions', () =>
+      HttpResponse.json([{ name: 'Elixir', key: 'elixir', spellings: ['Elixir', 'elixir'], jobCount: 5 }]),
+    ),
+    http.get('/api/skills/reviewed', () => HttpResponse.json([])),
     http.get('/api/auth/api-token', () => HttpResponse.json({ exists: false })),
     http.get('/api/notifications/telegram', () =>
       HttpResponse.json({ configured: true, types: ['VAGA_ALVO', 'FOLLOW_UP'] }),
@@ -173,5 +177,24 @@ describe('token da extensão', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Gerar token' }))
     expect(await screen.findByLabelText('Token gerado')).toHaveValue('jh_abcwxyz')
     expect(await screen.findByText('wxyz')).toBeInTheDocument()
+  })
+
+  it('mostra a fila do dicionário de skills e aceita uma sugestão com as outras grafias', async () => {
+    serveSettings()
+    let accepted: unknown
+    server.use(
+      http.post('/api/skills/reviewed', async ({ request }) => {
+        accepted = await request.json()
+        return HttpResponse.json({ id: 1, canonical: 'Elixir', aliases: ['elixir'], createdAt: '2026-10-27T10:00:00Z' }, { status: 201 })
+      }),
+    )
+    renderSettingsPage()
+
+    expect(await screen.findByText('Elixir')).toBeInTheDocument()
+    expect(screen.getByText('· 5 vagas')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /Aceitar/ }))
+    await vi.waitFor(() => expect(accepted).toEqual({ canonical: 'Elixir', aliases: ['elixir'] }))
+    expect(screen.getByText(/apagar os dados de um/)).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: /CSV/ })[0]).toHaveAttribute('href', '/api/export/VAGAS?format=csv')
   })
 })

@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 import { toast } from 'sonner'
-import { useGenerateInsights, useLatestInsights, useLlmUsage, type InsightReport } from '@/api/queries'
+import { useGenerateInsights, useLatestInsights, useLlmBudget, useLlmUsage, type InsightReport } from '@/api/queries'
 import { BarList } from '@/components/charts/BarList'
 import { StatTile } from '@/components/charts/StatTile'
 import { PageHeader } from '@/components/PageHeader'
@@ -263,14 +263,31 @@ function Report({ report }: { report: InsightReport }) {
 
 function UsageCard() {
   const usage = useLlmUsage()
-  if (!usage.data || usage.data.length === 0) return null
+  const budget = useLlmBudget()
+  const exhausted = budget.data?.filter((row) => row.exhausted) ?? []
+  const limited = budget.data?.filter((row) => row.limitUsd != null) ?? []
+  if (!usage.data || (usage.data.length === 0 && exhausted.length === 0)) return null
   return (
     <Card>
       <CardHeader>
         <CardTitle>Uso da Claude API no mês</CardTitle>
-        <CardDescription>Custo estimado pela tabela de preços; o limite de gasto fica no Console da Anthropic.</CardDescription>
+        <CardDescription>
+          Custo estimado pela tabela de preços. Cada tarefa tem um orçamento mensal (jobhunter.ai.budget); ao atingir, ela
+          para de chamar a API até o mês virar.
+        </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {exhausted.length > 0 && (
+          <p role="alert" className="rounded-md border border-destructive/50 p-3 text-sm text-destructive">
+            Orçamento do mês atingido em {exhausted.map((row) => row.task).join(', ')}: a análise das vagas novas fica só
+            no dicionário e nas regras até o mês virar.
+          </p>
+        )}
+        {limited.length > 0 && (
+          <p className="text-sm text-muted-foreground">
+            {limited.map((row) => `${row.task}: ${usd.format(row.spentUsd)} de ${usd.format(row.limitUsd ?? 0)}`).join(' · ')}
+          </p>
+        )}
         <Table>
           <TableHeader>
             <TableRow>

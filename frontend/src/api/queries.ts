@@ -965,6 +965,59 @@ export function useLlmUsage() {
   return useQuery({ queryKey: ['llm-usage'], queryFn: () => unwrap(api.GET('/api/insights/usage')) })
 }
 
+export type LlmBudgetStatus = Schemas['LlmBudgetStatus']
+
+/** Gasto do mês por tarefa contra o orçamento; a tarefa esgotada fica no determinístico. */
+export function useLlmBudget() {
+  return useQuery({ queryKey: ['llm-budget'], queryFn: () => unwrap(api.GET('/api/insights/budget')) })
+}
+
+// Dicionário de skills
+
+export type SkillSuggestion = Schemas['SkillSuggestion']
+export type ReviewedSkill = Schemas['ReviewedSkill']
+export type EscoSkill = Schemas['EscoSkill']
+
+export function useSkillSuggestions() {
+  return useQuery({ queryKey: ['skills', 'suggestions'], queryFn: () => unwrap(api.GET('/api/skills/suggestions')) })
+}
+
+export function useReviewedSkills() {
+  return useQuery({ queryKey: ['skills', 'reviewed'], queryFn: () => unwrap(api.GET('/api/skills/reviewed')) })
+}
+
+export function useAcceptSkill() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (body: Schemas['SkillAcceptance']) => unwrap(api.POST('/api/skills/reviewed', { body })),
+    // a skill aceita repontua as vagas que a pedem
+    onSuccess: () => Promise.all(['skills', 'jobs', 'job'].map((key) => client.invalidateQueries({ queryKey: [key] }))),
+  })
+}
+
+export function useIgnoreSkill() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (name: string) => unwrap(api.POST('/api/skills/ignored', { body: { name } })),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['skills'] }),
+  })
+}
+
+export function useRemoveSkill() {
+  const client = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => unwrap(api.DELETE('/api/skills/reviewed/{id}', { params: { path: { id } } })),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['skills'] }),
+  })
+}
+
+/** Busca a skill na ESCO (URI e rótulos em português e inglês). */
+export function useEscoSearch() {
+  return useMutation({
+    mutationFn: (text: string) => unwrap(api.GET('/api/skills/esco', { params: { query: { text } } })),
+  })
+}
+
 // Notificações
 
 export type NotificationItem = Schemas['NotificationView']

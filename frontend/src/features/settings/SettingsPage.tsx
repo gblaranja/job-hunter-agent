@@ -41,6 +41,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatDateTime } from '@/lib/format'
 import { jobFamilies, jobFamilyLabels, notificationTypeLabel, sourceLabel } from '@/lib/labels'
 import { useTheme } from '@/lib/useTheme'
+import { DataExportCard } from './DataExportCard'
+import { SkillReviewCard } from './SkillReviewCard'
 import {
   Activity,
   Database,
@@ -87,7 +89,9 @@ export function SettingsPage() {
       <CollectionCard />
       <SourceHealthCard />
       <ProfilesCard />
+      <SkillReviewCard />
       <SeedsCard />
+      <DataExportCard />
     </div>
   )
 }
