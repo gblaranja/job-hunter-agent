@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
+import dev.laranja.jobhunter.analysis.ResumeFit.AtsCoverage;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -20,13 +21,23 @@ import org.jspecify.annotations.Nullable;
  * @param scoreAfter score determinístico do texto adaptado
  * @param edited o texto foi editado à mão depois de gerado
  * @param resumeVersionId versão do currículo salva a partir deste texto (tela Currículos)
+ * @param ats cobertura ponderada das palavras-chave, título no headline, repetições e clichês do texto adaptado
  */
 public record TailoredResumeView(long id, long jobId, @Nullable Long baseResumeId, @Nullable String baseResumeLabel,
 		String status, @Nullable String content, @Nullable String headline, List<ResumeChange> changes,
 		List<String> notCovered, @Nullable String notes, List<String> keywords, List<String> coveredBefore,
 		List<String> coveredAfter, List<String> unsupportedSkills, @Nullable Integer scoreBefore,
 		@Nullable Integer scoreAfter, boolean edited, @Nullable Long resumeVersionId, @Nullable String resumeLabel,
-		@Nullable String modelVersion, @Nullable String lastError, Instant createdAt, Instant updatedAt) {
+		@Nullable String modelVersion, @Nullable String lastError, Instant createdAt, Instant updatedAt,
+		@Nullable AtsCoverage ats) {
+
+	public TailoredResumeView withAts(@Nullable AtsCoverage coverage) {
+		return new TailoredResumeView(this.id, this.jobId, this.baseResumeId, this.baseResumeLabel, this.status,
+				this.content, this.headline, this.changes, this.notCovered, this.notes, this.keywords, this.coveredBefore,
+				this.coveredAfter, this.unsupportedSkills, this.scoreBefore, this.scoreAfter, this.edited,
+				this.resumeVersionId, this.resumeLabel, this.modelVersion, this.lastError, this.createdAt, this.updatedAt,
+				coverage);
+	}
 
 	/** Uma mudança feita na adaptação. É também parte do schema da saída estruturada do LLM. */
 	public record ResumeChange(@JsonPropertyDescription("Seção do currículo (Resumo, Competências, uma experiência...)") String section,

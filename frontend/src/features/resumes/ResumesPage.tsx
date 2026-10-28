@@ -20,7 +20,7 @@ import { Label } from '@/components/ui/label'
 import { formatDate, formatFileSize, formatPercent } from '@/lib/format'
 import { openInNewTab } from '@/lib/open'
 import { cn } from '@/lib/utils'
-import { Archive, ArchiveRestore, Eye, Pencil, Sparkles, Star, Upload } from 'lucide-react'
+import { Archive, ArchiveRestore, Eye, Pencil, Sparkles, Star, TriangleAlert, Upload } from 'lucide-react'
 
 const ACCEPTED = '.pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
@@ -188,6 +188,19 @@ function ResumeRow({ resume }: { resume: ResumeItem }) {
                 Não foi possível ler o texto do arquivo (PDF escaneado?). O score usa o texto do currículo.
               </p>
             )
+          )}
+          {resume.lint.filter((warning) => warning.code !== 'SEM_TEXTO').length > 0 && (
+            <details className="mt-2 text-xs">
+              <summary className="cursor-pointer text-amber-700 dark:text-warning">
+                <TriangleAlert className="mr-1 inline size-3" aria-hidden />
+                O que o ATS lê: {resume.lint.length === 1 ? '1 aviso' : `${resume.lint.length} avisos`}
+              </summary>
+              <ul className="mt-1 list-disc space-y-0.5 pl-5 text-muted-foreground">
+                {resume.lint.map((warning, index) => (
+                  <li key={`${warning.code}-${index}`}>{warning.message}</li>
+                ))}
+              </ul>
+            </details>
           )}
         </div>
         <dl className="flex gap-6 text-center text-sm">

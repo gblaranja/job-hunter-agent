@@ -1,3 +1,4 @@
+import { ConnectionsImportCard } from '@/features/network/ConnectionsImportCard'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
@@ -12,11 +13,16 @@ import {
   useSaveSearchProfile,
   useSearchProfiles,
   useSeedSources,
+  useSendTelegramTest,
+  useSourceHealth,
+  useTelegramStatus,
   useVerifyLinks,
   type CollectionRun,
+  type JobFamily,
   type SearchProfile,
 } from '@/api/queries'
 import { PageHeader } from '@/components/PageHeader'
+import { ApiTokenCard } from './ApiTokenCard'
 import { ErrorBlock, LoadingBlock } from '@/components/QueryState'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -33,8 +39,27 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatDateTime } from '@/lib/format'
+import { jobFamilies, jobFamilyLabels, notificationTypeLabel, sourceLabel } from '@/lib/labels'
 import { useTheme } from '@/lib/useTheme'
-import { Database, Link2, Mail, Monitor, Moon, Pencil, Play, Plus, Sun, Trash2 } from 'lucide-react'
+import { DataExportCard } from './DataExportCard'
+import { SkillReviewCard } from './SkillReviewCard'
+import {
+  Activity,
+  Database,
+  ExternalLink,
+  Link2,
+  Mail,
+  Monitor,
+  Moon,
+  Pencil,
+  Play,
+  Plus,
+  Send,
+  Smartphone,
+  Sun,
+  Trash2,
+} from 'lucide-react'
+import { CandidateProfileCard } from './CandidateProfileCard'
 
 export function SettingsPage() {
   const [params, setParams] = useSearchParams()
@@ -53,13 +78,20 @@ export function SettingsPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <PageHeader
         title="Configurações"
-        description="Conexão com o Gmail, coleta de vagas, perfis de busca e as bases públicas de empresas."
+        description="Seus dados para a triagem, conexão com o Gmail, coleta de vagas, perfis de busca e as bases públicas de empresas."
       />
       <AppearanceCard />
+      <CandidateProfileCard />
       <GmailCard />
+      <TelegramCard />
+      <ConnectionsImportCard />
+      <ApiTokenCard />
       <CollectionCard />
+      <SourceHealthCard />
       <ProfilesCard />
+      <SkillReviewCard />
       <SeedsCard />
+      <DataExportCard />
     </div>
   )
 }
@@ -232,6 +264,141 @@ function CollectionCard() {
   )
 }
 
+/** Alertas no celular: o token fica só no backend; aqui aparece se está configurado e o botão de teste. */
+function TelegramCard() {
+  const status = useTelegramStatus()
+  const test = useSendTelegramTest()
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Smartphone className="size-4" aria-hidden /> Telegram
+        </CardTitle>
+        <CardDescription>
+          As notificações que pedem ação também chegam ao celular por um bot do Telegram. O passo a passo para criar o
+          bot está no README, em “Alertas no Telegram”.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {status.isLoading && <LoadingBlock lines={1} />}
+        {status.error && <ErrorBlock error={status.error} />}
+        {status.data && (
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="space-y-1 text-sm">
+              <div className="flex items-center gap-2">
+                {status.data.configured ? <Badge>Configurado</Badge> : <Badge variant="outline">Desligado</Badge>}
+              </div>
+              {status.data.configured ? (
+                <p className="text-muted-foreground">
+                  Vão ao celular: {status.data.types.map(notificationTypeLabel).join(', ') || 'nenhum tipo'}.
+                </p>
+              ) : (
+                <p className="text-muted-foreground">
+                  Defina JOBHUNTER_TELEGRAM_BOT_TOKEN e JOBHUNTER_TELEGRAM_CHAT_ID no backend para receber os alertas.
+                </p>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              disabled={!status.data.configured || test.isPending}
+              onClick={() =>
+                test.mutate(undefined, {
+                  onSuccess: () => toast.success('Mensagem de teste enviada. Confira o Telegram.'),
+                  onError: (error) => toast.error(error.message),
+                })
+              }
+            >
+              <Send aria-hidden /> Enviar teste
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+/** Coletas seguidas com erro que viram aviso (o mesmo limite do backend). */
+const FAILING_RUNS = 3
+
+/** Quando cada fonte trouxe vaga nova pela última vez, os erros recentes e os alertas que não viraram vaga. */
+function SourceHealthCard() {
+  const health = useSourceHealth()
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <Activity className="size-4" aria-hidden /> Saúde das fontes
+        </CardTitle>
+        <CardDescription>
+          Últimos 30 dias de coleta. Um alerta de vaga que não virou vaga em geral quer dizer que o e-mail mudou de formato;
+          você recebe um aviso por dia quando isso acontece.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {health.isLoading && <LoadingBlock lines={2} />}
+        {health.error && <ErrorBlock error={health.error} />}
+        {health.data && health.data.sources.length === 0 && (
+          <p className="text-sm text-muted-foreground">Nenhuma fonte em uso ainda: conecte o Gmail ou cadastre o ATS de uma empresa.</p>
+        )}
+        {health.data && health.data.sources.length > 0 && (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Fonte</TableHead>
+                <TableHead>Última vaga nova</TableHead>
+                <TableHead className="text-right">Novas em 7 dias</TableHead>
+                <TableHead className="text-right">Erros em 7 dias</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {health.data.sources.map((source) => (
+                <TableRow key={source.source}>
+                  <TableCell>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {sourceLabel(source.source)}
+                      {!source.available && <Badge variant="outline">fora de uso</Badge>}
+                      {source.failingRunsInRow >= FAILING_RUNS && (
+                        <Badge variant="destructive">falhou nas últimas {source.failingRunsInRow} coletas</Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>{source.lastNewJobAt ? formatDateTime(source.lastNewJobAt) : 'nenhuma em 30 dias'}</TableCell>
+                  <TableCell className="text-right">{source.newJobsLast7Days}</TableCell>
+                  <TableCell className="text-right">{source.errorsLast7Days}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+        {health.data && health.data.unrecognizedAlerts.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium">Alertas que não viraram vaga (14 dias)</h3>
+            <ul className="space-y-1 text-sm">
+              {health.data.unrecognizedAlerts.map((alert) => (
+                <li key={alert.emailId} className="flex flex-wrap items-center gap-x-2">
+                  <span className="text-muted-foreground">{formatDateTime(alert.receivedAt)}</span>
+                  <span>{alert.sender}</span>
+                  <span className="text-muted-foreground">{alert.subject ?? '(sem assunto)'}</span>
+                  <a
+                    className="inline-flex items-center gap-1 text-primary underline-offset-4 hover:underline"
+                    href={`https://mail.google.com/mail/u/0/#all/${alert.gmailId}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    abrir no Gmail <ExternalLink className="size-3" aria-hidden />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 function totalsOf(run: CollectionRun) {
   return Object.values(run.stats).reduce(
     (sum, source) => ({
@@ -279,6 +446,9 @@ function ProfilesCard() {
               <p className="text-muted-foreground">Palavras-chave: {profile.keywords.join(', ') || '—'}</p>
               <p className="text-muted-foreground">Exclusões: {profile.excludedKeywords.join(', ') || '—'}</p>
               <p className="text-muted-foreground">Localidades: {profile.locations.join(', ') || '—'}</p>
+              <p className="text-muted-foreground">
+                Famílias de cargo: {(profile.jobFamilies ?? []).map((family) => jobFamilyLabels[family]).join(', ') || 'todas'}
+              </p>
             </div>
             <div className="flex gap-1">
               <Button variant="ghost" size="icon-sm" aria-label={`Editar ${profile.name}`} onClick={() => setEditing(profile)}>
@@ -315,6 +485,11 @@ function ProfileDialog({ profile, onClose }: { profile?: SearchProfile; onClose:
   const [locations, setLocations] = useState(profile?.locations.join(', ') ?? '')
   const [remoteOnly, setRemoteOnly] = useState(profile?.remoteOnly ?? false)
   const [active, setActive] = useState(profile?.active ?? true)
+  const [families, setFamilies] = useState<JobFamily[]>(profile?.jobFamilies ?? [])
+
+  function toggleFamily(family: JobFamily, checked: boolean) {
+    setFamilies((current) => (checked ? [...current, family] : current.filter((item) => item !== family)))
+  }
 
   function submit(event: FormEvent) {
     event.preventDefault()
@@ -327,6 +502,7 @@ function ProfileDialog({ profile, onClose }: { profile?: SearchProfile; onClose:
         locations: split(locations),
         remoteOnly,
         active,
+        jobFamilies: families,
       },
       {
         onSuccess: () => {
@@ -361,6 +537,25 @@ function ProfileDialog({ profile, onClose }: { profile?: SearchProfile; onClose:
             <Label htmlFor="profile-locations">Localidades</Label>
             <Input id="profile-locations" value={locations} onChange={(e) => setLocations(e.target.value)} />
           </div>
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium">Famílias de cargo</legend>
+            <p className="text-xs text-muted-foreground">
+              Vagas de outra família saem da caixa como “sem perfil técnico” (dá para desfazer). Nenhuma marcada aceita
+              todas.
+            </p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-3">
+              {jobFamilies.map((family) => (
+                <label key={family} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={families.includes(family)}
+                    onChange={(e) => toggleFamily(family, e.target.checked)}
+                  />
+                  {jobFamilyLabels[family]}
+                </label>
+              ))}
+            </div>
+          </fieldset>
           <div className="flex gap-6 text-sm">
             <label className="flex items-center gap-2">
               <input type="checkbox" checked={remoteOnly} onChange={(e) => setRemoteOnly(e.target.checked)} /> Só remoto

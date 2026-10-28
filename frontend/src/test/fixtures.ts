@@ -16,6 +16,7 @@ export function resume(overrides: Partial<ResumeItem> = {}): ResumeItem {
     interviewRate: 1 / 3,
     skills: ['Java', 'Spring Boot'],
     hasText: true,
+    lint: [],
     ...overrides,
   }
 }
@@ -78,6 +79,7 @@ export function board(): Board {
             resumeVersionId: null,
             resumeLabel: null,
             nextActionAt: null,
+            nextActionKind: null,
             linkStatus: null,
           },
         ],
@@ -95,6 +97,7 @@ export function board(): Board {
             resumeVersionId: 1,
             resumeLabel: 'Backend Java',
             nextActionAt: '2026-01-01T12:00:00Z',
+            nextActionKind: 'FOLLOW_UP',
             linkStatus: 'REMOVIDO',
           },
         ],
@@ -116,6 +119,10 @@ export function inboxJob(overrides: Partial<JobListItem> = {}): JobListItem {
     url: 'https://www.linkedin.com/jobs/view/4012345678/',
     origin: 'LINKEDIN_ALERTA',
     collectedAt: '2026-10-23T10:00:00Z',
+    firstSeenAt: '2026-10-23T10:00:00Z',
+    legitimacy: 'ALTA',
+    legitimacyReasons: [],
+    connections: 0,
     preview: 'Buscamos pessoa desenvolvedora backend com Java e Kafka.',
     applicationId: null,
     status: 'NOVA',
@@ -125,6 +132,9 @@ export function inboxJob(overrides: Partial<JobListItem> = {}): JobListItem {
     summary: 'Evoluir o motor de crédito em Java com eventos em Kafka.',
     matchedSkills: ['Java', 'Kafka'],
     gaps: ['AWS'],
+    jobFamily: 'BACKEND',
+    contractor: false,
+    failedKnockouts: 0,
     ...overrides,
   }
 }
@@ -157,7 +167,7 @@ export function tailoredResume(overrides: Partial<TailoredResume> = {}): Tailore
     edited: false,
     resumeVersionId: null,
     resumeLabel: null,
-    modelVersion: 'claude-opus-5-5|tailor-resume@v1',
+    modelVersion: 'claude-opus-5-5|tailor-resume@v2',
     lastError: null,
     createdAt: '2026-10-23T12:00:00Z',
     updatedAt: '2026-10-23T12:02:00Z',

@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
-import { useInboxCount, useInboxJobs, useStartApplication, type JobListItem, type JobScope } from '@/api/queries'
+import {
+  useInboxCount,
+  useInboxJobs,
+  useStartApplication,
+  type JobListItem,
+  type JobScope,
+} from '@/api/queries'
 import { CompanyBadge } from '@/components/CompanyBadge'
+import { LegitimacyBadge } from '@/components/LegitimacyBadge'
 import { FeedbackButtons } from '@/components/FeedbackButtons'
 import { PageHeader } from '@/components/PageHeader'
 import { Pagination } from '@/components/Pagination'
@@ -13,12 +20,22 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
-import { formatDate } from '@/lib/format'
+import { formatAge, formatBrl, formatDate } from '@/lib/format'
 import { isPageSize } from '@/lib/pagination'
-import { closedJobNote, originLabels, sameAsWorkModel, workModelLabels } from '@/lib/labels'
-import { Ban, ExternalLink, Search } from 'lucide-react'
+import {
+  closedJobNote,
+  eligibilityLabels,
+  jobFamilies,
+  jobFamilyLabels,
+  originLabels,
+  sameAsWorkModel,
+  workModelLabels,
+} from '@/lib/labels'
+import { Ban, ExternalLink, Search, Users } from 'lucide-react'
 import { InterestMenu } from './InterestMenu'
 
 const PAGE_SIZE_KEY = 'job-hunter-inbox-page-size'
@@ -26,6 +43,9 @@ const DEFAULT_PAGE_SIZE = 20
 
 // Seção da caixa na URL (?secao=internacionais); sem ela, as nacionais, que são a prioridade.
 const INTERNATIONAL_SECTION = 'internacionais'
+// Família de cargo na URL (?familia=BACKEND) e, nas internacionais, ?elegibilidade=todas mostra também as restritas.
+const ALL_FAMILIES = 'TODAS'
+const ALL_ELIGIBILITY = 'todas'
 
 // O tamanho da página vem da URL; sem ele, da última escolha feita neste navegador.
 function readPageSize(params: URLSearchParams) {
@@ -50,8 +70,29 @@ export function InboxPage() {
   const size = readPageSize(params)
   const scope: JobScope = params.get('secao') === INTERNATIONAL_SECTION ? 'INTERNACIONAL' : 'NACIONAL'
   const otherScope: JobScope = scope === 'NACIONAL' ? 'INTERNACIONAL' : 'NACIONAL'
-  const jobs = useInboxJobs({ q: query, scope, page, size })
-  const otherTotal = useInboxCount({ q: query, scope: otherScope }).data
+  // "Mostrar todas": inclui as vagas de legitimidade baixa e as suspeitas de golpe, que a caixa esconde.
+  const allLegitimacy = params.get('todas') === '1'
+  // "Tenho conexão": só empresas onde você conhece alguém (contato ou conexão do LinkedIn).
+  const hasConnection = params.get('conexao') === '1'
+  // "No meu piso": esconde as vagas que informam salário abaixo da sua pretensão (equivalente anual CLT × PJ).
+  const salaryFloor = params.get('piso') === '1'
+    const familyParam = params.get('familia')
+  const family = jobFamilies.find((option) => option === familyParam)
+  const eligibleOnly = params.get('elegibilidade') !== ALL_ELIGIBILITY
+  // Por padrão, a aba Internacionais mostra só as vagas em que dá para se candidatar morando no Brasil.
+  const eligibleFor = (option: JobScope) => option === 'INTERNACIONAL' && eligibleOnly
+  const jobs = useInboxJobs({
+    q: query,
+    scope,
+    family,
+    eligibleFromBrazil: eligibleFor(scope),
+    page,
+    size,
+    allLegitimacy,
+    hasConnection,
+    salaryFloor,
+  })
+  const otherTotal = useInboxCount({ q: query, scope: otherScope, family, eligibleFromBrazil: eligibleFor(otherScope) }).data
   const totals: Partial<Record<JobScope, number>> = { [scope]: jobs.data?.total, [otherScope]: otherTotal }
   const top = useRef<HTMLDivElement>(null)
 
@@ -77,6 +118,32 @@ export function InboxPage() {
         const updated = new URLSearchParams(current)
         if (next === 'INTERNACIONAL') updated.set('secao', INTERNATIONAL_SECTION)
         else updated.delete('secao')
+        updated.delete('page')
+        return updated
+      },
+      { replace: true },
+    )
+  }
+
+  function changeFilter(key: string, value: string | null) {
+    setParams(
+      (current) => {
+        const updated = new URLSearchParams(current)
+        if (value) updated.set(key, value)
+        else updated.delete(key)
+        updated.delete('page')
+        return updated
+      },
+      { replace: true },
+    )
+  }
+
+  function toggleAll(checked: boolean, param = 'todas') {
+    setParams(
+      (current) => {
+        const updated = new URLSearchParams(current)
+        if (checked) updated.set(param, '1')
+        else updated.delete(param)
         updated.delete('page')
         return updated
       },
@@ -133,18 +200,85 @@ export function InboxPage() {
           ))}
         </TabsList>
       </Tabs>
-      <div ref={top} className="relative mb-4 max-w-xl scroll-mt-4">
-        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-        <Input
-          className="pl-9"
-          placeholder="Filtrar por cargo ou empresa"
-          aria-label="Filtrar vagas"
-          value={search}
-          onChange={(event) => {
-            setSearch(event.target.value)
-            if (page > 0) changePage({ page: 0 }, true)
-          }}
-        />
+      <div ref={top} className="mb-4 flex scroll-mt-4 flex-wrap items-center gap-3">
+        <div className="relative min-w-0 max-w-xl flex-1 basis-64">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+          <Input
+            className="pl-9"
+            placeholder="Filtrar por cargo ou empresa"
+            aria-label="Filtrar vagas"
+            value={search}
+            onChange={(event) => {
+              setSearch(event.target.value)
+              if (page > 0) changePage({ page: 0 }, true)
+            }}
+          />
+        </div>
+        <Select
+          value={family ?? ALL_FAMILIES}
+          onValueChange={(value) => changeFilter('familia', value === ALL_FAMILIES ? null : value)}
+        >
+          <SelectTrigger className="w-44" aria-label="Filtrar por família de cargo">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={ALL_FAMILIES}>Todas as famílias</SelectItem>
+            {jobFamilies.map((option) => (
+              <SelectItem key={option} value={option}>
+                {jobFamilyLabels[option]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {scope === 'INTERNACIONAL' && (
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={eligibleOnly}
+              onChange={(event) => changeFilter('elegibilidade', event.target.checked ? null : ALL_ELIGIBILITY)}
+            />
+            Só as elegíveis do Brasil
+          </label>
+        )}
+        <div className="flex items-center gap-2" title="A caixa esconde as possíveis vagas fantasma e as suspeitas de golpe.">
+          <input
+            id="all-legitimacy"
+            type="checkbox"
+            className="size-4 accent-primary"
+            checked={allLegitimacy}
+            onChange={(event) => toggleAll(event.target.checked)}
+          />
+          <Label htmlFor="all-legitimacy" className="text-sm font-normal">
+            Mostrar também as suspeitas
+          </Label>
+        </div>
+        <div className="flex items-center gap-2" title="Empresas onde você tem um contato ou conexão do LinkedIn.">
+          <input
+            id="has-connection"
+            type="checkbox"
+            className="size-4 accent-primary"
+            checked={hasConnection}
+            onChange={(event) => toggleAll(event.target.checked, 'conexao')}
+          />
+          <Label htmlFor="has-connection" className="text-sm font-normal">
+            Tenho conexão
+          </Label>
+        </div>
+        <div
+          className="flex items-center gap-2"
+          title="Esconde as vagas que informam salário abaixo da sua pretensão (Configurações), no equivalente anual."
+        >
+          <input
+            id="salary-floor"
+            type="checkbox"
+            className="size-4 accent-primary"
+            checked={salaryFloor}
+            onChange={(event) => toggleAll(event.target.checked, 'piso')}
+          />
+          <Label htmlFor="salary-floor" className="text-sm font-normal">
+            No meu piso salarial
+          </Label>
+        </div>
       </div>
       {jobs.isLoading && <LoadingBlock />}
       {jobs.error && <ErrorBlock error={jobs.error} />}
@@ -158,7 +292,10 @@ export function InboxPage() {
                 : 'Nenhuma vaga internacional por aqui.'
           }
         >
-          {!query && scope === 'INTERNACIONAL' && 'Vagas no exterior ou anunciadas em inglês aparecem nesta seção.'}
+          {!query && scope === 'INTERNACIONAL' &&
+            (eligibleOnly
+              ? 'Vagas no exterior ou anunciadas em inglês aparecem nesta seção; as restritas a outro país ficam escondidas.'
+              : 'Vagas no exterior ou anunciadas em inglês aparecem nesta seção.')}
           {!query && scope === 'NACIONAL' && (
             <>
               Conecte o Gmail e rode a coleta em <Link to="/settings" className="text-primary underline">Configurações</Link>.
@@ -209,13 +346,45 @@ function InboxCard({ job }: { job: JobListItem }) {
             <p className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
               {job.company}
               <CompanyBadge level={job.gptwLevel} />
+              <LegitimacyBadge level={job.legitimacy} reasons={job.legitimacyReasons} />
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+            {job.failedKnockouts > 0 && (
+              <Badge variant="destructive" title="Requisitos eliminatórios que você não atende">
+                {job.failedKnockouts === 1 ? '1 eliminatório' : `${job.failedKnockouts} eliminatórios`}
+              </Badge>
+            )}
+            {job.salaryEquivalent != null && (
+              <Badge
+                variant={job.belowSalaryFloor ? 'destructive' : 'secondary'}
+                title="Equivalente anual: CLT com 13,33 salários, FGTS e benefícios; PJ líquido de impostos e custos"
+              >
+                ≈ {formatBrl(job.salaryEquivalent)}/ano{job.belowSalaryFloor ? ' · abaixo do piso' : ''}
+              </Badge>
+            )}
+            {job.origin === 'RECRUTADOR' && (
+              <Badge title="Um recrutador ou agência te procurou com esta oportunidade; o contato está em Contatos">
+                abordagem
+              </Badge>
+            )}
+            {job.connections > 0 && (
+              <Badge variant="secondary" title="Contatos e conexões do LinkedIn na empresa">
+                <Users aria-hidden /> {job.connections === 1 ? '1 conexão' : `${job.connections} conexões`}
+              </Badge>
+            )}
             <Badge variant="outline">{originLabels[job.origin]}</Badge>
             {job.location && !sameAsWorkModel(job.location, job.workModel) && <Badge variant="secondary" className="max-w-full whitespace-normal">{job.location}</Badge>}
             {job.workModel !== 'NAO_INFORMADO' && <Badge variant="secondary">{workModelLabels[job.workModel]}</Badge>}
-            <span>{formatDate(job.collectedAt)}</span>
+            {job.jobFamily && <Badge variant="outline">{jobFamilyLabels[job.jobFamily]}</Badge>}
+            {job.scope === 'INTERNACIONAL' && job.internationalEligibility && (
+              <Badge variant={job.internationalEligibility === 'PAIS_ESPECIFICO' ? 'destructive' : 'outline'}>
+                {eligibilityLabels[job.internationalEligibility]}
+              </Badge>
+            )}
+            {job.scope === 'INTERNACIONAL' && job.requiredTimezone && <Badge variant="outline">Fuso {job.requiredTimezone}</Badge>}
+            {job.scope === 'INTERNACIONAL' && job.contractor && <Badge variant="outline">Contractor</Badge>}
+            <span title={`Vista pela primeira vez em ${formatDate(job.firstSeenAt)}`}>{formatAge(job.firstSeenAt)}</span>
           </div>
         </div>
         {(job.summary ?? job.preview) && (

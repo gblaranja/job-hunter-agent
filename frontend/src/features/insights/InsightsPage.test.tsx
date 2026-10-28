@@ -42,12 +42,26 @@ const report: InsightReport = {
   createdAt: '2026-10-23T12:00:00Z',
 }
 
+const emptyFunnel = {
+  applied: 0,
+  interview: 0,
+  offer: 0,
+  bySource: [],
+  byChannel: [],
+  byTimeToApply: [],
+  byTailoring: [],
+  medianDaysToFirstResponse: null,
+  rankingQuality: { evaluated: 0, positives: 0, topCount: 0, topPositives: 0, avgScorePositive: null, avgScoreNegative: null },
+}
+
 describe('InsightsPage', () => {
   it('sem relatório, gera um na hora e mostra o diagnóstico, as lacunas e os bullets', async () => {
     let generated = false
     server.use(
       http.get('/api/insights/latest', () => new HttpResponse(null, { status: 204 })),
       http.get('/api/insights/usage', () => HttpResponse.json([])),
+      http.get('/api/insights/budget', () => HttpResponse.json([])),
+      http.get('/api/insights/funnel', () => HttpResponse.json(emptyFunnel)),
       http.post('/api/insights/generate', () => {
         generated = true
         return HttpResponse.json(report)
@@ -64,5 +78,22 @@ describe('InsightsPage', () => {
     expect(screen.getByText('Construí APIs que processam [X] pagamentos.')).toBeInTheDocument()
     expect(screen.getByText('Exclua vagas "júnior"')).toBeInTheDocument()
     expect(screen.getByText('80%')).toBeInTheDocument()
+  })
+
+  it('avisa quando o orçamento mensal de uma tarefa acabou', async () => {
+    server.use(
+      http.get('/api/insights/latest', () => HttpResponse.json(report)),
+      http.get('/api/insights/usage', () => HttpResponse.json([])),
+      http.get('/api/insights/budget', () =>
+        HttpResponse.json([
+          { task: 'extract-requirements', spentUsd: 3.2, limitUsd: 3, exhausted: true },
+          { task: 'match-score', spentUsd: 0.5, limitUsd: 3, exhausted: false },
+        ]),
+      ),
+      http.get('/api/insights/funnel', () => HttpResponse.json(emptyFunnel)),
+    )
+    renderWithProviders(<InsightsPage />)
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Orçamento do mês atingido em extract-requirements')
   })
 })

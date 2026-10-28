@@ -1,24 +1,32 @@
 package dev.laranja.jobhunter.jobs.web;
 
+import java.math.BigDecimal;
 import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.Clock;
 import java.util.Arrays;
 import java.util.List;
 
 import dev.laranja.jobhunter.jobs.DismissReason;
 import dev.laranja.jobhunter.jobs.FeedbackRating;
 import dev.laranja.jobhunter.jobs.FeedbackReason;
+import dev.laranja.jobhunter.jobs.InternationalEligibility;
+import dev.laranja.jobhunter.jobs.JobFamily;
 import dev.laranja.jobhunter.jobs.JobOrigin;
 import dev.laranja.jobhunter.jobs.JobScope;
 import dev.laranja.jobhunter.jobs.JobView;
+import dev.laranja.jobhunter.jobs.Legitimacy;
 import dev.laranja.jobhunter.jobs.WorkModel;
 import dev.laranja.jobhunter.shared.jdbc.JdbcRows;
+import dev.laranja.jobhunter.shared.money.SalaryEquivalent;
 import dev.laranja.jobhunter.shared.web.PageResponse;
 
 import tools.jackson.databind.json.JsonMapper;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +35,7 @@ import org.springframework.stereotype.Component;
  * currículo) direto no SQL, para que {@code jobs} não dependa deles em Java.
  */
 @Component
+@EnableConfigurationProperties(InboxProperties.class)
 class JobQueries {
 
 	private static final String LIST_FROM = """
@@ -41,30 +50,77 @@ class JobQueries {
 			  and (cast(:rating as text) is null or f.rating = :rating)
 			  and (cast(:pattern as text) is null or j.title ilike :pattern or j.company ilike :pattern)
 			  and (cast(:scope as text) is null or coalesce(j.scope, 'NACIONAL') = :scope)
+			  and (cast(:family as text) is null or coalesce(an.job_family, j.job_family) = :family)
+			  -- elegíveis a partir do Brasil: tudo menos a vaga restrita a outro país (não informado conta como elegível)
+			  and (not :eligibleFromBrazil or coalesce(nullif(an.international_eligibility, 'NAO_INFORMADO'), j.international_eligibility,
+			                                     'NAO_INFORMADO') <> 'PAIS_ESPECIFICO')
 			  -- caixa de vagas: sem candidatura, sem "não gostei" e não descartada
 			  and (not :inbox or (a.id is null and coalesce(f.rating, '') <> 'NAO_GOSTEI' and d.job_id is null))
+			  -- a mesma vaga de outra fonte aparece uma vez só (a canônica), a não ser que a cópia tenha candidatura
+			  and (j.duplicate_of_job_id is null or a.id is not null)
+			  -- a caixa esconde as vagas de legitimidade BAIXA e SUSPEITA, a não ser com "mostrar todas"
+			  and (not :inbox or :allLegitimacy or coalesce(j.legitimacy, 'ALTA') in ('ALTA', 'MEDIA'))
+			  -- "tenho conexão": alguém da sua rede (módulo network) na empresa da vaga
+			  and (not :hasConnection or exists (select 1 from contact ct where ct.company_id = j.company_id))
+			  -- piso salarial: esconde só a vaga que informa salário (com câmbio) abaixo da sua pretensão no regime dela
+			  and (not :salaryFloor or an.salary is null or not coalesce(""" + SalaryFloor.ANNUAL_SQL + """
+			       < case when coalesce(an.salary->>'regime',
+			                            case when upper(coalesce(an.salary->>'currency', 'BRL')) = 'BRL' then 'CLT' end) = 'CLT'
+			              then cast(:floorClt as numeric) else cast(:floorPj as numeric) end, false))
 			""";
+
+	/**
+	 * Pontuação da caixa: aderência, bônus GPTW e bônus de frescor (cai a zero na janela), menos a penalidade de
+	 * legitimidade MEDIA.
+	 */
+	private static final String RANKING_SCORE = " (an.match_score + coalesce(g.bonus, 0)"
+			+ " + round(:freshnessBonus * greatest(0, 1 - extract(epoch from (cast(:now as timestamptz) - j.first_seen_at))"
+			+ " / :freshnessWindow))"
+			+ " - case when j.legitimacy = 'MEDIA' then :mediumPenalty else 0 end) ";
 
 	private final JdbcClient jdbc;
 
 	private final JsonMapper json;
 
-	JobQueries(JdbcClient jdbc, JsonMapper json) {
+	private final InboxProperties inbox;
+
+	private final Clock clock;
+
+	private final SalaryFloor salaries;
+
+	JobQueries(JdbcClient jdbc, JsonMapper json, InboxProperties inbox, Clock clock, SalaryFloor salaries) {
 		this.jdbc = jdbc;
 		this.json = json;
+		this.inbox = inbox;
+		this.clock = clock;
+		this.salaries = salaries;
 	}
 
 	PageResponse<JobListItem> list(JobListFilter filter, int page, int size) {
 		String pattern = JdbcRows.containsPattern(filter.query());
+		SalaryFloor.Floors floors = this.salaries.floors();
+		boolean salaryFloor = filter.salaryFloor() && floors.any();
+		// O câmbio só é consultado com o filtro ligado; na exibição, só para as vagas em moeda estrangeira.
+		SalaryFloor.SqlParams money = salaryFloor ? this.salaries.sqlParams() : null;
 		List<JobListItem> items = this.jdbc.sql("""
 				select j.id, j.title, j.company, j.company_id, j.location, j.work_model,
-				       coalesce(j.scope, 'NACIONAL') as scope, j.url, j.source, j.collected_at,
+				       coalesce(j.scope, 'NACIONAL') as scope, j.url, j.source, j.collected_at, j.first_seen_at,
 				       j.raw_description, a.id as application_id, coalesce(a.status, 'NOVA') as status,
 				       f.rating, f.reasons, an.match_score, an.summary, an.matched_skills::text as matched,
-				       an.gaps::text as gaps, g.level as gptw_level, an.match_score + coalesce(g.bonus, 0) as score_with_bonus
+				       an.gaps::text as gaps, g.level as gptw_level, j.legitimacy, j.legitimacy_reasons::text as legitimacy_reasons,
+				       (select count(*) from jsonb_array_elements(an.knockouts) k
+				        where k->>'status' = 'NAO_ATENDE') as failed_knockouts,
+				       (select count(*) from contact ct where ct.company_id = j.company_id) as connections,
+				       an.salary::text as salary,
+				       """ + RANKING_SCORE + """
+				 as score_with_bonus,
+				       coalesce(an.job_family, j.job_family) as job_family,
+				       coalesce(nullif(an.international_eligibility, 'NAO_INFORMADO'), j.international_eligibility)
+				           as international_eligibility, j.required_timezone, j.contractor
 				""" + LIST_FROM + """
-				-- a caixa de vagas é ordenada por aderência com o bônus GPTW; as demais listas, pela data da coleta
-				order by case when :inbox then an.match_score + coalesce(g.bonus, 0) end desc nulls last,
+				-- a caixa de vagas é ordenada pela pontuação com os bônus; as demais listas, pela data da coleta
+				order by case when :inbox then """ + RANKING_SCORE + """
+				 end desc nulls last,
 				         j.collected_at desc, j.id desc
 				limit :size offset :offset
 				""")
@@ -72,7 +128,23 @@ class JobQueries {
 			.param("rating", (filter.rating() != null) ? filter.rating().name() : null, Types.VARCHAR)
 			.param("pattern", pattern, Types.VARCHAR)
 			.param("scope", (filter.scope() != null) ? filter.scope().name() : null, Types.VARCHAR)
+			.param("family", (filter.family() != null) ? filter.family().name() : null, Types.VARCHAR)
+			.param("eligibleFromBrazil", filter.eligibleFromBrazil())
 			.param("inbox", filter.inbox())
+			.param("allLegitimacy", filter.allLegitimacy())
+			.param("hasConnection", filter.hasConnection())
+			.param("salaryFloor", salaryFloor)
+			.param("floorClt", floors.clt(), Types.NUMERIC)
+			.param("floorPj", floors.pj(), Types.NUMERIC)
+			.param("usd", (money != null) ? money.usd() : null, Types.NUMERIC)
+			.param("eur", (money != null) ? money.eur() : null, Types.NUMERIC)
+			.param("cltBenefits", (money != null) ? money.cltBenefits() : BigDecimal.ZERO)
+			.param("pjTax", (money != null) ? money.pjTax() : BigDecimal.ZERO)
+			.param("pjCosts", (money != null) ? money.pjCosts() : BigDecimal.ZERO)
+			.param("freshnessBonus", this.inbox.freshnessBonus())
+			.param("freshnessWindow", (double) Math.max(1, this.inbox.freshnessWindow().toSeconds()))
+			.param("mediumPenalty", this.inbox.mediumLegitimacyPenalty())
+			.param("now", Timestamp.from(this.clock.instant()))
 			.param("size", size)
 			.param("offset", page * size)
 			.query((rs, row) -> new JobListItem(rs.getLong("id"), rs.getString("title"), rs.getString("company"),
@@ -83,14 +155,33 @@ class JobQueries {
 					preview(rs.getString("raw_description")), JdbcRows.nullableLong(rs, "application_id"),
 					rs.getString("status"), JdbcRows.nullableEnum(rs, "rating", FeedbackRating.class),
 					reasons(rs), integer(rs, "match_score"), rs.getString("summary"), list(rs.getString("matched")),
-					list(rs.getString("gaps")), rs.getString("gptw_level"), integer(rs, "score_with_bonus")))
+					list(rs.getString("gaps")), rs.getString("gptw_level"), integer(rs, "score_with_bonus"),
+					rs.getInt("failed_knockouts"), JdbcRows.instant(rs, "first_seen_at"),
+					JdbcRows.nullableEnum(rs, "legitimacy", Legitimacy.class), list(rs.getString("legitimacy_reasons")),
+					rs.getInt("connections"), salaryEquivalent(rs.getString("salary")),
+					belowFloor(rs.getString("salary"), floors),
+					JdbcRows.nullableEnum(rs, "job_family", JobFamily.class),
+					JdbcRows.nullableEnum(rs, "international_eligibility", InternationalEligibility.class),
+					rs.getString("required_timezone"), rs.getBoolean("contractor")))
 			.list();
 		long total = this.jdbc.sql("select count(*) " + LIST_FROM)
 			.param("status", filter.status(), Types.VARCHAR)
 			.param("rating", (filter.rating() != null) ? filter.rating().name() : null, Types.VARCHAR)
 			.param("pattern", pattern, Types.VARCHAR)
 			.param("scope", (filter.scope() != null) ? filter.scope().name() : null, Types.VARCHAR)
+			.param("family", (filter.family() != null) ? filter.family().name() : null, Types.VARCHAR)
+			.param("eligibleFromBrazil", filter.eligibleFromBrazil())
 			.param("inbox", filter.inbox())
+			.param("allLegitimacy", filter.allLegitimacy())
+			.param("hasConnection", filter.hasConnection())
+			.param("salaryFloor", salaryFloor)
+			.param("floorClt", floors.clt(), Types.NUMERIC)
+			.param("floorPj", floors.pj(), Types.NUMERIC)
+			.param("usd", (money != null) ? money.usd() : null, Types.NUMERIC)
+			.param("eur", (money != null) ? money.eur() : null, Types.NUMERIC)
+			.param("cltBenefits", (money != null) ? money.cltBenefits() : BigDecimal.ZERO)
+			.param("pjTax", (money != null) ? money.pjTax() : BigDecimal.ZERO)
+			.param("pjCosts", (money != null) ? money.pjCosts() : BigDecimal.ZERO)
 			.query(Long.class)
 			.single();
 		return new PageResponse<>(items, page, size, total);
@@ -99,7 +190,7 @@ class JobQueries {
 	JobDetail detail(JobView job) {
 		JobDetail.ApplicationSummary application = this.jdbc.sql("""
 				select a.id, a.status, a.applied_at, a.channel, a.resume_version_id, r.label as resume_label,
-				       a.notes, a.next_action_at
+				       a.notes, a.next_action_at, a.next_action_kind, a.next_action_auto, a.follow_ups_sent
 				from application a
 				left join resume_version r on r.id = a.resume_version_id
 				where a.job_id = :jobId
@@ -108,7 +199,8 @@ class JobQueries {
 			.query((rs, row) -> new JobDetail.ApplicationSummary(rs.getLong("id"), rs.getString("status"),
 					JdbcRows.instant(rs, "applied_at"), rs.getString("channel"),
 					JdbcRows.nullableLong(rs, "resume_version_id"), rs.getString("resume_label"),
-					rs.getString("notes"), JdbcRows.instant(rs, "next_action_at")))
+					rs.getString("notes"), JdbcRows.instant(rs, "next_action_at"), rs.getString("next_action_kind"),
+					rs.getBoolean("next_action_auto"), rs.getInt("follow_ups_sent")))
 			.optional()
 			.orElse(null);
 		List<JobDetail.TimelineEvent> timeline = (application == null) ? List.of() : this.jdbc.sql("""
@@ -128,17 +220,19 @@ class JobQueries {
 					rs.getString("comment")))
 			.optional()
 			.orElse(null);
-		JobDetail.Dismissal dismissal = this.jdbc.sql("select reason, created_at from job_dismissal where job_id = :jobId")
+		JobDetail.Dismissal dismissal = this.jdbc
+			.sql("select reason, detail, created_at from job_dismissal where job_id = :jobId")
 			.param("jobId", job.id())
 			.query((rs, row) -> new JobDetail.Dismissal(DismissReason.valueOf(rs.getString("reason")),
-					JdbcRows.instant(rs, "created_at")))
+					JdbcRows.instant(rs, "created_at"), rs.getString("detail")))
 			.optional()
 			.orElse(null);
 		JobDetail.Analysis analysis = this.jdbc.sql("""
 				select status, seniority, required_skills::text as required, nice_to_have::text as nice, summary,
 				       employer_kind, contract_type, deterministic_score, llm_adjustment, match_score,
 				       matched_skills::text as matched, gaps::text as gaps, justification, model_version, last_error,
-				       analyzed_at
+				       analyzed_at, partial_skills::text as partial, knockouts::text as knockouts, salary::text as salary,
+				       job_family, international_eligibility, evidence::text as evidence
 				from job_analysis where job_id = :jobId
 				""")
 			.param("jobId", job.id())
@@ -147,15 +241,63 @@ class JobQueries {
 					rs.getString("employer_kind"), rs.getString("contract_type"), integer(rs, "deterministic_score"),
 					integer(rs, "llm_adjustment"), integer(rs, "match_score"), list(rs.getString("matched")),
 					list(rs.getString("gaps")), rs.getString("justification"), rs.getString("model_version"),
-					rs.getString("last_error"), JdbcRows.instant(rs, "analyzed_at")))
+					rs.getString("last_error"), JdbcRows.instant(rs, "analyzed_at"),
+					listOf(rs.getString("partial"), JobDetail.PartialSkill.class),
+					listOf(rs.getString("knockouts"), JobDetail.Knockout.class),
+					(rs.getString("salary") != null) ? this.json.readValue(rs.getString("salary"), JobDetail.Salary.class)
+							: null,
+					rs.getString("job_family"), rs.getString("international_eligibility"),
+					listOf(rs.getString("evidence"), JobDetail.Evidence.class)))
 			.optional()
 			.orElse(null);
-		return new JobDetail(job, application, timeline, feedback, dismissal, analysis);
+		JobDetail.Legitimacy legitimacy = this.jdbc
+			.sql("select legitimacy, legitimacy_reasons::text as reasons, duplicate_of_job_id from job where id = :jobId")
+			.param("jobId", job.id())
+			.query((rs, row) -> new JobDetail.Legitimacy(
+					JdbcRows.nullableEnum(rs, "legitimacy", dev.laranja.jobhunter.jobs.Legitimacy.class),
+					list(rs.getString("reasons")), JdbcRows.nullableLong(rs, "duplicate_of_job_id")))
+			.single();
+		// as outras publicações da mesma vaga: a canônica e as cópias dela, menos esta
+		List<JobDetail.Copy> copies = this.jdbc.sql("""
+				select o.id, o.source, o.url, o.closed_at, o.duplicate_of_job_id is null as canonical from job o
+				where o.id <> :jobId
+				  and coalesce(o.duplicate_of_job_id, o.id) = (select coalesce(duplicate_of_job_id, id) from job where id = :jobId)
+				order by o.duplicate_of_job_id is null desc, o.id
+				""")
+			.param("jobId", job.id())
+			.query((rs, row) -> new JobDetail.Copy(rs.getLong("id"), JobOrigin.valueOf(rs.getString("source")),
+					rs.getString("url"), JdbcRows.instant(rs, "closed_at"), rs.getBoolean("canonical")))
+			.list();
+		JobDetail.JobClassificationView classification = this.jdbc.sql("""
+				-- a leitura da Claude (job_analysis) vale sobre as regras quando existe
+				select coalesce(an.job_family, j.job_family) as job_family,
+				       coalesce(nullif(an.international_eligibility, 'NAO_INFORMADO'), j.international_eligibility)
+				           as international_eligibility, j.required_timezone, j.contractor
+				from job j left join job_analysis an on an.job_id = j.id
+				where j.id = :jobId
+				""")
+			.param("jobId", job.id())
+			.query((rs, row) -> {
+				InternationalEligibility eligibility = JdbcRows.nullableEnum(rs, "international_eligibility",
+						InternationalEligibility.class);
+				return new JobDetail.JobClassificationView(JdbcRows.nullableEnum(rs, "job_family", JobFamily.class),
+						eligibility, eligibility == null || eligibility.eligibleFromBrazil(),
+						rs.getString("required_timezone"), rs.getBoolean("contractor"));
+			})
+			.single();
+		return new JobDetail(job, application, timeline, feedback, dismissal, analysis, legitimacy, copies,
+				classification);
 	}
 
 	@SuppressWarnings("unchecked")
 	private List<String> list(String json) {
 		return (json == null) ? List.of() : (List<String>) this.json.readValue(json, List.class);
+	}
+
+	/** Lista jsonb de objetos (as colunas da análise). */
+	private <T> List<T> listOf(String json, Class<T> type) {
+		return (json == null) ? List.of()
+				: this.json.readValue(json, this.json.getTypeFactory().constructCollectionType(List.class, type));
 	}
 
 	private static Integer integer(ResultSet rs, String column) throws SQLException {
@@ -172,6 +314,20 @@ class JobQueries {
 	}
 
 	// Começo da descrição em texto corrido, para o card da caixa de vagas (o resumo por IA chega na Fase 3).
+	private BigDecimal salaryEquivalent(String json) {
+		SalaryEquivalent equivalent = this.salaries.equivalent(salary(json));
+		return (equivalent != null) ? equivalent.annualBrl() : null;
+	}
+
+	private Boolean belowFloor(String json, SalaryFloor.Floors floors) {
+		JobDetail.Salary salary = salary(json);
+		return SalaryFloor.below(this.salaries.equivalent(salary), salary, floors);
+	}
+
+	private JobDetail.Salary salary(String json) {
+		return (json != null) ? this.json.readValue(json, JobDetail.Salary.class) : null;
+	}
+
 	private static String preview(String description) {
 		if (description == null) {
 			return null;
@@ -180,7 +336,12 @@ class JobQueries {
 		return (text.length() <= 280) ? text : text.substring(0, 280).strip() + "…";
 	}
 
-	record JobListFilter(String status, FeedbackRating rating, String query, JobScope scope, boolean inbox) {
+	/** @param allLegitimacy na caixa, mostra também as vagas de legitimidade BAIXA e SUSPEITA */
+	/** @param hasConnection só vagas de empresas onde você tem um contato ou conexão */
+	/** @param salaryFloor esconde as vagas abaixo da sua pretensão salarial (equivalente anual) */
+	record JobListFilter(String status, FeedbackRating rating, String query, JobScope scope, boolean inbox,
+			boolean allLegitimacy, boolean hasConnection, boolean salaryFloor, JobFamily family,
+			boolean eligibleFromBrazil) {
 	}
 
 }

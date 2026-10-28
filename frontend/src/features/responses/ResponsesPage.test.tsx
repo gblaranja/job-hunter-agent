@@ -2,7 +2,7 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import type { EmailItem } from '@/api/queries'
-import { board } from '@/test/fixtures'
+import { board, resume } from '@/test/fixtures'
 import { renderWithProviders } from '@/test/render'
 import { server } from '@/test/server'
 import { ResponsesPage } from './ResponsesPage'
@@ -47,5 +47,41 @@ describe('ResponsesPage', () => {
     await userEvent.click(screen.getByRole('button', { name: /confirmar/i }))
 
     await vi.waitFor(() => expect(reviewed).toEqual({ classification: 'RECUSA', applicationId: 2 }))
+  })
+
+  it('registra a candidatura que não estava no agente a partir do e-mail de confirmação', async () => {
+    let body: unknown
+    const confirmation: EmailItem = {
+      ...email,
+      id: 9,
+      subject: 'Recebemos sua candidatura',
+      aiClassification: 'CONFIRMACAO_CANDIDATURA',
+      companyGuess: 'Fintech Exemplo',
+      jobGuess: 'Engenheira de Software',
+      applicationId: null,
+      applicationTitle: null,
+      applicationCompany: null,
+    }
+    server.use(
+      http.get('/api/emails', () => HttpResponse.json([confirmation])),
+      http.get('/api/emails/accuracy', () => HttpResponse.json({ reviewed: 0, agreed: 0, pending: 1, rate: null })),
+      http.get('/api/applications/board', () => HttpResponse.json(board())),
+      http.get('/api/resumes', () => HttpResponse.json([resume()])),
+      http.post('/api/applications/from-email/:id', async ({ request }) => {
+        body = await request.json()
+        return HttpResponse.json({ id: 30 }, { status: 201 })
+      }),
+    )
+    renderWithProviders(<ResponsesPage />)
+
+    expect(await screen.findByText('Candidatura não registrada no agente.')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Registrar candidatura' }))
+    expect(screen.getByLabelText('Cargo')).toHaveValue('Engenheira de Software')
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Registrar' })).toBeEnabled())
+    await userEvent.click(screen.getByRole('button', { name: 'Registrar' }))
+
+    await vi.waitFor(() =>
+      expect(body).toEqual({ resumeVersionId: 1, title: 'Engenheira de Software', company: 'Fintech Exemplo' }),
+    )
   })
 })

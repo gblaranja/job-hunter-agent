@@ -1,6 +1,7 @@
 import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
+import type { CandidateProfile, SourceHealth } from '@/api/queries'
 import { ThemeProvider } from '@/lib/theme'
 import { renderWithProviders } from '@/test/render'
 import { server } from '@/test/server'
@@ -24,12 +25,31 @@ function renderSettingsPage() {
   )
 }
 
-function serveSettings(runs: unknown[] = []) {
+const emptyCandidateProfile: CandidateProfile = {
+  acceptedContracts: ['CLT', 'PJ'],
+  workAuthorizations: ['BR'],
+  certifications: [],
+  weeklyGoal: 12,
+}
+
+const emptyHealth: SourceHealth = { sources: [], unrecognizedAlerts: [] }
+
+function serveSettings(runs: unknown[] = [], health: SourceHealth = emptyHealth) {
   server.use(
+    http.get('/api/admin/sources/health', () => HttpResponse.json(health)),
+    http.get('/api/skills/suggestions', () =>
+      HttpResponse.json([{ name: 'Elixir', key: 'elixir', spellings: ['Elixir', 'elixir'], jobCount: 5 }]),
+    ),
+    http.get('/api/skills/reviewed', () => HttpResponse.json([])),
+    http.get('/api/auth/api-token', () => HttpResponse.json({ exists: false })),
+    http.get('/api/notifications/telegram', () =>
+      HttpResponse.json({ configured: true, types: ['VAGA_ALVO', 'FOLLOW_UP'] }),
+    ),
     http.get('/api/admin/gmail/status', () =>
       HttpResponse.json({ configured: true, connected: true, accountEmail: 'eu@example.com', label: 'jobs', lastSyncAt: null }),
     ),
     http.get('/api/admin/collection-runs', () => HttpResponse.json(runs)),
+    http.get('/api/candidate-profile', () => HttpResponse.json(emptyCandidateProfile)),
     http.get('/api/search-profiles', () =>
       HttpResponse.json([
         {
@@ -80,6 +100,50 @@ describe('SettingsPage', () => {
     expect(screen.getByText('4')).toBeInTheDocument()
   })
 
+  it('mostra a saúde das fontes e os alertas que não viraram vaga', async () => {
+    serveSettings([], {
+      sources: [
+        {
+          source: 'GREENHOUSE',
+          available: true,
+          lastRunAt: '2026-10-23T10:00:00Z',
+          lastNewJobAt: null,
+          newJobsLast7Days: 0,
+          errorsLast7Days: 3,
+          failingRunsInRow: 3,
+        },
+      ],
+      unrecognizedAlerts: [
+        { emailId: 7, gmailId: '18a2b3c', sender: 'alertas@gupy.io', subject: 'Novas vagas', receivedAt: '2026-10-23T09:00:00Z' },
+      ],
+    })
+    renderSettingsPage()
+
+    expect(await screen.findByText('falhou nas últimas 3 coletas')).toBeInTheDocument()
+    expect(screen.getByText('nenhuma em 30 dias')).toBeInTheDocument()
+    expect(screen.getByText('alertas@gupy.io')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /abrir no gmail/i })).toHaveAttribute(
+      'href',
+      'https://mail.google.com/mail/u/0/#all/18a2b3c',
+    )
+  })
+
+  it('mostra o Telegram configurado e envia a mensagem de teste', async () => {
+    serveSettings()
+    let tested = false
+    server.use(
+      http.post('/api/notifications/telegram/test', () => {
+        tested = true
+        return new HttpResponse(null, { status: 204 })
+      }),
+    )
+    renderSettingsPage()
+
+    expect(await screen.findByText(/Vaga de empresa-alvo, Follow-up/)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /enviar teste/i }))
+    await vi.waitFor(() => expect(tested).toBe(true))
+  })
+
   it('permite escolher e salva o tema escuro', async () => {
     serveSettings()
     const user = userEvent.setup()
@@ -92,5 +156,45 @@ describe('SettingsPage', () => {
 
     expect(window.localStorage.getItem('job-hunter-theme')).toBe('dark')
     expect(document.documentElement).toHaveClass('dark')
+  })
+})
+
+describe('token da extensão', () => {
+  it('gera o token, mostra uma vez e depois só o final', async () => {
+    let exists = false
+    serveSettings()
+    server.use(
+      http.get('/api/auth/api-token', () =>
+        HttpResponse.json(exists ? { exists: true, hint: 'wxyz', createdAt: '2026-10-24T10:00:00Z', lastUsedAt: null } : { exists: false }),
+      ),
+      http.post('/api/auth/api-token', () => {
+        exists = true
+        return HttpResponse.json({ token: 'jh_abcwxyz' }, { status: 201 })
+      }),
+    )
+    renderSettingsPage()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Gerar token' }))
+    expect(await screen.findByLabelText('Token gerado')).toHaveValue('jh_abcwxyz')
+    expect(await screen.findByText('wxyz')).toBeInTheDocument()
+  })
+
+  it('mostra a fila do dicionário de skills e aceita uma sugestão com as outras grafias', async () => {
+    serveSettings()
+    let accepted: unknown
+    server.use(
+      http.post('/api/skills/reviewed', async ({ request }) => {
+        accepted = await request.json()
+        return HttpResponse.json({ id: 1, canonical: 'Elixir', aliases: ['elixir'], createdAt: '2026-10-27T10:00:00Z' }, { status: 201 })
+      }),
+    )
+    renderSettingsPage()
+
+    expect(await screen.findByText('Elixir')).toBeInTheDocument()
+    expect(screen.getByText('· 5 vagas')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /Aceitar/ }))
+    await vi.waitFor(() => expect(accepted).toEqual({ canonical: 'Elixir', aliases: ['elixir'] }))
+    expect(screen.getByText(/apagar os dados de um/)).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: /CSV/ })[0]).toHaveAttribute('href', '/api/export/VAGAS?format=csv')
   })
 })

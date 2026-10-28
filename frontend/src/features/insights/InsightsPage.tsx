@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 import { toast } from 'sonner'
-import { useGenerateInsights, useLatestInsights, useLlmUsage, type InsightReport } from '@/api/queries'
+import { useGenerateInsights, useLatestInsights, useLlmBudget, useLlmUsage, type InsightReport } from '@/api/queries'
 import { BarList } from '@/components/charts/BarList'
 import { StatTile } from '@/components/charts/StatTile'
 import { PageHeader } from '@/components/PageHeader'
@@ -9,15 +9,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { formatDate, formatDateTime, formatPercent } from '@/lib/format'
+import { ConversionSection, ConversionTable } from './ConversionSection'
+import { PlatformProfilesCard } from './PlatformProfilesCard'
+import { formatDate, formatDateTime, formatPercent, rate } from '@/lib/format'
 import { diagnosisLabels, feedbackReasonLabels, seniorityLabels } from '@/lib/labels'
 import { ArrowRight, Loader2, Sparkles } from 'lucide-react'
 
 const usd = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 4 })
-
-function rate(part: number, total: number) {
-  return total === 0 ? null : part / total
-}
 
 /** Relatório semanal: o que o mercado pede, onde o funil trava e o que mudar no currículo. */
 export function InsightsPage() {
@@ -43,6 +41,9 @@ export function InsightsPage() {
           </Button>
         }
       />
+      <div className="mb-8">
+        <ConversionSection />
+      </div>
       {latest.isLoading && <LoadingBlock lines={6} />}
       {latest.error && <ErrorBlock error={latest.error} />}
       {latest.isSuccess && latest.data === null && (
@@ -206,6 +207,8 @@ function Report({ report }: { report: InsightReport }) {
         </Card>
       )}
 
+      <PlatformProfilesCard recommendations={recommendations} />
+
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
@@ -258,42 +261,33 @@ function Report({ report }: { report: InsightReport }) {
   )
 }
 
-function ConversionTable({ rows, groupLabel }: { rows: { key: string; group: string; applied: number; interview: number }[]; groupLabel: string }) {
-  if (rows.length === 0) return <p className="text-sm text-muted-foreground">Sem candidaturas ainda.</p>
-  return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>{groupLabel}</TableHead>
-          <TableHead className="text-right">Aplicadas</TableHead>
-          <TableHead className="text-right">Entrevistas</TableHead>
-          <TableHead className="text-right">Conversão</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {rows.map((row) => (
-          <TableRow key={row.key}>
-            <TableCell>{row.group}</TableCell>
-            <TableCell className="text-right tabular-nums">{row.applied}</TableCell>
-            <TableCell className="text-right tabular-nums">{row.interview}</TableCell>
-            <TableCell className="text-right tabular-nums">{formatPercent(rate(row.interview, row.applied))}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  )
-}
-
 function UsageCard() {
   const usage = useLlmUsage()
-  if (!usage.data || usage.data.length === 0) return null
+  const budget = useLlmBudget()
+  const exhausted = budget.data?.filter((row) => row.exhausted) ?? []
+  const limited = budget.data?.filter((row) => row.limitUsd != null) ?? []
+  if (!usage.data || (usage.data.length === 0 && exhausted.length === 0)) return null
   return (
     <Card>
       <CardHeader>
         <CardTitle>Uso da Claude API no mês</CardTitle>
-        <CardDescription>Custo estimado pela tabela de preços; o limite de gasto fica no Console da Anthropic.</CardDescription>
+        <CardDescription>
+          Custo estimado pela tabela de preços. Cada tarefa tem um orçamento mensal (jobhunter.ai.budget); ao atingir, ela
+          para de chamar a API até o mês virar.
+        </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {exhausted.length > 0 && (
+          <p role="alert" className="rounded-md border border-destructive/50 p-3 text-sm text-destructive">
+            Orçamento do mês atingido em {exhausted.map((row) => row.task).join(', ')}: a análise das vagas novas fica só
+            no dicionário e nas regras até o mês virar.
+          </p>
+        )}
+        {limited.length > 0 && (
+          <p className="text-sm text-muted-foreground">
+            {limited.map((row) => `${row.task}: ${usd.format(row.spentUsd)} de ${usd.format(row.limitUsd ?? 0)}`).join(' · ')}
+          </p>
+        )}
         <Table>
           <TableHeader>
             <TableRow>

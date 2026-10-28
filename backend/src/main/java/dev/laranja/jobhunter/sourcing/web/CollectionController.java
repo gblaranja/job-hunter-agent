@@ -7,6 +7,7 @@ import java.util.Map;
 
 import dev.laranja.jobhunter.shared.jdbc.JdbcRows;
 import dev.laranja.jobhunter.sourcing.JobCollector;
+import dev.laranja.jobhunter.sourcing.SourceHealth;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
@@ -30,10 +31,13 @@ class CollectionController {
 
 	private final JsonMapper json;
 
-	CollectionController(JobCollector collector, JdbcClient jdbc, JsonMapper json) {
+	private final SourceHealth health;
+
+	CollectionController(JobCollector collector, JdbcClient jdbc, JsonMapper json, SourceHealth health) {
 		this.collector = collector;
 		this.jdbc = jdbc;
 		this.json = json;
+		this.health = health;
 	}
 
 	/** Dispara a coleta agora e devolve o resultado (síncrono; leva segundos no volume de uso pessoal). */
@@ -46,6 +50,12 @@ class CollectionController {
 	@GetMapping("/collection-runs")
 	List<CollectionRun> recentRuns() {
 		return runs(20, null);
+	}
+
+	/** Última vaga nova e erros de cada fonte, e os alertas de vaga que não viraram vaga. */
+	@GetMapping("/sources/health")
+	SourceHealth.HealthReport sourceHealth() {
+		return this.health.report();
 	}
 
 	private List<CollectionRun> runs(int limit, @Nullable Long id) {

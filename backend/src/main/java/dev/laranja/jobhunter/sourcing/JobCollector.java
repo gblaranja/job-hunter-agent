@@ -11,6 +11,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import dev.laranja.jobhunter.inbox.Mailbox;
 import dev.laranja.jobhunter.jobs.IngestResult;
 import dev.laranja.jobhunter.jobs.JobCatalog;
+import dev.laranja.jobhunter.jobs.JobDismissalService;
+import dev.laranja.jobhunter.jobs.JobFamily;
 import dev.laranja.jobhunter.profile.JobFilter;
 import dev.laranja.jobhunter.profile.SearchProfiles;
 import dev.laranja.jobhunter.shared.ConflictException;
@@ -24,7 +26,8 @@ import org.springframework.stereotype.Service;
 
 /**
  * Executa a coleta: sincroniza o Gmail, passa por cada fonte, aplica o filtro dos perfis de busca e grava as
- * vagas no catálogo. Cada execução fica registrada em {@code collection_run} com as contagens por fonte.
+ * vagas no catálogo. Uma vaga nova de família de cargo fora dos perfis é gravada, mas sai da caixa com o motivo
+ * (você pode desfazer). Cada execução fica registrada em {@code collection_run} com as contagens por fonte.
  */
 @Service
 public class JobCollector {
@@ -39,6 +42,8 @@ public class JobCollector {
 
 	private final JobCatalog catalog;
 
+	private final JobDismissalService dismissals;
+
 	private final JdbcClient jdbc;
 
 	private final JsonMapper json;
@@ -50,11 +55,12 @@ public class JobCollector {
 	private final ReentrantLock running = new ReentrantLock();
 
 	JobCollector(List<JobSource> sources, Mailbox mailbox, SearchProfiles profiles, JobCatalog catalog,
-			JdbcClient jdbc, JsonMapper json, MeterRegistry meters, Clock clock) {
+			JobDismissalService dismissals, JdbcClient jdbc, JsonMapper json, MeterRegistry meters, Clock clock) {
 		this.sources = sources;
 		this.mailbox = mailbox;
 		this.profiles = profiles;
 		this.catalog = catalog;
+		this.dismissals = dismissals;
 		this.jdbc = jdbc;
 		this.json = json;
 		this.meters = meters;
@@ -114,6 +120,10 @@ public class JobCollector {
 						IngestResult result = this.catalog.ingest(raw);
 						if (result.created()) {
 							sourceStats.created++;
+							JobFamily family = JobFamily.ofTitle(raw.title());
+							if (filter.outsideFamilies(family)) {
+								this.dismissals.dismissOutsideFamilies(result.jobId(), family);
+							}
 						}
 						else {
 							sourceStats.duplicate++;

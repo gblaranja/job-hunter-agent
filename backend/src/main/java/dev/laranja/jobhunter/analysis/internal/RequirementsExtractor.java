@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import dev.laranja.jobhunter.analysis.JobSalary;
 import dev.laranja.jobhunter.analysis.Seniority;
 import dev.laranja.jobhunter.jobs.JobView;
 import dev.laranja.jobhunter.shared.TextNormalizer;
@@ -66,7 +67,20 @@ class RequirementsExtractor {
 		boolean clt = CLT.matcher(normalized).find();
 		String contract = (pj && clt) ? "AMBOS" : pj ? "PJ" : clt ? "CLT" : "NAO_INFORMADO";
 		String employer = CONSULTANCY.matcher(normalized).find() ? "CONSULTORIA_TI" : "CONTRATANTE";
-		return new JobRequirements(seniority, required, nice, job.workModel().name(), null, employer, List.of(), contract);
+		return new JobRequirements(seniority, required, nice, job.workModel().name(), null, employer, List.of(), contract,
+				KnockoutRules.extract(description, contract, job.workModel().name(), job.location()),
+				KnockoutRules.salary(description, contract), null, null);
+	}
+
+	/** Requisitos salvos completados pelas regras: eliminatórios dos tipos que faltam e o salário. */
+	JobRequirements withRules(JobRequirements stored, JobView job) {
+		List<KnockoutRequirement> rules = KnockoutRules.extract(job.description(), stored.contractType(),
+				stored.workModel(), job.location());
+		JobSalary salary = (stored.salary() != null) ? stored.salary()
+				: KnockoutRules.salary(job.description(), stored.contractType());
+		return new JobRequirements(stored.seniority(), stored.requiredSkills(), stored.niceToHave(), stored.workModel(),
+				stored.summary(), stored.employerKind(), stored.clientSectors(), stored.contractType(),
+				mergeKnockouts(stored.knockouts(), rules), salary, stored.jobFamily(), stored.internationalEligibility());
 	}
 
 	boolean canUseLlm(JobView job) {
@@ -92,9 +106,34 @@ class RequirementsExtractor {
 			.filter(skill -> !required.contains(skill))
 			.toList();
 		String seniority = Seniority.parse(extracted.seniority()).map(Enum::name).orElse(null);
-		return new JobRequirements(seniority, required, nice, orDefault(extracted.workModel(), job.workModel().name()),
-				extracted.summary(), orDefault(extracted.employerKind(), "CONTRATANTE"),
-				orEmpty(extracted.clientSectors()), orDefault(extracted.contractType(), "NAO_INFORMADO"));
+		String workModel = orDefault(extracted.workModel(), job.workModel().name());
+		String contract = orDefault(extracted.contractType(), "NAO_INFORMADO");
+		List<KnockoutRequirement> rules = KnockoutRules.extract(job.description(), contract, workModel, job.location());
+		JobSalary salary = (extracted.salary() != null && extracted.salary().isInformed()) ? extracted.salary()
+				: KnockoutRules.salary(job.description(), contract);
+		return new JobRequirements(seniority, required, nice, workModel, extracted.summary(),
+				orDefault(extracted.employerKind(), "CONTRATANTE"), orEmpty(extracted.clientSectors()), contract,
+				mergeKnockouts(extracted.knockouts(), rules), salary, blankToNull(extracted.jobFamily()),
+				blankToNull(extracted.internationalEligibility()));
+	}
+
+	/** Os eliminatórios do LLM; as regras completam os tipos que ele não trouxe. */
+	static List<KnockoutRequirement> mergeKnockouts(List<KnockoutRequirement> llm, List<KnockoutRequirement> rules) {
+		List<KnockoutRequirement> merged = new ArrayList<>();
+		java.util.Set<String> types = new java.util.HashSet<>();
+		for (KnockoutRequirement knockout : (llm == null) ? List.<KnockoutRequirement>of() : llm) {
+			if (knockout != null && KnockoutEvaluator.parseType(knockout.type()).isPresent() && knockout.value() != null
+					&& !knockout.value().isBlank()) {
+				merged.add(knockout);
+				types.add(knockout.type().strip().toUpperCase(java.util.Locale.ROOT));
+			}
+		}
+		rules.stream().filter(rule -> !types.contains(rule.type())).forEach(merged::add);
+		return merged;
+	}
+
+	private static String blankToNull(String value) {
+		return (value == null || value.isBlank()) ? null : value.strip().toUpperCase(java.util.Locale.ROOT);
 	}
 
 	String extractionVersion() {

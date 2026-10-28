@@ -38,7 +38,7 @@ describe('HomePage', () => {
 
     const links = await screen.findAllByRole('link', { name: /abrir o painel/i })
     expect(links).toHaveLength(2)
-    for (const link of links) expect(link).toHaveAttribute('href', '/board')
+    for (const link of links) expect(link).toHaveAttribute('href', '/today')
     expect(screen.queryByRole('link', { name: /ver o código no github/i })).not.toBeInTheDocument()
   })
 })

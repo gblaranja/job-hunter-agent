@@ -1,0 +1,15 @@
+{
+  "id": "exemplo-3",
+  "title": "Desenvolvedor Full Stack Pleno",
+  "company": "Consultoria Exemplo",
+  "location": "Ribeirão Preto, SP",
+  "workModel": "PRESENCIAL",
+  "description": "Exemplo sintético. Atuação alocada em cliente do setor bancário. Requisitos: Java, Angular e PostgreSQL. Desejável: Docker.",
+  "expected": {
+    "seniority": "PLENO",
+    "requiredSkills": ["Java", "Angular", "PostgreSQL"],
+    "niceToHave": ["Docker"],
+    "workModel": "PRESENCIAL",
+    "contractType": "NAO_INFORMADO"
+  }
+}

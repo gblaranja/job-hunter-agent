@@ -1,20 +1,26 @@
 import { useState } from 'react'
-import { useParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import {
+  useApplicationContacts,
   useChangeResume,
   useJob,
   useResumes,
+  useSeparateDuplicate,
   useStartApplication,
   useTailoredResumes,
   type ApplicationStatus,
+  type ContactView,
+  type DraftKind,
   type JobDetail,
 } from '@/api/queries'
 import { AppliedJobCard } from '@/components/AppliedJobCard'
 import { FeedbackButtons } from '@/components/FeedbackButtons'
+import { LegitimacyBadge } from '@/components/LegitimacyBadge'
 import { AnalysisCard } from './AnalysisCard'
 import { DismissalActions } from './DismissalActions'
 import { ScopeSwitch } from './ScopeSwitch'
+import { ScreeningQuestionsCard } from './ScreeningQuestionsCard'
 import { TailoredResumeCard } from './TailoredResumeCard'
 import { Markdown } from '@/components/Markdown'
 import { PageHeader } from '@/components/PageHeader'
@@ -27,11 +33,30 @@ import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/componen
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ApplicationDetailsForm } from '@/features/applications/ApplicationDetailsForm'
+import { FollowUpStatus } from '@/features/applications/FollowUpStatus'
 import { ResponseDialog } from '@/features/applications/ResponseDialog'
 import { Timeline } from '@/features/applications/Timeline'
 import { useStatusMove } from '@/features/applications/useStatusMove'
-import { closedJobNote, sameAsWorkModel, statusesRequiringResume, statusLabels, workModelLabels } from '@/lib/labels'
-import { ExternalLink } from 'lucide-react'
+import { ContactsCard } from '@/features/network/ContactsCard'
+import { InterviewSection } from '@/features/interviews/InterviewSection'
+import { MessageDrafts } from '@/features/network/MessageDrafts'
+import { interviewStatuses } from '@/lib/interviewLabels'
+import type { InterviewStage } from '@/api/interviews'
+import {
+  closedJobNote,
+  draftKindLabels,
+  eligibilityLabels,
+  jobFamilyLabels,
+  legitimacyLabels,
+  originLabels,
+  sameAsWorkModel,
+  statusesRequiringResume,
+  statusLabels,
+  workModelLabels,
+} from '@/lib/labels'
+import { ExternalLink, ShieldAlert, Unlink } from 'lucide-react'
+
+const draftKinds = Object.keys(draftKindLabels) as DraftKind[]
 
 const movableStatuses = (Object.keys(statusLabels) as ApplicationStatus[]).filter((status) => status !== 'NOVA')
 
@@ -48,6 +73,10 @@ export function JobDetailPage() {
 function JobDetailView({ detail }: { detail: JobDetail }) {
   const { job, application, timeline } = detail
   const hasSnapshot = application != null && statusesRequiringResume.has(application.status as ApplicationStatus)
+  const contacts = useApplicationContacts(application?.id)
+  // "?mensagem=PEDIDO_INDICACAO" (link da notificação de finalista) abre o rascunho direto nesse tipo.
+  const [params] = useSearchParams()
+  const initialKind = draftKinds.find((kind) => kind === params.get('mensagem'))
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -61,6 +90,8 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
         {job.workModel !== 'NAO_INFORMADO' && <Badge variant="secondary">{workModelLabels[job.workModel]}</Badge>}
         {job.salaryRange && <Badge variant="secondary">{job.salaryRange}</Badge>}
         <ScopeSwitch jobId={job.id} scope={job.scope} />
+        <ClassificationBadges detail={detail} />
+        <LegitimacyBadge level={detail.legitimacy.level} reasons={detail.legitimacy.reasons} />
         <div className="ml-auto">
           <FeedbackButtons jobId={job.id} rating={detail.feedback?.rating} reasons={detail.feedback?.reasons} />
         </div>
@@ -94,17 +125,35 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
             </Card>
           )}
           <TailoredResumeCard jobId={job.id} />
+          {application && interviewStatuses.has(application.status) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Entrevista</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <InterviewSection
+                  applicationId={application.id}
+                  jobId={job.id}
+                  status={application.status as InterviewStage}
+                />
+              </CardContent>
+            </Card>
+          )}
+          <MessageDrafts jobId={job.id} applicationId={application?.id} initialKind={initialKind} />
+          <ScreeningQuestionsCard jobId={job.id} />
           {application && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Anotações</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                <FollowUpStatus application={application} />
                 <ApplicationDetailsForm
-                  key={application.id}
+                  key={`${application.id}-${application.nextActionAt ?? ''}`}
                   applicationId={application.id}
                   notes={application.notes}
                   nextActionAt={application.nextActionAt}
+                  nextActionKind={application.nextActionKind}
                 />
               </CardContent>
             </Card>
@@ -113,24 +162,32 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
 
         <aside className="space-y-6">
           <AnalysisCard jobId={job.id} analysis={detail.analysis} />
+          <LegitimacyCard detail={detail} />
+          <CopiesCard detail={detail} />
           {application ? (
             <>
               <StatusPanel
+                jobId={job.id}
                 applicationId={application.id}
                 status={application.status as ApplicationStatus}
                 resumeVersionId={application.resumeVersionId}
+                contacts={contacts.data?.contacts}
               />
+              <ContactsCard jobId={job.id} company={job.company} applicationId={application.id} />
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Linha do tempo</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <Timeline events={timeline} />
+                  <Timeline events={timeline} interactions={contacts.data?.interactions} />
                 </CardContent>
               </Card>
             </>
           ) : (
-            <StartPanel jobId={job.id} dismissal={detail.dismissal} />
+            <>
+              <StartPanel jobId={job.id} dismissal={detail.dismissal} />
+              <ContactsCard jobId={job.id} company={job.company} />
+            </>
           )}
         </aside>
       </div>
@@ -139,13 +196,17 @@ function JobDetailView({ detail }: { detail: JobDetail }) {
 }
 
 function StatusPanel({
+  jobId,
   applicationId,
   status,
   resumeVersionId,
+  contacts,
 }: {
+  jobId: number
   applicationId: number
   status: ApplicationStatus
   resumeVersionId?: number | null
+  contacts?: ContactView[]
 }) {
   const { requestMove, dialog } = useStatusMove()
   const resumes = useResumes()
@@ -162,7 +223,7 @@ function StatusPanel({
           <Label htmlFor="status-select">Etapa</Label>
           <Select
             value={status}
-            onValueChange={(target) => requestMove({ applicationId, status, resumeVersionId }, target as ApplicationStatus)}
+            onValueChange={(target) => requestMove({ applicationId, status, resumeVersionId, jobId }, target as ApplicationStatus)}
           >
             <SelectTrigger id="status-select" className="w-full">
               <SelectValue />
@@ -202,7 +263,7 @@ function StatusPanel({
             </SelectContent>
           </Select>
         </div>
-        <ResponseDialog applicationId={applicationId} />
+        <ResponseDialog applicationId={applicationId} contacts={contacts} />
       </CardContent>
       {dialog}
     </Card>
@@ -249,6 +310,7 @@ function StartPanel({ jobId, dismissal }: { jobId: number; dismissal: JobDetail[
           title="Registrar aplicação"
           description="Qual versão do currículo você enviou para esta vaga?"
           preferredResumeId={tailoredResumeId}
+          applyCheckJobId={jobId}
           onCancel={() => setPicking(false)}
           onConfirm={({ resumeVersionId }) => {
             setPicking(false)
@@ -256,6 +318,101 @@ function StartPanel({ jobId, dismissal }: { jobId: number; dismissal: JobDetail[
           }}
         />
       )}
+    </Card>
+  )
+}
+
+/** Família de cargo e, nas vagas do exterior, de onde dá para ser contratado, o fuso e o tipo de contratação. */
+function ClassificationBadges({ detail }: { detail: JobDetail }) {
+  const { classification, job } = detail
+  const international = job.scope === 'INTERNACIONAL'
+  return (
+    <>
+      {classification.jobFamily && <Badge variant="outline">{jobFamilyLabels[classification.jobFamily]}</Badge>}
+      {international && classification.internationalEligibility && (
+        <Badge variant={classification.eligibleFromBrazil ? 'outline' : 'destructive'}>
+          {eligibilityLabels[classification.internationalEligibility]}
+        </Badge>
+      )}
+      {international && classification.requiredTimezone && (
+        <Badge variant="outline">Fuso {classification.requiredTimezone}</Badge>
+      )}
+      {international && classification.contractor && <Badge variant="outline">Contractor</Badge>}
+    </>
+  )
+}
+
+/** Motivos da legitimidade, quando a vaga tem algum sinal de vaga fantasma ou golpe. */
+function LegitimacyCard({ detail }: { detail: JobDetail }) {
+  const { level, reasons } = detail.legitimacy
+  if (!level || level === 'ALTA' || reasons.length === 0) return null
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <ShieldAlert className="size-4" aria-hidden /> {legitimacyLabels[level] ?? level}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          {reasons.map((reason) => (
+            <li key={reason}>{reason}</li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
+  )
+}
+
+/** "Também publicada em": a mesma vaga em outras fontes, com a opção de separar uma cópia. */
+function CopiesCard({ detail }: { detail: JobDetail }) {
+  const separate = useSeparateDuplicate()
+  const isCopy = detail.legitimacy.duplicateOfJobId != null
+  if (detail.copies.length === 0) return null
+
+  function split(jobId: number) {
+    separate.mutate(jobId, {
+      onSuccess: () => toast.success('Vagas separadas: cada uma aparece na caixa por conta própria.'),
+      onError: (error) => toast.error(error.message),
+    })
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Também publicada em</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        {isCopy && (
+          <p className="text-muted-foreground">
+            Esta é uma cópia: a caixa mostra só a publicação principal.{' '}
+            <Button variant="link" size="sm" className="h-auto p-0" onClick={() => split(detail.job.id)} disabled={separate.isPending}>
+              Não é a mesma vaga
+            </Button>
+          </p>
+        )}
+        <ul className="space-y-2">
+          {detail.copies.map((copy) => (
+            <li key={copy.id} className="flex flex-wrap items-center gap-2">
+              <Link to={`/jobs/${copy.id}`} className="hover:underline">
+                {originLabels[copy.origin]}
+              </Link>
+              {copy.canonical && <Badge variant="secondary">principal</Badge>}
+              {copy.closedAt && <Badge variant="outline">fechada</Badge>}
+              {copy.url && (
+                <a href={copy.url} target="_blank" rel="noopener noreferrer" aria-label={`Abrir no ${originLabels[copy.origin]}`}>
+                  <ExternalLink className="size-3.5" aria-hidden />
+                </a>
+              )}
+              {!copy.canonical && !isCopy && (
+                <Button variant="ghost" size="sm" className="ml-auto" onClick={() => split(copy.id)} disabled={separate.isPending}>
+                  <Unlink aria-hidden /> Separar
+                </Button>
+              )}
+            </li>
+          ))}
+        </ul>
+      </CardContent>
     </Card>
   )
 }

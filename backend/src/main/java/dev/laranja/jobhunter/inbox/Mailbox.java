@@ -194,7 +194,7 @@ public class Mailbox {
 		String body = bodyText(email.gmailId()).orElse((email.snippet() != null) ? email.snippet() : "");
 		body = body.substring(0, Math.min(6000, body.length()));
 		ResponseClassifier.Result result = this.classifier.classify(email.sender(), email.subject(), body, corrections);
-		boolean review = result.classification().isResponse() || result.confidence() < 0.7;
+		boolean review = result.classification().isActionable() || result.confidence() < 0.7;
 		this.jdbc.sql("""
 				update email_message
 				set ai_classification = :classification, ai_confidence = :confidence, company_guess = :company,
@@ -210,9 +210,10 @@ public class Mailbox {
 			.param("review", review)
 			.param("id", email.id())
 			.update();
-		if (result.classification().isResponse()) {
+		if (result.classification().isActionable()) {
 			this.events.publishEvent(new EmailClassified(email.id(), result.classification(), result.confidence(),
-					result.company(), email.sender(), email.subject(), email.receivedAt()));
+					result.company(), email.sender(), email.subject(), email.receivedAt(), result.jobTitle(),
+					result.recruiterName(), result.agency()));
 		}
 	}
 
@@ -234,6 +235,28 @@ public class Mailbox {
 	public void markHandled(long emailId, long applicationId) {
 		this.jdbc.sql("update email_message set application_id = :app, processed = true, needs_review = false where id = :id")
 			.param("app", applicationId)
+			.param("id", emailId)
+			.update();
+	}
+
+	/** Dados de um e-mail classificado, para quem cria a candidatura ou o contato a partir dele. */
+	public Optional<ClassifiedEmail> find(long emailId) {
+		return this.jdbc.sql("""
+				select id, sender, subject, snippet, received_at, coalesce(final_classification, ai_classification) as classification,
+				       company_guess, job_guess, application_id
+				from email_message where id = :id
+				""")
+			.param("id", emailId)
+			.query((rs, row) -> new ClassifiedEmail(rs.getLong("id"), rs.getString("sender"), rs.getString("subject"),
+					rs.getString("snippet"), JdbcRows.instant(rs, "received_at"),
+					JdbcRows.nullableEnum(rs, "classification", EmailClassification.class), rs.getString("company_guess"),
+					rs.getString("job_guess"), JdbcRows.nullableLong(rs, "application_id")))
+			.optional();
+	}
+
+	/** O e-mail foi tratado sem candidatura (por exemplo, virou um contato): sai da fila de revisão. */
+	public void markProcessed(long emailId) {
+		this.jdbc.sql("update email_message set processed = true, needs_review = false where id = :id")
 			.param("id", emailId)
 			.update();
 	}
@@ -298,6 +321,12 @@ public class Mailbox {
 	}
 
 	public record SyncResult(int newMessages, int newAlerts) {
+	}
+
+	/** @param classification a sua revisão, ou a da IA enquanto você não revisou */
+	public record ClassifiedEmail(long id, String sender, @Nullable String subject, @Nullable String snippet,
+			Instant receivedAt, @Nullable EmailClassification classification, @Nullable String companyGuess,
+			@Nullable String jobGuess, @Nullable Long applicationId) {
 	}
 
 	public record AlertEmail(long emailId, String sender, @Nullable String subject, Instant receivedAt, String html) {

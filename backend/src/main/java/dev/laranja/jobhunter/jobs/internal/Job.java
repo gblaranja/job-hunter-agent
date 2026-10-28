@@ -2,6 +2,8 @@ package dev.laranja.jobhunter.jobs.internal;
 
 import java.time.Instant;
 
+import dev.laranja.jobhunter.jobs.InternationalEligibility;
+import dev.laranja.jobhunter.jobs.JobFamily;
 import dev.laranja.jobhunter.jobs.JobOrigin;
 import dev.laranja.jobhunter.jobs.JobScope;
 import dev.laranja.jobhunter.jobs.JobView;
@@ -46,6 +48,18 @@ public class Job {
 
 	private boolean scopeLocked;
 
+	@Enumerated(EnumType.STRING)
+	private JobFamily jobFamily;
+
+	@Enumerated(EnumType.STRING)
+	private InternationalEligibility internationalEligibility;
+
+	private String requiredTimezone;
+
+	private boolean contractor;
+
+	private Integer classificationVersion;
+
 	private String salaryRange;
 
 	private String url;
@@ -74,6 +88,13 @@ public class Job {
 		job.scope = (command.scope() != null) ? command.scope()
 				: JobScopeDetector.detect(command.title(), command.location(), command.description());
 		job.scopeLocked = command.scope() != null;
+		JobClassification classification = JobClassification.of(command.title(), command.location(),
+				command.description());
+		job.jobFamily = classification.family();
+		job.internationalEligibility = classification.international().eligibility();
+		job.requiredTimezone = classification.international().timezone();
+		job.contractor = classification.international().contractor();
+		job.classificationVersion = JobClassification.VERSION;
 		job.salaryRange = blankToNull(command.salaryRange());
 		job.url = blankToNull(command.url());
 		job.rawDescription = blankToNull(command.description());

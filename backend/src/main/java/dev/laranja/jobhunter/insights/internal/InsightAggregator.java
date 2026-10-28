@@ -3,6 +3,7 @@ package dev.laranja.jobhunter.insights.internal;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -11,9 +12,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import dev.laranja.jobhunter.insights.FunnelBreakdown;
+import dev.laranja.jobhunter.interviews.InterviewDebriefs;
 import dev.laranja.jobhunter.insights.InsightReport.Conversion;
 import dev.laranja.jobhunter.insights.InsightReport.Funnel;
 import dev.laranja.jobhunter.insights.InsightReport.Gap;
@@ -21,6 +25,7 @@ import dev.laranja.jobhunter.insights.InsightReport.ResumePerformance;
 import dev.laranja.jobhunter.insights.InsightReport.SkillDemand;
 import dev.laranja.jobhunter.insights.InsightReport.SuggestedFilter;
 import dev.laranja.jobhunter.insights.LlmUsage;
+import dev.laranja.jobhunter.shared.jdbc.JdbcRows;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -33,13 +38,19 @@ class InsightAggregator {
 	/** Quantos descartes pelo mesmo motivo bastam para sugerir um ajuste no filtro. */
 	static final int SUGGESTION_THRESHOLD = 5;
 
+	/** Quantas vagas do topo do ranking entram na qualidade do ranking. */
+	static final int RANKING_TOP = 20;
+
 	private static final Map<String, String> SENIORITY_KEYWORDS = Map.of("ESTAGIO", "estágio", "JUNIOR", "júnior",
 			"PLENO", "pleno", "SENIOR", "sênior", "ESPECIALISTA", "especialista");
 
 	private final JdbcClient jdbc;
 
-	InsightAggregator(JdbcClient jdbc) {
+	private final InterviewDebriefs debriefs;
+
+	InsightAggregator(JdbcClient jdbc, InterviewDebriefs debriefs) {
 		this.jdbc = jdbc;
+		this.debriefs = debriefs;
 	}
 
 	List<SkillDemand> topSkills(Instant since, Set<String> resumeSkills) {
@@ -109,7 +120,7 @@ class InsightAggregator {
 		return new Funnel(applied.size(), count(applied, Reached::screening), count(applied, Reached::interview),
 				count(applied, Reached::offer),
 				scores.isEmpty() ? null : (int) Math.round(scores.stream().mapToInt(Integer::intValue).average().orElse(0)),
-				conversions, scoreByRating);
+				conversions, scoreByRating, this.debriefs.recurringQuestions());
 	}
 
 	List<ResumePerformance> resumePerformance() {
@@ -122,6 +133,111 @@ class InsightAggregator {
 					entry.getValue().size(), count(entry.getValue(), Reached::interview)))
 			.sorted((a, b) -> Integer.compare(b.applied(), a.applied()))
 			.toList();
+	}
+
+	/** Funil aberto por fonte, canal, tempo até aplicar e adaptação do currículo, mais a qualidade do ranking. */
+	FunnelBreakdown breakdown() {
+		List<Applied> rows = this.jdbc.sql("""
+				select a.id, j.source, a.channel, a.applied_at, j.first_seen_at,
+				       exists (select 1 from tailored_resume t where t.resume_version_id = a.resume_version_id) as tailored,
+				       bool_or(e.to_status in ('ENTREVISTA', 'TESTE_TECNICO', 'OFERTA')) as interview,
+				       bool_or(e.to_status = 'OFERTA') as offer,
+				       min(e.created_at) filter (where e.response_type is not null) as first_response_at,
+				       exists (select 1 from offer o where o.application_id = a.id and o.decision = 'ACEITA') as accepted
+				from application a
+				join job j on j.id = a.job_id
+				join application_event e on e.application_id = a.id
+				group by a.id, j.source, a.channel, a.applied_at, j.first_seen_at
+				having bool_or(e.to_status in ('APLICADA', 'TRIAGEM', 'ENTREVISTA', 'TESTE_TECNICO', 'OFERTA'))
+				""")
+			.query((rs, row) -> new Applied(rs.getString("source"), rs.getString("channel"),
+					JdbcRows.instant(rs, "applied_at"), JdbcRows.instant(rs, "first_seen_at"), rs.getBoolean("tailored"),
+					rs.getBoolean("interview"), rs.getBoolean("offer"), JdbcRows.instant(rs, "first_response_at"),
+					rs.getBoolean("accepted")))
+			.list();
+		List<Double> responseDays = rows.stream()
+			.filter(row -> row.appliedAt() != null && row.firstResponseAt() != null
+					&& !row.firstResponseAt().isBefore(row.appliedAt()))
+			.map(row -> Duration.between(row.appliedAt(), row.firstResponseAt()).toMinutes() / 1440.0)
+			.sorted()
+			.toList();
+		return new FunnelBreakdown(rows.size(), (int) rows.stream().filter(Applied::interview).count(),
+				(int) rows.stream().filter(Applied::offer).count(), groups(rows, Applied::source),
+				groups(rows, row -> (row.channel() != null) ? row.channel() : "NAO_INFORMADO"),
+				groups(rows, row -> timeToApplyBucket(row.source(), row.firstSeenAt(), row.appliedAt())),
+				groups(rows, row -> row.tailored() ? "ADAPTADO" : "PADRAO"), median(responseDays), rankingQuality(),
+				(int) rows.stream().filter(Applied::accepted).count());
+	}
+
+	/**
+	 * Faixa do tempo entre a vaga aparecer no agente e você aplicar. Vagas manuais não contam (você costuma cadastrar
+	 * depois de aplicar), nem datas incoerentes.
+	 */
+	static String timeToApplyBucket(String source, @Nullable Instant firstSeenAt, @Nullable Instant appliedAt) {
+		if ("MANUAL".equals(source) || firstSeenAt == null || appliedAt == null || appliedAt.isBefore(firstSeenAt)) {
+			return "SEM_DADO";
+		}
+		long hours = Duration.between(firstSeenAt, appliedAt).toHours();
+		if (hours < 24) {
+			return "ATE_1_DIA";
+		}
+		if (hours < 72) {
+			return "1_A_3_DIAS";
+		}
+		return (hours < 168) ? "4_A_7_DIAS" : "MAIS_DE_7_DIAS";
+	}
+
+	private static List<FunnelBreakdown.FunnelGroup> groups(List<Applied> rows, Function<Applied, String> key) {
+		Map<String, List<Applied>> grouped = rows.stream()
+			.collect(Collectors.groupingBy(key, LinkedHashMap::new, Collectors.toList()));
+		return grouped.entrySet()
+			.stream()
+			.map(entry -> new FunnelBreakdown.FunnelGroup(entry.getKey(), entry.getValue().size(),
+					(int) entry.getValue().stream().filter(Applied::interview).count(),
+					(int) entry.getValue().stream().filter(Applied::offer).count()))
+			.sorted((a, b) -> Integer.compare(b.applied(), a.applied()))
+			.toList();
+	}
+
+	private static @Nullable Double median(List<Double> sorted) {
+		if (sorted.isEmpty()) {
+			return null;
+		}
+		int middle = sorted.size() / 2;
+		double value = (sorted.size() % 2 == 1) ? sorted.get(middle) : (sorted.get(middle - 1) + sorted.get(middle)) / 2;
+		return Math.round(value * 10) / 10.0;
+	}
+
+	/**
+	 * Entre as vagas que você já avaliou, as {@value #RANKING_TOP} de maior score e quantas eram as que você quis
+	 * (candidatura ou "gostei"); as demais avaliadas são as descartadas ou com "não gostei".
+	 */
+	FunnelBreakdown.RankingQuality rankingQuality() {
+		record Decided(int score, boolean positive) {
+		}
+		List<Decided> decided = this.jdbc.sql("""
+				select an.match_score, (a.id is not null or f.rating = 'GOSTEI') as positive
+				from job j
+				join job_analysis an on an.job_id = j.id
+				left join application a on a.job_id = j.id
+				left join job_feedback f on f.job_id = j.id
+				left join job_dismissal d on d.job_id = j.id
+				where an.match_score is not null
+				  and (a.id is not null or f.rating in ('GOSTEI', 'NAO_GOSTEI') or d.job_id is not null)
+				order by an.match_score desc, j.id
+				""")
+			.query((rs, row) -> new Decided(rs.getInt("match_score"), rs.getBoolean("positive")))
+			.list();
+		List<Decided> top = decided.stream().limit(RANKING_TOP).toList();
+		return new FunnelBreakdown.RankingQuality(decided.size(), (int) decided.stream().filter(Decided::positive).count(),
+				top.size(), (int) top.stream().filter(Decided::positive).count(),
+				average(decided.stream().filter(Decided::positive).map(Decided::score).toList()),
+				average(decided.stream().filter(d -> !d.positive()).map(Decided::score).toList()));
+	}
+
+	private static @Nullable Integer average(List<Integer> values) {
+		return values.isEmpty() ? null
+				: (int) Math.round(values.stream().mapToInt(Integer::intValue).average().orElse(0));
 	}
 
 	/**
@@ -275,6 +391,11 @@ class InsightAggregator {
 
 	private static int count(List<Reached> rows, Predicate<Reached> stage) {
 		return (int) rows.stream().filter(stage).count();
+	}
+
+	private record Applied(String source, @Nullable String channel, @Nullable Instant appliedAt,
+			@Nullable Instant firstSeenAt, boolean tailored, boolean interview, boolean offer,
+			@Nullable Instant firstResponseAt, boolean accepted) {
 	}
 
 	private record Reached(@Nullable Long resumeVersionId, @Nullable String resumeLabel, @Nullable String seniority,

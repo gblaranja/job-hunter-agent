@@ -30,6 +30,8 @@ public class Company {
 
 	private String atsSlug;
 
+	private String careersUrl;
+
 	@Enumerated(EnumType.STRING)
 	private CompanyKind kind;
 
@@ -61,6 +63,23 @@ public class Company {
 		this.atsType = blankToNull(atsType);
 		this.atsSlug = blankToNull(atsSlug);
 		this.notes = blankToNull(notes);
+	}
+
+	/** Página de carreira; texto em branco apaga. */
+	public void changeCareersUrl(String careersUrl) {
+		this.careersUrl = blankToNull(careersUrl);
+	}
+
+	public String getCareersUrl() {
+		return this.careersUrl;
+	}
+
+	public String getAtsType() {
+		return this.atsType;
+	}
+
+	public String getAtsSlug() {
+		return this.atsSlug;
 	}
 
 	public void changeWatchStatus(WatchStatus watchStatus) {

@@ -12,7 +12,7 @@ import org.springframework.core.io.ClassPathResource;
  */
 enum Prompts {
 
-	EXTRACT_REQUIREMENTS("extract-requirements", 1), MATCH_SCORE("match-score", 1), RESUME_SKILLS("resume-skills", 1);
+	EXTRACT_REQUIREMENTS("extract-requirements", 2), MATCH_SCORE("match-score", 2), RESUME_SKILLS("resume-skills", 2);
 
 	private final String name;
 

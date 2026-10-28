@@ -3,13 +3,18 @@ package dev.laranja.jobhunter.insights.internal;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import dev.laranja.jobhunter.insights.InsightReport.BulletRewrite;
 import dev.laranja.jobhunter.insights.InsightReport.Funnel;
 import dev.laranja.jobhunter.insights.InsightReport.Gap;
 import dev.laranja.jobhunter.insights.InsightReport.GapAdvice;
+import dev.laranja.jobhunter.insights.InsightReport.GupyProfile;
+import dev.laranja.jobhunter.insights.InsightReport.LinkedinProfile;
 import dev.laranja.jobhunter.insights.InsightReport.Recommendations;
 import dev.laranja.jobhunter.insights.InsightReport.ResumePerformance;
 import dev.laranja.jobhunter.insights.InsightReport.SkillDemand;
@@ -19,6 +24,7 @@ import dev.laranja.jobhunter.shared.ai.LlmClient;
 import dev.laranja.jobhunter.shared.ai.LlmClient.Effort;
 import dev.laranja.jobhunter.shared.ai.LlmClient.LlmRequest;
 import dev.laranja.jobhunter.shared.ai.LlmException;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import tools.jackson.databind.json.JsonMapper;
@@ -34,11 +40,11 @@ import org.springframework.stereotype.Component;
 @Component
 class ResumeAdvisor {
 
-	static final String PROMPT_ID = "resume-advice@v1";
+	static final String PROMPT_ID = "resume-advice@v2";
 
 	private static final Logger log = LoggerFactory.getLogger(ResumeAdvisor.class);
 
-	private static final String PROMPT = load("prompts/resume-advice.v1.md");
+	private static final String PROMPT = load("prompts/resume-advice.v2.md");
 
 	private final LlmClient llm;
 
@@ -60,18 +66,74 @@ class ResumeAdvisor {
 			try {
 				LlmAdvice advice = this.llm.structured(new LlmRequest("resume-advice", this.ai.models().insights(), PROMPT,
 						userMessage(resume, facts), 16000, Effort.HIGH, true), LlmAdvice.class);
-				return new Advice(new Recommendations(advice.gaps(), advice.bullets(), advice.linkedinKeywords(),
-						advice.diagnosis(), advice.diagnosisExplanation(), "IA"), this.ai.models().insights() + "|" + PROMPT_ID);
+				Recommendations deterministic = deterministic(facts, resume);
+				Recommendations recommendations = new Recommendations(advice.gaps(), advice.bullets(),
+						advice.linkedinKeywords(), advice.diagnosis(), advice.diagnosisExplanation(), "IA",
+						(advice.gupyProfile() != null) ? advice.gupyProfile() : deterministic.gupyProfile(),
+						(advice.linkedinProfile() != null && advice.linkedinProfile().headline() != null)
+								? advice.linkedinProfile() : deterministic.linkedinProfile(),
+						null);
+				return new Advice(withChanges(recommendations), this.ai.models().insights() + "|" + PROMPT_ID);
 			}
 			catch (LlmException ex) {
 				log.warn("Sugestões do LLM indisponíveis; usando as regras: {}", ex.getMessage());
 			}
 		}
-		return new Advice(deterministic(facts), "regras@v1");
+		return new Advice(withChanges(deterministic(facts, resume)), "regras@v2");
 	}
 
-	/** Lacunas mais frequentes como sugestões e o diagnóstico pelos números do funil. */
+	/** Compara os textos dos perfis com os do relatório anterior. */
+	private Recommendations withChanges(Recommendations current) {
+		Recommendations previous = this.jdbc.sql("""
+				select recommendations::text from insight_report where recommendations is not null
+				order by created_at desc, id desc limit 1
+				""")
+			.query(String.class)
+			.optional()
+			.map(value -> this.json.readValue(value, Recommendations.class))
+			.orElse(null);
+		return current.withProfileChanges(profileChanges(previous, current));
+	}
+
+	static List<String> profileChanges(@Nullable Recommendations previous, Recommendations current) {
+		List<String> changes = new ArrayList<>();
+		LinkedinProfile before = (previous != null) ? previous.linkedinProfile() : null;
+		LinkedinProfile after = current.linkedinProfile();
+		if (after == null) {
+			return changes;
+		}
+		if (before == null) {
+			changes.add("Primeira versão dos textos dos perfis.");
+			return changes;
+		}
+		if (!Objects.equals(before.headline(), after.headline())) {
+			changes.add("Headline do LinkedIn mudou.");
+		}
+		if (!Objects.equals(before.about(), after.about())) {
+			changes.add("Seção Sobre do LinkedIn mudou.");
+		}
+		Set<String> old = new LinkedHashSet<>(before.skills());
+		List<String> added = after.skills().stream().filter(skill -> !old.contains(skill)).toList();
+		if (!added.isEmpty()) {
+			changes.add("Competências novas: " + String.join(", ", added) + ".");
+		}
+		GupyProfile gupyBefore = previous.gupyProfile();
+		GupyProfile gupyAfter = current.gupyProfile();
+		if (gupyAfter != null && (gupyBefore == null || !Objects.equals(gupyBefore.skills(), gupyAfter.skills()))) {
+			changes.add("Habilidades da Gupy mudaram.");
+		}
+		return changes;
+	}
+
 	static Recommendations deterministic(Facts facts) {
+		return deterministic(facts, null);
+	}
+
+	/**
+	 * Lacunas mais frequentes como sugestões e o diagnóstico pelos números do funil. O headline sai do cargo-alvo
+	 * mais as 5 skills cobertas mais pedidas.
+	 */
+	static Recommendations deterministic(Facts facts, @Nullable ResumeProfile resume) {
 		List<GapAdvice> gaps = facts.gaps()
 			.stream()
 			.limit(5)
@@ -104,7 +166,22 @@ class ResumeAdvisor {
 			explanation = "As vagas candidatadas são aderentes (score médio %s), mas só %.0f%% viraram entrevista: o currículo não está mostrando a aderência."
 				.formatted((avgScore != null) ? avgScore : "—", conversion * 100);
 		}
-		return new Recommendations(gaps, List.of(), keywords, diagnosis, explanation, "REGRAS");
+		List<String> top = keywords.stream().limit(5).toList();
+		String role = (resume != null && resume.targetRole() != null && !resume.targetRole().isBlank())
+				? resume.targetRole().strip() : null;
+		LinkedinProfile linkedin = (role == null && top.isEmpty()) ? null
+				: new LinkedinProfile(String.join(" | ", concat(role, top)), null, keywords);
+		GupyProfile gupy = keywords.isEmpty() ? null : new GupyProfile(String.join(", ", keywords), List.of());
+		return new Recommendations(gaps, List.of(), keywords, diagnosis, explanation, "REGRAS", gupy, linkedin, null);
+	}
+
+	private static List<String> concat(@Nullable String first, List<String> rest) {
+		List<String> all = new ArrayList<>();
+		if (first != null) {
+			all.add(first);
+		}
+		all.addAll(rest);
+		return all;
 	}
 
 	private String userMessage(ResumeProfile resume, Facts facts) {
@@ -151,7 +228,7 @@ class ResumeAdvisor {
 
 	/** Saída estruturada pedida ao modelo. */
 	record LlmAdvice(List<GapAdvice> gaps, List<BulletRewrite> bullets, List<String> linkedinKeywords, String diagnosis,
-			String diagnosisExplanation) {
+			String diagnosisExplanation, @Nullable GupyProfile gupyProfile, @Nullable LinkedinProfile linkedinProfile) {
 	}
 
 }

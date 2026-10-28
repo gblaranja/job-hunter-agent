@@ -16,6 +16,7 @@ describe('BoardPage', () => {
     expect(within(applied).getByText('Backend Java')).toBeInTheDocument()
     expect(within(applied).getByText('4 dias')).toBeInTheDocument()
     expect(within(applied).getByText('vaga fora do ar')).toBeInTheDocument()
+    expect(within(applied).getByText(/Follow-up · 1 de jan/)).toBeInTheDocument()
 
     const interview = screen.getByRole('region', { name: 'Entrevista' })
     expect(within(interview).getByText('0')).toBeInTheDocument()
@@ -38,6 +39,7 @@ describe('BoardPage', () => {
           timeline: [],
         }),
       ),
+      http.get('/api/applications/:id/contacts', () => HttpResponse.json({ contacts: [], interactions: [] })),
     )
     renderWithProviders(<BoardPage />)
 

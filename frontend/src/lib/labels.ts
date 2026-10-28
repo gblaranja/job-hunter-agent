@@ -1,13 +1,21 @@
 import type {
   ApplicationChannel,
+  DraftKind,
+  ContactRole,
+  InteractionChannel,
+  InteractionDirection,
+  InteractionKind,
   ApplicationStatus,
   DismissReason,
   EmailClassification,
   FitBand,
   FeedbackReason,
+  InternationalEligibility,
+  JobFamily,
   JobListItem,
   JobScope,
   LinkStatus,
+  NextActionKind,
   NicheSource,
   RecognitionLevel,
   ResponseChannel,
@@ -62,6 +70,13 @@ export const statusAccent: Record<ApplicationStatus, string> = {
   ENCERRADA: 'bg-stone-500',
 }
 
+export const nextActionKindLabels: Record<NextActionKind, string> = {
+  FOLLOW_UP: 'Follow-up',
+  RESPONDER: 'Responder',
+  ENTREVISTA: 'Entrevista',
+  OUTRO: 'Próxima ação',
+}
+
 export const channelLabels: Record<ApplicationChannel, string> = {
   EASY_APPLY: 'Easy Apply',
   SITE_EMPRESA: 'Site da empresa',
@@ -112,6 +127,31 @@ export const originLabels: Record<JobListItem['origin'], string> = {
   REMOTIVE: 'Remotive',
   GITHUB: 'GitHub (backend-br)',
   ADZUNA: 'Adzuna',
+  SMARTRECRUITERS: 'SmartRecruiters',
+  WORKABLE: 'Workable',
+  TEAMTAILOR: 'Teamtailor',
+  RECRUITEE: 'Recruitee',
+  RECRUTADOR: 'Recrutador',
+}
+
+/** Fonte da coleta: as origens das vagas, mais os alertas do Gmail (que juntam LinkedIn e Gupy). */
+export function sourceLabel(source: string): string {
+  if (source === 'GMAIL_ALERTAS') return 'Alertas no Gmail'
+  return originLabels[source as JobListItem['origin']] ?? source
+}
+
+/** Faixas do tempo entre a vaga aparecer no agente e você aplicar. */
+export const timeToApplyLabels: Record<string, string> = {
+  ATE_1_DIA: 'Até 1 dia',
+  '1_A_3_DIAS': '1 a 3 dias',
+  '4_A_7_DIAS': '4 a 7 dias',
+  MAIS_DE_7_DIAS: 'Mais de 7 dias',
+  SEM_DADO: 'Sem dado (vaga manual)',
+}
+
+export const tailoringLabels: Record<string, string> = {
+  ADAPTADO: 'Currículo adaptado à vaga',
+  PADRAO: 'Currículo sem adaptação',
 }
 
 export const watchStatusLabels: Record<WatchStatus, string> = {
@@ -134,6 +174,8 @@ export const classificationLabels: Record<EmailClassification, string> = {
   PEDIDO_INFORMACAO: 'Pedido de informação',
   OFERTA: 'Oferta',
   RECUSA: 'Recusa',
+  CONFIRMACAO_CANDIDATURA: 'Candidatura recebida',
+  CONTATO_RECRUTADOR: 'Abordagem de recrutador',
   OUTRO: 'Outro',
   IRRELEVANTE: 'Irrelevante',
 }
@@ -176,8 +218,18 @@ export const atsLabels: Record<string, string> = {
   GREENHOUSE: 'Greenhouse',
   LEVER: 'Lever',
   ASHBY: 'Ashby',
+  SMARTRECRUITERS: 'SmartRecruiters',
+  WORKABLE: 'Workable',
+  TEAMTAILOR: 'Teamtailor',
+  RECRUITEE: 'Recruitee',
   GUPY: 'Gupy',
   OUTRO: 'Outro',
+}
+
+export const atsSlugStatusLabels: Record<string, string> = {
+  ENCONTRADO: 'job board encontrado',
+  NAO_ENCONTRADO: 'o ATS diz que esse slug não existe',
+  NAO_CONFIRMADO: 'não deu para confirmar (lista vazia ou ATS sem resposta)',
 }
 
 export const diagnosisLabels: Record<string, string> = {
@@ -195,6 +247,15 @@ export const notificationTypeLabels: Record<string, string> = {
   VOLUME_CAIU: 'Volume caiu',
   RELATORIO_SEMANAL: 'Relatório semanal',
   CURRICULO_ADAPTADO: 'Currículo adaptado',
+  VAGA_ALVO: 'Vaga de empresa-alvo',
+  FOLLOW_UP: 'Follow-up',
+  PREPARACAO_PRONTA: 'Preparação pronta',
+  RESUMO_DIARIO: 'Resumo do dia',
+  FINALISTA: 'Você foi finalista',
+}
+
+export function notificationTypeLabel(type: string): string {
+  return notificationTypeLabels[type] ?? type
 }
 
 export const recognitionLevelLabels: Record<RecognitionLevel, string> = {
@@ -217,4 +278,125 @@ export const nicheSourceLabels: Record<NicheSource, string> = {
   IA: 'Sugestão da IA',
   VAGA: 'Palavras-chave das vagas',
   MANUAL: 'Sua escolha',
+}
+
+/** Família de cargo, pelo título da vaga. */
+export const jobFamilyLabels: Record<JobFamily, string> = {
+  BACKEND: 'Backend',
+  FRONTEND: 'Frontend',
+  FULLSTACK: 'Full stack',
+  MOBILE: 'Mobile',
+  DADOS: 'Dados',
+  DEVOPS_SRE: 'SRE/DevOps',
+  QA: 'QA',
+  SEGURANCA: 'Segurança',
+  GESTAO: 'Gestão',
+  FORA_DE_TI: 'Fora de TI',
+  OUTRA: 'Outra',
+}
+
+export const jobFamilies = Object.keys(jobFamilyLabels) as JobFamily[]
+
+/** De onde dá para ser contratado numa vaga do exterior. */
+export const eligibilityLabels: Record<InternationalEligibility, string> = {
+  BRASIL: 'Aceita o Brasil',
+  LATAM: 'América Latina',
+  GLOBAL: 'Remoto global',
+  PAIS_ESPECIFICO: 'Só para outro país',
+  NAO_INFORMADO: 'Elegibilidade a confirmar',
+}
+
+export const contactRoleLabels: Record<ContactRole, string> = {
+  RECRUTADOR: 'Recrutador(a)',
+  HEADHUNTER: 'Headhunter',
+  GESTOR: 'Gestor(a)',
+  INDICACAO: 'Pode indicar',
+  CONEXAO: 'Conexão do LinkedIn',
+  OUTRO: 'Outro',
+}
+
+export const interactionChannelLabels: Record<InteractionChannel, string> = {
+  LINKEDIN: 'LinkedIn',
+  EMAIL: 'E-mail',
+  WHATSAPP: 'WhatsApp',
+  TELEFONE: 'Ligação',
+  PRESENCIAL: 'Pessoalmente',
+  OUTRO: 'Outro',
+}
+
+export const interactionDirectionLabels: Record<InteractionDirection, string> = {
+  ENVIADA: 'Você mandou',
+  RECEBIDA: 'Você recebeu',
+}
+
+export const interactionKindLabels: Record<InteractionKind, string> = {
+  PEDIDO_INDICACAO: 'Pedido de indicação',
+  FOLLOW_UP: 'Follow-up',
+  AGRADECIMENTO: 'Agradecimento',
+  RESPOSTA_RECRUTADOR: 'Resposta a recrutador',
+  ABORDAGEM: 'Abordagem de recrutador',
+  CONVERSA: 'Conversa',
+  OUTRO: 'Outro',
+}
+
+// Triagem: dados da pessoa e eliminatórios das vagas
+
+export const englishLevelLabels: Record<string, string> = {
+  NENHUM: 'Nenhum',
+  BASICO: 'Básico',
+  INTERMEDIARIO: 'Intermediário',
+  AVANCADO: 'Avançado',
+  FLUENTE: 'Fluente',
+}
+
+export const educationLevelLabels: Record<string, string> = {
+  MEDIO: 'Ensino médio',
+  TECNICO: 'Técnico',
+  SUPERIOR_INCOMPLETO: 'Superior incompleto',
+  SUPERIOR: 'Superior completo',
+  POS: 'Pós-graduação',
+  MESTRADO: 'Mestrado',
+  DOUTORADO: 'Doutorado',
+}
+
+export const contractRegimeLabels: Record<string, string> = {
+  CLT: 'CLT',
+  PJ: 'PJ',
+  CONTRACTOR: 'Contractor (exterior)',
+}
+
+export const knockoutTypeLabels: Record<string, string> = {
+  ANOS_EXPERIENCIA: 'Anos de experiência',
+  IDIOMA: 'Idioma',
+  LOCALIDADE: 'Localidade',
+  PRESENCIAL: 'Dias presenciais',
+  AUTORIZACAO_TRABALHO: 'Autorização de trabalho',
+  FUSO: 'Fuso horário',
+  FORMACAO: 'Formação',
+  CERTIFICACAO: 'Certificação',
+  CONTRATO: 'Regime de contratação',
+}
+
+export const knockoutStatusLabels: Record<string, string> = {
+  ATENDE: 'Atende',
+  NAO_ATENDE: 'Não atende',
+  SEM_INFORMACAO: 'Sem informação',
+}
+
+export const legitimacyLabels: Record<string, string> = {
+  ALTA: 'Vaga confiável',
+  MEDIA: 'Atenção',
+  BAIXA: 'Possível vaga fantasma',
+  SUSPEITA: 'Suspeita de golpe',
+}
+
+export function nextActionKindLabel(kind: string | null | undefined): string {
+  return kind ? (nextActionKindLabels[kind as NextActionKind] ?? kind) : 'Próxima ação'
+}
+
+export const draftKindLabels: Record<DraftKind, string> = {
+  PEDIDO_INDICACAO: 'Pedir indicação',
+  FOLLOW_UP: 'Follow-up',
+  AGRADECIMENTO: 'Agradecer a entrevista',
+  RESPOSTA_RECRUTADOR: 'Responder recrutador',
 }
